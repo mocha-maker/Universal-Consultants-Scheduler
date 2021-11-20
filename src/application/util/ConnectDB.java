@@ -1,4 +1,4 @@
-package util;
+package application.util;
 
 // From code repository
 
@@ -6,7 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 
-public class connectSQL {
+public class ConnectDB {
 
     // Set SQL Database connector variables
     private static final String protocol = "jdbc";
@@ -21,6 +21,7 @@ public class connectSQL {
 
     // Establish Connection
     public static void openConnection() {
+        System.out.println("Attempting to connect to database...");
         try {
             Class.forName(driver); // Locate driver
             connection = DriverManager.getConnection (jdbcUrl, userName, password); // Reference Connection object
@@ -34,6 +35,7 @@ public class connectSQL {
     // Terminate Connection
 
     public static void closeConnection() {
+        System.out.println("Attempting to discconect from database...");
         try {
             connection.close();
             System.out.println("Successfully Disconnected.");
