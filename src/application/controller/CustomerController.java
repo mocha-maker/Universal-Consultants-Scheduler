@@ -1,4 +1,4 @@
-package application.view_controller;
+package application.controller;
 
 public class CustomerController {
 }

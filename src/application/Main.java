@@ -39,7 +39,7 @@ public class Main extends Application {
 
         System.out.println("Loading Application");
 
-        Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("view_controller/sample.fxml")));
+        Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("view_controller/main_login.fxml")));
         primaryStage.setTitle("Hello World");
         primaryStage.setScene(new Scene(root, 300, 275));
         primaryStage.show();
