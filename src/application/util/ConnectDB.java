@@ -35,7 +35,7 @@ public class ConnectDB {
     // Terminate Connection
 
     public static void closeConnection() {
-        System.out.println("Attempting to discconect from database...");
+        System.out.println("Attempting to disconnect from database...");
         try {
             connection.close();
             System.out.println("Successfully Disconnected.");

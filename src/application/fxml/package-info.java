@@ -1,4 +1,4 @@
 /**
  * This package is the
  */
-package application.view;
+package application.fxml;

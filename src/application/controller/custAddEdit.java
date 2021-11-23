@@ -1,4 +1,4 @@
 package application.controller;
 
-public class CustomerController {
+public class custAddEdit {
 }

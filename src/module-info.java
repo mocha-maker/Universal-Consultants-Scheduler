@@ -8,4 +8,7 @@ module application {
         exports application;
     exports application.model;
     opens application.model to javafx.graphics;
+    exports application.controller;
+        opens application.controller to javafx.graphics, javafx.fxml;
+
 }
