@@ -14,6 +14,8 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import static application.controller.Reports.loginActivity;
@@ -55,10 +57,15 @@ public class Login extends Base implements Initializable {
         final String pass = passwordTF.getText();
         Boolean result = false;
         if (user.length() != 0 && pass.length() != 0) {
-            if (user == "test" && pass == "test") {
+            /*if (user == "test" && pass == "test") {
                 result = true;
                 System.out.println("Logging in");
-            }
+            }*/
+
+            final List<Object> args = new ArrayList<>();
+            args.add(user);
+            //final long userID = executeQuery("SELECT User_ID, Password FROM users WHERE User_Name = ? LIMIT 1",args,this::validateCredentials);
+
             System.out.println(user);
             System.out.println(pass);
             Reports.loginActivity(Loc.toUTCZDT(ZonedDateTime.now()),user,result);
@@ -67,6 +74,7 @@ public class Login extends Base implements Initializable {
         }
 
     }
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {

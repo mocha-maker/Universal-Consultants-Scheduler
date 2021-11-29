@@ -4,18 +4,20 @@ import application.model.Customer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
 
 /**
  * This module interfaces with the database and connects the model to the view_controller
  */
-public abstract class DAO {
+public interface DAO {
     /*  ======================
         Initialize Data Structure
         ======================*/
 
-    private static final ObservableList<Customer> allCustomers = FXCollections.observableArrayList(); // TODO: change to work with DB
+     // ObservableList<Record> allRecords = FXCollections.observableArrayList(); // TODO: change to work with DB
 
 
 
@@ -35,9 +37,29 @@ public abstract class DAO {
         ADDERS
        ======================*/
 
-    // add new customer
+    // add new record
+    default void executeInsert(String query, List<Object> arguments, BiConsumer<SQLException, Long> handler) {
+        try (
+                Connection connection = DBC.connection;
+                PreparedStatement stmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
+        ) {
+            setArguments(stmt, arguments);
+            stmt.executeUpdate();
 
-    // add new appointment
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    handler.accept(null, generatedKeys.getLong(1));
+                } else {
+                    throw new SQLException("Creating user failed, no ID obtained.");
+                }
+            }
+        } catch (SQLException ex) {
+            //printSQLException(ex);
+            handler.accept(ex, null);
+        }
+    }
+
+    void setArguments(PreparedStatement stmt, List<Object> arguments);
 
     /* ======================
         UPDATERS
