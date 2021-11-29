@@ -1,4 +1,4 @@
 package application.controller;
 
-public class Customer extends MainC {
+public class Customer extends Base {
 }

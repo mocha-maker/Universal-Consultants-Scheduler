@@ -1,13 +1,15 @@
 package application;
 
-import application.controller.MainC;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.util.Locale;
+
+import java.time.ZonedDateTime;
+
+import static application.util.Loc.*;
 
 public class Main extends Application {
 
@@ -17,33 +19,25 @@ public class Main extends Application {
      */
     public static void main(String[] args) {
 
-        //ConnectDB.openConnection(); // Establish Connection to SQL DB
-
         launch(args);
-
-        //ConnectDB.closeConnection(); // Close Connection to SQL DB
 
     }
     @Override
     public void start(Stage primaryStage) throws Exception{
         // locale test
-        Locale.setDefault(new Locale("fr"));
+        // Locale.setDefault(new Locale("fr","CA"));
 
+
+        setLocaleBundle();
         System.out.println("Loading Application");
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("fxml/login.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("view/login.fxml"), getBundle());
         Parent root = loader.load();
         Scene scene = new Scene(root);
-
-        primaryStage.setTitle("Universal Consultants Scheduling Assistant");
+        primaryStage.setTitle(getBundle().getString("app.title"));
         primaryStage.setScene(scene);
         primaryStage.show();
 
 
-
-
-/*        mainController controller = loader.<mainController>getController();
-        Pane view = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("fxml/login.fxml")));
-        controller.getView(view);*/
 
     }
 

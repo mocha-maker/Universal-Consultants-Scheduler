@@ -5,7 +5,7 @@ import javafx.scene.input.MouseEvent;
 
 import java.io.IOException;
 
-public class Appt extends MainC {
+public class Appt extends Base {
     // Navigation
     @FXML
     private void apptAddEdit(MouseEvent event) throws IOException {

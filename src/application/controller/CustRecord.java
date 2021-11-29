@@ -1,4 +1,4 @@
 package application.controller;
 
-public class apptAddEdit {
+public class CustRecord {
 }

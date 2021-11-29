@@ -4,12 +4,13 @@ import application.model.Customer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.sql.ResultSet;
 import java.util.ArrayList;
 
 /**
  * This module interfaces with the database and connects the model to the view_controller
  */
-public class DAO {
+public abstract class DAO {
     /*  ======================
         Initialize Data Structure
         ======================*/
@@ -22,17 +23,38 @@ public class DAO {
         GETTERS
        ======================*/
 
-    public static ObservableList<Customer> getAllCustomers() { return allCustomers;     }
+    // retrieve login information
 
-    /* ======================
-        UPDATERS
-       ======================*/
+    // retrieve customer list
+
+    // retrieve contacts list
+
+    // retrieve appointments list
 
     /* ======================
         ADDERS
        ======================*/
 
+    // add new customer
+
+    // add new appointment
+
+    /* ======================
+        UPDATERS
+       ======================*/
+
+    // update customer
+
+    // update appointment
+
+
+
     /* ======================
         DELETERS
        ======================*/
+
+    // delete customer
+
+    // delete appointment
+
 }

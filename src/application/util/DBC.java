@@ -6,7 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 
-public class ConnectDB {
+public class DBC {
 
     // Set SQL Database connector variables
     private static final String protocol = "jdbc";
@@ -45,4 +45,5 @@ public class ConnectDB {
             System.out.println("Error: " + e.getMessage());
         }
     }
+
 }
