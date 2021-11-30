@@ -1,4 +1,4 @@
 package application.controller;
 
-public class CustRecord {
+public class CustRecord extends Base {
 }

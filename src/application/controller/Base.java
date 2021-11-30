@@ -1,5 +1,6 @@
 package application.controller;
 
+import application.util.DAO;
 import application.util.Loc;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,12 +21,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-public abstract class Base implements Initializable {
+public abstract class Base extends DAO implements Initializable {
     @FXML
     private AnchorPane mainPane; // main viewing pane
     private Pane view; // child pane of mainPane
     private String appf = "/application/view/";
     private ResourceBundle resourceBundle;
+    protected View vController;
 
     /**
      * Initialize Base. This is the main application controller for the main view that contains the menu and loadable pages.
@@ -44,6 +46,11 @@ public abstract class Base implements Initializable {
      * Generic Scene Switcher. This is used as the template for switching scenes.
      *
      */
+
+    protected void setViewController(View vController) {
+        this.vController = vController;
+    }
+
     public void switchScene(MouseEvent event, String fileName) throws IOException {
         view = FXMLLoader.load(Objects.requireNonNull(getClass().getResource(appf + fileName + ".fxml")));
         mainPane.getChildren().setAll(view);

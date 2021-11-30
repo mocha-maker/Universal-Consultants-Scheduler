@@ -1,46 +1,83 @@
 package application.util;
 
-import application.model.Customer;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 /**
  * This module interfaces with the database and connects the model to the view_controller
  */
-public interface DAO {
+public abstract class DAO extends DBC{
     /*  ======================
         Initialize Data Structure
         ======================*/
 
      // ObservableList<Record> allRecords = FXCollections.observableArrayList(); // TODO: change to work with DB
-
+        ResultSet rs;
 
 
     /* ======================
-        GETTERS
+        EXECUTE QUERY LAMBDA
        ======================*/
 
-    // retrieve login information
+    /**
+     * goes through a list of objects to use as arguments in a prepared statement
+     *
+     * @param statement the prepared statement that will be executed
+     * @param arguments the arguments to use with the prepared statement
+     * @throws SQLException any exception that occurs when setting the arguments
+     */
+    private void setArguments(PreparedStatement statement, List<Object> arguments) throws SQLException {
+        if (arguments != null) {
+            for (int i = 0; i < arguments.size(); i++) {
+                statement.setObject(i + 1, arguments.get(i));
+            }
+        }
+    }
 
-    // retrieve customer list
+    protected <T> T executeQuery(String query, BiFunction<SQLException, ResultSet, T> handler) {
+        // lambda to consume an exception and result set and allow for DRY resource cleanup
+        return executeQuery(query, null, (ex, rs) -> (T) handler.apply(ex, rs));
+    }
 
-    // retrieve contacts list
+    protected void executeQuery(String query, BiConsumer<SQLException, ResultSet> handler) {
+        // lambda to consume an exception and result set and allow for DRY resource cleanup
+        executeQuery(query, null, (ex, rs) -> {
+            handler.accept(ex, rs);
+            return null;
+        });
+    }
 
-    // retrieve appointments list
+    protected void executeQuery(String query, List<Object> arguments, BiConsumer<SQLException, ResultSet> handler) {
+        // lambda to consume an exception and result set and allow for DRY resource cleanup
+        executeQuery(query, arguments, (ex, rs) -> {
+            handler.accept(ex, rs);
+            return null;
+        });
+    }
+
+    protected <T> T executeQuery(String query, List<Object> arguments, BiFunction<SQLException, ResultSet, T> handler) {
+        try (var stmt = getConnection().prepareStatement(query)) {
+            setArguments(stmt, arguments);
+
+            try (var rs = stmt.executeQuery()) {
+                return handler.apply(null, rs);
+            }
+        } catch (SQLException ex) {
+            printSQLException(ex);
+            return handler.apply(ex, null);
+        }
+    }
 
     /* ======================
         ADDERS
        ======================*/
 
     // add new record
-    default void executeInsert(String query, List<Object> arguments, BiConsumer<SQLException, Long> handler) {
+    public void executeInsert(String query, List<Object> arguments, BiConsumer<SQLException, Long> handler) {
         try (
-                Connection connection = DBC.connection;
+                Connection connection = getConnection();
                 PreparedStatement stmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
         ) {
             setArguments(stmt, arguments);
@@ -59,24 +96,42 @@ public interface DAO {
         }
     }
 
-    void setArguments(PreparedStatement stmt, List<Object> arguments);
 
     /* ======================
         UPDATERS
        ======================*/
 
-    // update customer
+    protected void executeUpdate(String query, List<Object> arguments, BiConsumer<SQLException, Integer> handler) {
+        // lambda to consume an exception and result set and allow for DRY resource cleanup
+        executeUpdate(query, arguments, ((BiFunction<SQLException, Integer, Void>) (ex, updates) -> {
+            handler.accept(ex, updates);
+            return null;
+        }));
+    }
 
-    // update appointment
+    protected <T> T executeUpdate(String query, List<Object> arguments, BiFunction<SQLException, Integer, T> handler) {
+        try (
+                Connection connection = getConnection();
+                PreparedStatement stmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
+        ) {
+            setArguments(stmt, arguments);
 
-
+            int affectedRows = stmt.executeUpdate();
+            return handler.apply(null, affectedRows);
+        } catch (SQLException ex) {
+            printSQLException(ex);
+            return handler.apply(ex, null);
+        }
+    }
 
     /* ======================
-        DELETERS
-       ======================*/
+        Exception Handling
+        ======================*/
 
-    // delete customer
-
-    // delete appointment
+    protected void printSQLException(SQLException ex) {
+        System.out.println("SQLException: " + ex.getMessage());
+        System.out.println("SQLState: " + ex.getSQLState());
+        System.out.println("VendorError: " + ex.getErrorCode());
+    }
 
 }

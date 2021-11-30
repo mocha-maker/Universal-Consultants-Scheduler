@@ -1,4 +1,4 @@
 package application.controller;
 
-public class Calendar {
+public class Calendar extends Base{
 }

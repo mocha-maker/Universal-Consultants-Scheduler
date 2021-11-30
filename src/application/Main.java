@@ -6,8 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-
-import java.time.ZonedDateTime;
+import java.net.URL;
 
 import static application.util.Loc.*;
 
@@ -30,7 +29,10 @@ public class Main extends Application {
 
         setLocaleBundle();
         System.out.println("Loading Application");
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("view/login.fxml"), getBundle());
+        URL url = getClass().getResource("view/login.fxml");
+
+        FXMLLoader loader = new FXMLLoader(url, getBundle());
+        System.out.println(getBundle().getString("login.login"));
         Parent root = loader.load();
         Scene scene = new Scene(root);
         primaryStage.setTitle(getBundle().getString("app.title"));

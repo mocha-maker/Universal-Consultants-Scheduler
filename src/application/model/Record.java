@@ -1,11 +1,15 @@
 package application.model;
 
+
+import application.util.Alerts;
+
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-public abstract class Record {
+
+public abstract class Record implements Alerts {
 
     // variables
     public static ResourceBundle bundle;
@@ -24,18 +28,18 @@ public abstract class Record {
         this.id = id;
     }
 
-public void validateFields() {
+    public void validateFields() {
         for (final Field field : getClass().getDeclaredFields()) {
             try {
                 field.setAccessible(true);
                 final Object value = field.get(this);
                 if (value instanceof String) {
                     if (((String) value).length() == 0) {
-                        System.out.println(field.getName() + "Error. Empty String.");
+                        Alerts.errorMessage("Field Validation", "Empty String.");
                     }
                 } else if (value instanceof Long) {
                     if ((Long) value == 0) {
-                        System.out.println("Empty Long");
+                        Alerts.errorMessage("Field Validation", "Empty Long Value.");
                     }
                 } else if (value instanceof LocalDateTime) {
                 } else {
