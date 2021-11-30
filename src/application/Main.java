@@ -1,9 +1,11 @@
 package application;
 
+import application.controller.View;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 import java.net.URL;
@@ -29,15 +31,9 @@ public class Main extends Application {
 
         setLocaleBundle();
         System.out.println("Loading Application");
-        URL url = getClass().getResource("view/login.fxml");
-
-        FXMLLoader loader = new FXMLLoader(url, getBundle());
-        System.out.println(getBundle().getString("login.login"));
-        Parent root = loader.load();
-        Scene scene = new Scene(root);
-        primaryStage.setTitle(getBundle().getString("app.title"));
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        final Scene scene = new Scene(new AnchorPane());
+        View vController = new View(scene, primaryStage);
+        vController.loadLoginWindow();
 
     }
 

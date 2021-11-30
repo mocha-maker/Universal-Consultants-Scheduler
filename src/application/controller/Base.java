@@ -26,7 +26,7 @@ public abstract class Base extends DAO implements Initializable {
     private AnchorPane mainPane; // main viewing pane
     private Pane view; // child pane of mainPane
     private String appf = "/application/view/";
-    private ResourceBundle resourceBundle;
+    private final ResourceBundle rb = Loc.getBundle();
     protected View vController;
 
     /**
@@ -59,7 +59,7 @@ public abstract class Base extends DAO implements Initializable {
     public void showMain(final Scene scene, final Stage primaryStage) {
         try {
             primaryStage.hide();
-            final FXMLLoader loader = new FXMLLoader(getClass().getResource("views/main.fxml"), Loc.getBundle());
+            final FXMLLoader loader = new FXMLLoader(getClass().getResource("view/main.fxml"), Loc.getBundle());
             scene.setRoot(loader.load());
             primaryStage.setWidth(800);
             primaryStage.setHeight(600);

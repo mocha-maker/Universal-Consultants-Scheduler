@@ -9,9 +9,9 @@ import java.util.TimeZone;
 /**
  * Localization Helper Class
  */
-public class Loc {
-    private static ResourceBundle rb;
-    private static Locale activeLocale;
+public abstract class Loc {
+    static ResourceBundle rb;
+    static Locale activeLocale;
 
 
     // Locale Management //
