@@ -1,12 +1,16 @@
 package application.controller;
 
+import application.util.Alerts;
 import application.util.DAO;
 import application.util.Loc;
+import javafx.collections.ObservableArray;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.MouseEvent;
@@ -16,10 +20,9 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
+
+import static application.util.Alerts.*;
 
 public abstract class Base extends DAO implements Initializable {
     @FXML
@@ -28,6 +31,8 @@ public abstract class Base extends DAO implements Initializable {
     private String appf = "/application/view/";
     final ResourceBundle rb = Loc.getBundle();
     protected View vController;
+/*    private Button backButton;
+    private Stack<Pane> sceneHistory;*/
 
     /**
      * Initialize Base. This is the main application controller for the main view that contains the menu and loadable pages.
@@ -56,15 +61,9 @@ public abstract class Base extends DAO implements Initializable {
     public void switchScene(MouseEvent event, String fileName) throws IOException {
         view = FXMLLoader.load(Objects.requireNonNull(getClass().getResource(appf + fileName + ".fxml")));
         mainPane.getChildren().setAll(view);
+        // sceneHistory.add(view); TODO: back button functionality
     }
 
-    @FXML
-    private void menuLogout(MouseEvent event) throws IOException {
-        // TODO: add a confirmation msg
-        System.out.println("Logging out...");
-        // TODO: disconnect from database
-        switchScene(event,"login");
-    }
 
     @FXML
     private void menuAppointment(MouseEvent event) throws IOException {
@@ -87,88 +86,25 @@ public abstract class Base extends DAO implements Initializable {
     }
 
     @FXML
-    private void close(MouseEvent event) throws IOException {
-        Stage stage = vController.getStage();
+    private void menuLogout(MouseEvent event) {
         closeConnection();
-        stage.close();
-    }
-
-
-
-
-    /*  ======================
-        DIALOGS
-        ======================
-        Dialog pop-ups for errors and confirmations
-        */
-
-    /**
-     * Error Alert Constructor
-     * @param title the dialog title
-     * @param msg the message to show in dialog
-     */
-    public void errorMessage(String title, String msg) {
-        // Create alert and set parameters
-        Alert error = new Alert(Alert.AlertType.ERROR);
-        if (!error.isShowing()) { // prevent additional dialogs
-            error.setTitle("ERROR: " + title);
-            error.setHeaderText("");
-            error.setContentText(msg);
-            error.showAndWait();
-        }
-    }
-    /**
-     * Warning Alert Constructor
-     * @param title the dialog title
-     * @param msg the message to show in dialog
-     */
-    public void warningMessage(String title, String msg) {
-        // Create alert and set parameters
-        Alert warning = new Alert(Alert.AlertType.WARNING);
-        if (!warning.isShowing()) { // prevent additional dialogs
-            warning.setTitle("WARNING: " + title);
-            warning.setHeaderText("");
-            warning.setContentText(msg);
-            warning.showAndWait();
+        try {
+            vController.loadLoginWindow();
+        } catch (Exception e) {
+            errorMessage("Loading Error", "Failed to load login window.");
         }
     }
 
-    /**
-     * Info Alert Constructor
-     * @param msg the message to show in dialog
-     */
-    public void infoMessage(String msg) {
-        // Create alert and set parameters
-        Alert error = new Alert(Alert.AlertType.INFORMATION);
-        error.setTitle("Information");
-        error.setHeaderText("");
-        error.setContentText(msg);
-        error.showAndWait();
+    @FXML
+    private void handleBackButton(ActionEvent event) throws IOException {
+/*        sceneHistory.pop();
+        mainPane.getChildren().setAll(sceneHistory.pop());*/
+
     }
 
-    /**
-     * Simple Confirmation Dialog
-     * @param title the title of the dialog
-     * @param msg the message to show in dialog
-     * @return boolean confirmation input
-     */
-    public boolean confirmMessage(String title, String msg) {
 
-        // Create alert and set parameters
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Please Confirm " + title);
-        confirm.setHeaderText("");
-        confirm.setContentText(msg);
 
-        // buttons to include in dialog
-        ButtonType continueButton = new ButtonType("Continue");
-        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
 
-        confirm.getButtonTypes().setAll(continueButton,cancelButton); // creates the buttons in dialog
-
-        Optional<ButtonType> result = confirm.showAndWait(); // show dialog
-        return result.get() == continueButton; // user chose CANCEL or closed the dialog
-    }
 
 
     // end of class

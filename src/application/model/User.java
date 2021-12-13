@@ -9,7 +9,7 @@ public class User extends Record {
 
     public User(long userID, String userName) {
         super(userID);
-        this.userName = userName;
+        setUserName(userName);
     }
 
     public void setUserName(String userName) {

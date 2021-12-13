@@ -9,6 +9,6 @@ public class Appt extends Base {
     // Navigation
     @FXML
     private void apptAddEdit(MouseEvent event) throws IOException {
-        switchScene(event,"appt_addedit");
+        switchScene(event,"appt_record");
     }
 }

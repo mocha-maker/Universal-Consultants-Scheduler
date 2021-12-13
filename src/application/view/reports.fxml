@@ -16,7 +16,7 @@
    <children>
       <VBox layoutX="10.0" layoutY="10.0">
          <children>
-            <Button mnemonicParsing="false" text="Back" />
+            <Button onAction="#handleBackButton" mnemonicParsing="false" text="Back" />
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Reports">
                <VBox.margin>
                   <Insets bottom="25.0" top="25.0" />

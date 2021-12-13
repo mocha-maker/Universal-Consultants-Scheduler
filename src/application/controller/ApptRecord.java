@@ -1,4 +1,4 @@
 package application.controller;
 
-public class ApptRecord {
+public class ApptRecord extends Base {
 }

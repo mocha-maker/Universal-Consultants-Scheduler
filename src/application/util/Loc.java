@@ -49,6 +49,12 @@ public abstract class Loc {
         return zone;
     }
 
+    // TODO: Get local time and dates
+    public static LocalDateTime getLocalDateTime() {
+        LocalDateTime localDT = LocalDateTime.now();
+        return localDT;
+    }
+
 
     public static ZonedDateTime toEastZDT(ZonedDateTime zonedDateTime) {
         ZonedDateTime eastZDT = toUTCZDT(zonedDateTime).withZoneSameInstant(ZoneId.of("US/Eastern"));

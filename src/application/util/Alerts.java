@@ -5,13 +5,13 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 
 import java.util.Optional;
-public interface Alerts {
+public final class Alerts {
     /**
      * Error Alert Constructor
      * @param title the dialog title
      * @param msg the message to show in dialog
      */
-    static void errorMessage(String title, String msg) {
+    public static final void errorMessage(String title, String msg) {
         // Create alert and set parameters
         Alert error = new Alert(Alert.AlertType.ERROR);
         if (!error.isShowing()) { // prevent additional dialogs
@@ -26,7 +26,7 @@ public interface Alerts {
      * @param title the dialog title
      * @param msg the message to show in dialog
      */
-    static void warningMessage(String title, String msg) {
+    final void warningMessage(String title, String msg) {
         // Create alert and set parameters
         Alert warning = new Alert(Alert.AlertType.WARNING);
         if (!warning.isShowing()) { // prevent additional dialogs

@@ -18,14 +18,6 @@ public final class View extends Base {
     public View(final Scene scene, final Stage primaryStage) {
         this.scene = scene;
         this.primaryStage = primaryStage;
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent t) {
-                closeConnection();
-                Platform.exit();
-                System.exit(0);
-            }
-        });
 
     }
 

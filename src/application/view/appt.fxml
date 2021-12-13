@@ -15,7 +15,7 @@
    <children>
       <VBox>
          <children>
-            <Button mnemonicParsing="false" text="Back" />
+            <Button onAction="#handleBackButton" mnemonicParsing="false" text="Back" />
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Appointments">
                <VBox.margin>
                   <Insets bottom="25.0" top="25.0" />

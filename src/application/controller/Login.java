@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import static application.util.Alerts.*;
+
 
 public class Login extends Base implements Initializable {
 

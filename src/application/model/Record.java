@@ -1,7 +1,7 @@
 package application.model;
 
 
-import application.util.Alerts;
+import static application.util.Alerts.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -9,7 +9,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 
-public abstract class Record implements Alerts {
+public abstract class Record {
 
     // variables
     public static ResourceBundle bundle;
@@ -17,14 +17,14 @@ public abstract class Record implements Alerts {
     protected long id;
 
     public Record(long id) {
-        this.id = id;
+        setID(id);
     }
 
     public long getID() {
         return id;
     }
 
-    public void setID() {
+    public void setID(long id) {
         this.id = id;
     }
 
@@ -35,11 +35,11 @@ public abstract class Record implements Alerts {
                 final Object value = field.get(this);
                 if (value instanceof String) {
                     if (((String) value).length() == 0) {
-                        Alerts.errorMessage("Field Validation", "Empty String.");
+                        errorMessage("Field Validation", "Empty String.");
                     }
                 } else if (value instanceof Long) {
                     if ((Long) value == 0) {
-                        Alerts.errorMessage("Field Validation", "Empty Long Value.");
+                        errorMessage("Field Validation", "Empty Long Value.");
                     }
                 } else if (value instanceof LocalDateTime) {
                 } else {
