@@ -26,7 +26,7 @@ public abstract class Base extends DAO implements Initializable {
     private AnchorPane mainPane; // main viewing pane
     private Pane view; // child pane of mainPane
     private String appf = "/application/view/";
-    private final ResourceBundle rb = Loc.getBundle();
+    final ResourceBundle rb = Loc.getBundle();
     protected View vController;
 
     /**
@@ -40,13 +40,15 @@ public abstract class Base extends DAO implements Initializable {
 
     }
 
-    // Scene Management
+    /* ======================
+        SCENE MANAGEMENT
+       ======================*/
 
     /**
-     * Generic Scene Switcher. This is used as the template for switching scenes.
      *
+     *
+     * @param vController
      */
-
     protected void setViewController(View vController) {
         this.vController = vController;
     }
@@ -54,20 +56,6 @@ public abstract class Base extends DAO implements Initializable {
     public void switchScene(MouseEvent event, String fileName) throws IOException {
         view = FXMLLoader.load(Objects.requireNonNull(getClass().getResource(appf + fileName + ".fxml")));
         mainPane.getChildren().setAll(view);
-    }
-
-    public void showMain(final Scene scene, final Stage primaryStage) {
-        try {
-            primaryStage.hide();
-            final FXMLLoader loader = new FXMLLoader(getClass().getResource("view/main.fxml"), Loc.getBundle());
-            scene.setRoot(loader.load());
-            primaryStage.setWidth(800);
-            primaryStage.setHeight(600);
-            primaryStage.show();
-        } catch (Exception e) {
-            System.out.println("error opening main view:");
-            System.out.println(e);
-        }
     }
 
     @FXML
@@ -97,6 +85,14 @@ public abstract class Base extends DAO implements Initializable {
     private void menuReports(MouseEvent event) throws IOException {
         switchScene(event,"reports");
     }
+
+    @FXML
+    private void close(MouseEvent event) throws IOException {
+        Stage stage = vController.getStage();
+        closeConnection();
+        stage.close();
+    }
+
 
 
 

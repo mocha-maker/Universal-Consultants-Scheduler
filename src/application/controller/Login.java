@@ -51,28 +51,34 @@ public class Login extends Base implements Initializable {
         // retrieve entered credentials
         final String user = usernameTF.getText();
         final String pass = passwordTF.getText();
-        Boolean result = false;
+        boolean result = false;
 
         if (user.length() != 0 && pass.length() != 0) {
-            /*if (user == "test" && pass == "test") {
-                result = true;
-                System.out.println("Logging in");
-            }*/
 
             final List<Object> args = new ArrayList<>();
             args.add(user);
             final long userID = executeQuery("SELECT User_ID, Password " + "FROM users " + "WHERE User_Name = ? " + "LIMIT 1", args, this::validateCredentials);
-            closeConnection();
+
             if (userID != -1) {
                 System.out.println(user);
                 System.out.println(pass);
                 result = true;
                 System.out.println("Successfully Logged In.");
+
+                // Stay connected to DB
+
+                // Change Window
+                vController.loadMainWindow();
             } else {
-                errorMessage(Loc.getBundle().getString("error.loginEmpty"), "Login Error");
+                errorMessage("Login Error", Loc.getBundle().getString("error.loginInvalid"));
+                closeConnection();
+                usernameTF.setText("");
+                passwordTF.setText("");
             }
             Reports.loginActivity(Loc.toUTCZDT(ZonedDateTime.now()), user, result);
 
+        } else {
+            errorMessage("Login Error", Loc.getBundle().getString("error.loginEmpty"));
         }
     }
 

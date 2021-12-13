@@ -15,7 +15,7 @@ abstract class DBC {
     private static final String location = "//localhost/";
     private static final String databaseName = "client_schedule";
     private static final String jdbcUrl = protocol + vendor + location + databaseName + "?connectionTimeZone = SERVER"; // LOCAL
-    private static final String driver = "com.mysql.jdbc.Driver"; // Driver reference
+    private static final String driver = "com.mysql.cj.jdbc.Driver"; // Driver reference
     private static final String userName = "sqlUser"; // User
     private static final String password = "Passw0rd!"; // Password
     private static Connection connection; // Connection Interface
@@ -24,6 +24,12 @@ abstract class DBC {
     public static Connection getConnection() throws SQLException {
         if (connection != null && !connection.isClosed()) return connection;
         openConnection();
+        return connection;
+    }
+
+    public static Connection exitConnection() throws SQLException {
+        if (connection == null && connection.isClosed()) return connection;
+        closeConnection();
         return connection;
     }
 
