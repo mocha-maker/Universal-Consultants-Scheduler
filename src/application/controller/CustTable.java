@@ -1,6 +1,7 @@
 package application.controller;
 
-import application.util.DAOimpl;
+import application.model.Customer;
+
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -8,20 +9,22 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-@SuppressWarnings("ALL")
+import static application.util.DAOimpl.getAllCustomers;
+
+
 public class CustTable extends Base {
     /*  ======================
         CUSTOMER TABLE ELEMENTS
         ======================*/
 
-    public TableView<CustTable> allCustomersTable;
-    public TableColumn custID;
-    public TableColumn custName;
-    public TableColumn custPhone;
-    public TableColumn custAddress;
-    public TableColumn custCode;
-    public TableColumn custState;
-    public TableColumn custCountry;
+    public TableView<Customer> allCustomersTable;
+    public TableColumn<?,?> custID;
+    public TableColumn<?,?> custName;
+    public TableColumn<?,?> custPhone;
+    public TableColumn<?,?> custAddress;
+    public TableColumn<?,?> custCode;
+    public TableColumn<?,?> custState;
+    public TableColumn<?,?> custCountry;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -35,8 +38,14 @@ public class CustTable extends Base {
         TABLEVIEW MANAGEMENT
         ======================*/
     public void setColumns() {
-        custID.setCellValueFactory(new PropertyValueFactory<CustTable,Integer>("custid"));
-
+        System.out.println("Setting Customer Table Columns.");
+        custID.setCellValueFactory(new PropertyValueFactory<>("id"));
+        custName.setCellValueFactory(new PropertyValueFactory<>("customerName"));
+        custPhone.setCellValueFactory(new PropertyValueFactory<>("phone"));
+        custAddress.setCellValueFactory(new PropertyValueFactory<>("address"));
+        custCode.setCellValueFactory(new PropertyValueFactory<>("postalCode"));
+        custState.setCellValueFactory(new PropertyValueFactory<>("division"));
+        custCountry.setCellValueFactory(new PropertyValueFactory<>("country"));
     }
 
     /**
@@ -44,7 +53,8 @@ public class CustTable extends Base {
      * used to populate tableview
      */
     public void updateCustomersTable() {
-        allCustomersTable.setItems(DAOimpl.getAllCustomers());
+        allCustomersTable.setItems(getAllCustomers());
+
     }
 
 }

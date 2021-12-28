@@ -1,30 +1,31 @@
 package application.model;
 
-import java.sql.Date;
-import java.time.LocalDateTime;
-
 public class Appointment extends Record {
 
     private String title;
     private String description;
     private String location;
-    private LocalDateTime start;
-    private LocalDateTime end;
-    private long contactID;
-    private long customerID;
-    private long userID;
+    private String type;
+    private String start;
+    private String end;
+    private String contact;
+    private int customerId;
+    private int userId;
 
-    public Appointment(long apptID, String title, String description, String location, LocalDateTime start, LocalDateTime end, long contactID, long customerID, long userID) {
-        super(apptID);
+    public Appointment(int id, String title, String description, String location, String type, String start, String end, String contact, int customerID, int userID) {
+        super(id);
         setTitle(title);
         setDescription(description);
         setLocation(location);
+        setType(type);
         setStart(start);
         setEnd(end);
-        setContactID(contactID);
-        setCustomerID(customerID);
-        setUserID(userID);
+        setContact(contact);
+        setCustomerId(customerID);
+        setUserId(userID);
     }
+
+
 
     /*  ======================
         SETTERS
@@ -42,24 +43,26 @@ public class Appointment extends Record {
         this.location = location;
     }
 
-    public void setStart(LocalDateTime start) {
+    public void setType(String type) { this.type = type; }
+
+    public void setStart(String start) {
         this.start = start;
     }
 
-    public void setEnd(LocalDateTime end) {
+    public void setEnd(String end) {
         this.end = end;
     }
 
-    public void setContactID(long contactID) {
-        this.contactID = contactID;
+    public void setContact(String contact) {
+        this.contact = contact;
     }
 
-    public void setCustomerID(long customerID) {
-        this.customerID = customerID;
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
     }
 
-    public void setUserID(long userID) {
-        this.userID = userID;
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
     /*  ======================
@@ -78,23 +81,25 @@ public class Appointment extends Record {
         return location;
     }
 
-    public LocalDateTime getStart() {
+    public String getType() { return type;}
+
+    public String getStart() {
         return start;
     }
 
-    public LocalDateTime getEnd() {
+    public String getEnd() {
         return end;
     }
 
-    public long getContactID() {
-        return contactID;
+    public String getContact() {
+        return contact;
     }
 
-    public long getCustomerID() {
-        return customerID;
+    public int getCustomerId() {
+        return customerId;
     }
 
-    public long getUserID() {
-        return userID;
+    public int getUserId() {
+        return userId;
     }
 }

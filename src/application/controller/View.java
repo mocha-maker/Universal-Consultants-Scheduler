@@ -21,13 +21,19 @@ public final class View extends Base {
 
     }
 
-    public void loadLoginWindow() throws Exception {
-        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/application/view/login.fxml"), rb);
-        scene.setRoot(loader.load());
-        loader.<Login>getController().setViewController(this);
-        primaryStage.setTitle(rb.getString("app.title"));
-        primaryStage.setScene(scene);
-        primaryStage.show();
+    public void loadLoginWindow() {
+        try {
+            primaryStage.hide();
+            final FXMLLoader loader = new FXMLLoader(getClass().getResource("/application/view/login.fxml"), rb);
+            scene.setRoot(loader.load());
+            loader.<Login>getController().setViewController(this);
+            primaryStage.setTitle(rb.getString("app.title"));
+            primaryStage.setScene(scene);
+            primaryStage.show();
+        } catch (Exception ex) {
+            System.out.println("Error opening Login Window");
+            ex.printStackTrace();
+        }
     }
 
     public void loadMainWindow() {
@@ -40,7 +46,7 @@ public final class View extends Base {
             primaryStage.show();
         } catch (Exception ex) {
             System.out.println("Error opening Main Window:");
-            System.out.println(ex);
+            ex.printStackTrace();
         }
     }
 

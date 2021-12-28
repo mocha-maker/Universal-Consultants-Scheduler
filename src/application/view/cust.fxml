@@ -54,7 +54,7 @@
          <columns>
             <TableColumn prefWidth="75.0" text="ID" fx:id="custID"/>
             <TableColumn prefWidth="75.0" text="Name" fx:id="custName"/>
-            <TableColumn prefWidth="75.0" text="Phone Number" fx:id="custPhone"/>
+            <TableColumn prefWidth="75.0" text="Phone" fx:id="custPhone"/>
             <TableColumn prefWidth="75.0" text="Address" fx:id="custAddress"/>
             <TableColumn prefWidth="75.0" text="Postal/Zip Code" fx:id="custCode"/>
             <TableColumn prefWidth="75.0" text="State/Province" fx:id="custState"/>

@@ -7,7 +7,7 @@ public class User extends Record {
        ======================*/
     private String userName;
 
-    public User(long userID, String userName) {
+    public User(int userID, String userName) {
         super(userID);
         setUserName(userName);
     }

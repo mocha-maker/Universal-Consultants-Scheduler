@@ -6,7 +6,7 @@
 <?import javafx.scene.text.*?>
 
 <AnchorPane xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.Login">
-    <GridPane prefHeight="300.0">
+    <GridPane prefHeight="300.0" prefWidth="500.0">
         <columnConstraints>
             <ColumnConstraints hgrow="SOMETIMES" maxWidth="251.0" minWidth="10.0" prefWidth="107.0" />
             <ColumnConstraints hgrow="SOMETIMES" maxWidth="405.0" minWidth="10.0" prefWidth="405.0" />
@@ -29,9 +29,9 @@
                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                 </rowConstraints>
                 <Label text="%login.username" GridPane.halignment="RIGHT" />
-                <TextField fx:id="usernameTF" GridPane.columnIndex="1" />
+                <TextField fx:id="usernameTF" onAction="#loginHandler" GridPane.columnIndex="1" />
                 <Label text="%login.password" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-                <PasswordField fx:id="passwordTF" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <PasswordField fx:id="passwordTF" onAction="#loginHandler" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                 <Button mnemonicParsing="false" onAction="#loginHandler" text="%login.login" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
             </GridPane>
         </VBox>

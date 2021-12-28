@@ -10,6 +10,7 @@ import javafx.scene.control.TextField;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,21 +32,17 @@ public class Login extends Base implements Initializable {
 
 
     // Validate Credentials with Database
-    private long validateCredentials(SQLException ex, ResultSet results) {
+    private long validateCredentials(ResultSet rs, String user, String password) {
         long result = -1L;
-        if (ex == null) {
-            final String username = usernameTF.getText();
-            final String password = passwordTF.getText();
-            try {
-                    if (results.next() && (results.getString("Password").trim().equals(passwordTF.getText().trim()) || username == "test" && password == "test"))
-                {
-                    result = results.getLong("User_ID");
+                try {
+                    if ((rs.next() && (rs.getString("Password").trim().equals(password.trim()) || user == "test" && password == "test"))) {
+                        result = rs.getInt("User_ID");
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
-            }
-                    catch (SQLException ex_v) {
-                        System.out.println(ex_v);
-            }
-        }
+
+
         return result;
     }
 
@@ -57,9 +54,9 @@ public class Login extends Base implements Initializable {
 
         if (user.length() != 0 && pass.length() != 0) {
 
-            final List<Object> args = new ArrayList<>();
-            args.add(user);
-            final long userID = executeQuery("SELECT User_ID, Password " + "FROM users " + "WHERE User_Name = ? " + "LIMIT 1", args, this::validateCredentials);
+            String stmt = "SELECT User_ID, Password FROM users WHERE User_Name = '" + user + "'";
+            makeQuery(stmt);
+            final long userID = validateCredentials(getResult(), user, pass);
 
             if (userID != -1) {
                 System.out.println(user);
@@ -92,6 +89,9 @@ public class Login extends Base implements Initializable {
         location.setText(Loc.getZone().getID()); // timezone label
     }
 
+    public void onEnter(ActionEvent event) {
+        loginHandler(event);
+    }
 
 
     // Go to next Screen

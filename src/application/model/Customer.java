@@ -1,6 +1,6 @@
 package application.model;
 
-public class Customer extends Record{
+public class Customer extends Record {
     private String customerName;
     private String address;
     private String postalCode;
@@ -8,8 +8,8 @@ public class Customer extends Record{
     private String division;
     private String country;
 
-    public Customer(long custID, String customerName, String address, String postalCode, String phone, String division, String country) {
-        super(custID);
+    public Customer(int id, String customerName, String address, String postalCode, String phone, String division, String country) {
+        super(id);
         setCustomerName(customerName);
         setAddress(address);
         setPostalCode(postalCode);
