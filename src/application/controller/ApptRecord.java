@@ -3,21 +3,28 @@ package application.controller;
 import application.model.Appointment;
 import application.model.Contact;
 import application.model.Customer;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 import static application.util.DAOimpl.getAllContacts;
+import static application.util.DAOimpl.getAllCustomers;
 
 public class ApptRecord extends Base{
+
+    Boolean formTypeNew = true;
+    Appointment formAppointment = null;
+    ObservableList<Contact> allContacts;
 
     @FXML
     Text apptRecordTitle;
@@ -26,7 +33,7 @@ public class ApptRecord extends Base{
     @FXML
     TextField userId;
     @FXML
-    ComboBox apptType;
+    ComboBox<String> apptType;
     @FXML
     ComboBox<Customer> customerComboBox;
     @FXML
@@ -46,6 +53,7 @@ public class ApptRecord extends Base{
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         setComboBoxes();
+        populateForm();
     }
 
     // set record title depending on button pressed (pass variable from controller)
@@ -54,8 +62,10 @@ public class ApptRecord extends Base{
      * @param actionEvent when clicking the "Cancel" button
      * @throws IOException exceptions unload
      */
-    public void cancelButton(ActionEvent actionEvent) throws IOException {
-        switchScene("apptTable");
+    @FXML
+    private void cancelButton(ActionEvent actionEvent) throws IOException {
+        Stage stage = (Stage)((Button)actionEvent.getSource()).getScene().getWindow();
+        stage.close();
     }
 
     // receive parameters
@@ -66,26 +76,80 @@ public class ApptRecord extends Base{
         switch (action) {
             case "add":
                 apptRecordTitle.setText("Add New Appointment");
+                formTypeNew = true;
                 break;
             case "edit" :
                 apptRecordTitle.setText("Edit Existing Appointment");
+                formTypeNew = false;
                 break;
             default:
                 break;
         }
+        formAppointment = appointment;
 
-        // TODO: Populate Form
-        apptId.setText(String.valueOf(appointment.getId()));
-        apptTitle.setText(appointment.getTitle());
-        apptDesc.setText(appointment.getDescription());
+    }
+
+    // TODO: Populate Form
+    private void populateForm() {
+        System.out.println("Populating Form...");
+        // set id
+
+        if (!formTypeNew) {
+            apptId.setText(String.valueOf(formAppointment.getId()));
+            apptTitle.setText(formAppointment.getTitle());
+            apptDesc.setText(formAppointment.getDescription());
+            apptLoc.setText(formAppointment.getLocation());
+
+            // TODO: Set combo box values
+            Contact apptContact = allContacts.get(formAppointment.getContactId() - 1);
+            System.out.println(apptContact);
+            contactComboBox.setValue(apptContact);
+
+            Customer apptCustomer = getAllCustomers().get(formAppointment.getCustomerId() - 1);
+            customerComboBox.setValue(apptCustomer);
+
+            // TODO: Set dates
+
+        }
     }
 
     /*  ======================
-        COMBO BOX MANAGEMENT
+        TODO: COMBO BOX MANAGEMENT
         ======================*/
-    public void setComboBoxes() {
-        System.out.println("Setting Contacts Combo Box.");
-        contactComboBox.setItems(getAllContacts());
+    private void setComboBoxes() {
+        System.out.println("Starting Combo box Population...");
+        setContactComboBox();
+        setCustomerComboBox();
+        setAppointmentType();
+
     }
 
+
+    private void setContactComboBox() {
+        System.out.println("Setting Contacts Combo Box...");
+        allContacts = getAllContacts();
+        contactComboBox.setItems(allContacts);
+        contactComboBox.setPromptText("You must select a contact.");
+
+
+    }
+
+    private void getContact(ActionEvent event) {
+        StringBuilder sb = new StringBuilder("");
+        Contact contact = contactComboBox.getSelectionModel().getSelectedItem();
+        if (contact == null) {
+            System.out.println("CB: Null");
+        } else {
+            System.out.println("CB: " + contact.getName());
+        }
+    }
+
+    private void setCustomerComboBox() {
+        System.out.println("Setting Customer Combo Box...");
+        customerComboBox.setItems(getAllCustomers());
+        customerComboBox.setPromptText("You must select a customer.");
+    }
+
+    private void setAppointmentType() {
+    }
 }

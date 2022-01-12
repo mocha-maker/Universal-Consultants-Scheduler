@@ -98,7 +98,7 @@
                   <HBox alignment="BOTTOM_RIGHT" prefHeight="100.0" prefWidth="200.0" spacing="4.0" GridPane.columnIndex="3" GridPane.rowIndex="7">
                      <children>
                         <Button mnemonicParsing="false" text="Submit" />
-                        <Button mnemonicParsing="false" text="Cancel" />
+                        <Button mnemonicParsing="false" text="Cancel" onAction="#cancelButton"/>
                      </children>
                      <opaqueInsets>
                         <Insets />

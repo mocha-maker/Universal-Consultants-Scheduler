@@ -37,7 +37,7 @@ public class ApptTable extends Base {
     public TableColumn<?,?> apptType;
     public TableColumn<?,?> apptStart;
     public TableColumn<?,?> apptEnd;
-    public TableColumn<?,?> apptContact;
+    public TableColumn<?,?> apptContactID;
     public TableColumn<?,?> apptCustID;
     public TableColumn<?,?> apptUserID;
 
@@ -61,7 +61,7 @@ public class ApptTable extends Base {
         apptType.setCellValueFactory(new PropertyValueFactory<>("type"));
         apptStart.setCellValueFactory(new PropertyValueFactory<>("start"));
         apptEnd.setCellValueFactory(new PropertyValueFactory<>("end"));
-        apptContact.setCellValueFactory(new PropertyValueFactory<>("contact"));
+        apptContactID.setCellValueFactory(new PropertyValueFactory<>("contactId"));
         apptCustID.setCellValueFactory(new PropertyValueFactory<>("customerId"));
         apptUserID.setCellValueFactory(new PropertyValueFactory<>("userId"));
     }

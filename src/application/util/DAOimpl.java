@@ -140,7 +140,7 @@ public class DAOimpl extends DAO {
                 String apptStart = dateToString(getLocalDateTime(rs.getTimestamp("Start")),"hh:mm a");
                 String apptEnd = dateToString(getLocalDateTime(rs.getTimestamp("End")),"hh:mm a");
 
-                String apptContact = rs.getString("Contact_Name");
+                int apptContact = rs.getInt("Contact_ID");
                 int apptCustID = rs.getInt("Customer_ID");
                 int apptUserID = rs.getInt("User_ID");
 

@@ -71,4 +71,9 @@ public class Customer extends Record {
     public String getCountry() {
         return country;
     }
+
+    @Override
+    public String toString() {
+        return ("#" + id + " - " + customerName);
+    }
 }
