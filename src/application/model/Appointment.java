@@ -1,5 +1,7 @@
 package application.model;
 
+import java.time.LocalDateTime;
+
 public class Appointment extends Record {
 
     private String title;

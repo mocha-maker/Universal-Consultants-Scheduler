@@ -8,12 +8,12 @@ public class Customer extends Record {
     private String division;
     private String country;
 
-    public Customer(int id, String customerName, String address, String postalCode, String phone, String division, String country) {
+    public Customer(int id, String customerName, String phone, String address, String postalCode, String division, String country) {
         super(id);
         setCustomerName(customerName);
+        setPhone(phone);
         setAddress(address);
         setPostalCode(postalCode);
-        setPhone(phone);
         setDivision(division);
         setCountry(country);
     }

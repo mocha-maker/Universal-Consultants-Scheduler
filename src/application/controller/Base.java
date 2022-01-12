@@ -8,6 +8,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -16,6 +17,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -58,31 +60,48 @@ public abstract class Base extends DAO implements Initializable {
         this.vController = vController;
     }
 
-    public void switchScene(MouseEvent event, String fileName) throws IOException {
-        view = FXMLLoader.load(Objects.requireNonNull(getClass().getResource(appf + fileName + ".fxml")));
+    protected FXMLLoader setLoader(String fileName) {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource(appf + fileName + ".fxml"));
+        return loader;
+    }
+
+    public void switchScene(String fileName) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource(appf + fileName + ".fxml"));
+        view = loader.load();
         mainPane.getChildren().setAll(view);
-        // sceneHistory.add(view); TODO: back button functionality
+        loader.getController();
+    }
+
+    public void popupScene(Parent root, String title) throws IOException {
+        Stage stage = new Stage(); // new Stage aka Window
+
+        // Create New Scene
+        Scene scene = new Scene(root);
+        stage.setTitle(title); // Window Title
+        stage.setScene(scene); // Load Scene on Stage
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.showAndWait(); // Show Stage
     }
 
 
     @FXML
     private void menuAppointment(MouseEvent event) throws IOException {
-        switchScene(event,"appt");
+        switchScene("appt");
     }
 
     @FXML
     private void menuCalendar(MouseEvent event) throws IOException {
-        switchScene(event,"cal");
+        switchScene("cal");
     }
 
     @FXML
     private void menuCustomers(MouseEvent event) throws IOException {
-        switchScene(event,"cust");
+        switchScene("cust");
     }
 
     @FXML
     private void menuReports(MouseEvent event) throws IOException {
-        switchScene(event,"reports");
+        switchScene("reports");
     }
 
     @FXML
@@ -94,15 +113,13 @@ public abstract class Base extends DAO implements Initializable {
             errorMessage("Loading Error", "Failed to load login window.");
         }
     }
-
+// TODO: Remove Back Buttons
     @FXML
     private void handleBackButton(ActionEvent event) throws IOException {
 /*        sceneHistory.pop();
         mainPane.getChildren().setAll(sceneHistory.pop());*/
 
     }
-
-
 
 
 

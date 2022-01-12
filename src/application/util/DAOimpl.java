@@ -1,13 +1,15 @@
 package application.util;
 
 import application.model.Appointment;
+import application.model.Contact;
 import application.model.Customer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+
+import static application.util.Loc.*;
 
 public class DAOimpl extends DAO {
 
@@ -77,7 +79,7 @@ public class DAOimpl extends DAO {
 
         try {
             System.out.println("Querying Customers Database.");
-            makeQuery("SELECT * FROM customers JOIN first_level_divisions USING (Division_ID) JOIN countries USING (Country_ID)");
+            prepQuery("SELECT * FROM customers JOIN first_level_divisions USING (Division_ID) JOIN countries USING (Country_ID)");
 
             ResultSet rs = getResult();
             System.out.println("Retrieved Results.");
@@ -121,7 +123,7 @@ public class DAOimpl extends DAO {
 
         try {
             System.out.println("Querying Appointment Database.");
-            makeQuery("SELECT * FROM appointments JOIN contacts USING (Contact_ID) JOIN customers USING (Customer_ID) JOIN users USING (User_ID)");
+            prepQuery("SELECT * FROM appointments JOIN contacts USING (Contact_ID) JOIN customers USING (Customer_ID) JOIN users USING (User_ID)");
             ResultSet rs = getResult();
             System.out.println("Retrieved Results.");
             int i = 0;
@@ -135,8 +137,8 @@ public class DAOimpl extends DAO {
                 String apptLoc = rs.getString("Location");
                 String apptType = rs.getString("Type");
 
-                String apptStart = rs.getTimestamp("Start").toString();
-                String apptEnd = rs.getTimestamp("End").toString();
+                String apptStart = dateToString(getLocalDateTime(rs.getTimestamp("Start")),"hh:mm a");
+                String apptEnd = dateToString(getLocalDateTime(rs.getTimestamp("End")),"hh:mm a");
 
                 String apptContact = rs.getString("Contact_Name");
                 int apptCustID = rs.getInt("Customer_ID");
@@ -160,9 +162,6 @@ public class DAOimpl extends DAO {
                 i++;
                 System.out.println("Appointment added to Observable List. (" + i + ")");
 
-                // Testing SQL time conversion to Local Time
-                LocalDateTime localDateTime = rs.getTimestamp("Start").toInstant().atZone(ZoneId.of("UTC")).toLocalDateTime();
-                System.out.println(localDateTime);
             }
         } catch (SQLException ex) {
             printSQLException(ex);
@@ -171,12 +170,40 @@ public class DAOimpl extends DAO {
         return allAppointments;
     }
 
+    public static ObservableList<Contact> getAllContacts() {
+        ObservableList<Contact> allContacts = FXCollections.observableArrayList();
 
-    // Convert java.sql.Date to LocalDateTime
-    public static LocalDateTime getLocalDateTime(Time x) {
-        LocalDateTime localDateTime = x.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        try {
+            System.out.println("Querying Contacts Database.");
+            prepQuery("SELECT * FROM contacts");
+            ResultSet rs = getResult();
+            System.out.println("Retrieved Results.");
+            int i = 0;
+            while (rs.next()) {
 
-        return localDateTime;
+                // set result to variables
+                System.out.println("Setting Results to Contact Variables.");
+                int contact_id = rs.getInt("Contact_ID");
+                String contact_name = rs.getString("Contact_Name");
+                String email = rs.getString("Email");
+
+                // construct Contact object using result
+                System.out.println("Constructing Contact Object.");
+                Contact contactResult = new Contact(contact_id,
+                        contact_name,
+                        email);
+
+                // add Contact object to Observable List
+                allContacts.add(contactResult);
+                i++;
+                System.out.println("Contact added to Observable List. (" + i + ")");
+
+            }
+        } catch (SQLException ex) {
+            printSQLException(ex);
+        }
+        System.out.println("Retrieving Observable List.");
+        return allContacts;
     }
 
     // end of class

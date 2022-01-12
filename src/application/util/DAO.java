@@ -18,11 +18,14 @@ public abstract class DAO extends DBC{
 
 
     /* ======================
-        EXECUTE QUERY LAMBDA
+        QUERY LAMBDA
        ======================*/
 
-
-    public static void makeQuery(String q) {
+    /**
+     *
+     * @param q
+     */
+    public static void prepQuery(String q) {
 
         try {
             sm = DBC.getConnection().createStatement();
@@ -33,28 +36,18 @@ public abstract class DAO extends DBC{
                     q.toLowerCase().startsWith("insert")||
                     q.toLowerCase().startsWith("update"))
                 sm.executeUpdate(q);
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException ex) {
+            printSQLException(ex);
         }
     }
 
+    /**
+     *
+     * @return rs - ResultSet
+     */
     public static ResultSet getResult(){
         return rs;
     }
-
-
-    /* ======================
-        ADDERS
-       ======================*/
-
-    // add new record
-
-
-
-    /* ======================
-        UPDATERS
-       ======================*/
-
 
 
     /* ======================

@@ -23,12 +23,12 @@
       <AnchorPane prefHeight="25.0" prefWidth="680.0">
          <AnchorPane prefWidth="300.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
             <HBox prefWidth="200.0">
-               <Button mnemonicParsing="false" text="New">
+               <Button mnemonicParsing="false" text="New" onAction="#toApptRecord">
                   <HBox.margin>
                      <Insets right="10.0"/>
                   </HBox.margin>
                </Button>
-               <Button mnemonicParsing="false" text="Update">
+               <Button mnemonicParsing="false" text="Update" onAction="#toApptRecord">
                   <HBox.margin>
                      <Insets right="10.0"/>
                   </HBox.margin>

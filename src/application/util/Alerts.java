@@ -41,7 +41,7 @@ public final class Alerts {
      * Info Alert Constructor
      * @param msg the message to show in dialog
      */
-    static void infoMessage(String msg) {
+    public static void infoMessage(String msg) {
         // Create alert and set parameters
         Alert error = new Alert(Alert.AlertType.INFORMATION);
         error.setTitle("Information");

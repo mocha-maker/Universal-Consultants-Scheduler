@@ -10,10 +10,7 @@ import javafx.scene.control.TextField;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
 
 import static application.util.Alerts.*;
@@ -55,7 +52,7 @@ public class Login extends Base implements Initializable {
         if (user.length() != 0 && pass.length() != 0) {
 
             String stmt = "SELECT User_ID, Password FROM users WHERE User_Name = '" + user + "'";
-            makeQuery(stmt);
+            prepQuery(stmt);
             final long userID = validateCredentials(getResult(), user, pass);
 
             if (userID != -1) {

@@ -1,13 +1,26 @@
 package application.controller;
 
 import application.model.Appointment;
+import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import org.w3c.dom.events.MouseEvent;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import static application.util.Alerts.errorMessage;
+import static application.util.Alerts.infoMessage;
 import static application.util.DAOimpl.getAllAppointments;
 
 public class ApptTable extends Base {
@@ -59,6 +72,48 @@ public class ApptTable extends Base {
      */
     public void updateAppointmentsTable() {
          allAppointmentsTable.setItems(getAllAppointments());
+    }
+
+
+    /*  ======================
+        Event Handling
+        ======================*/
+    /**
+     * Open Appointment Record
+     * TODO: Update record title depending on which button is clicked
+     */
+    public void toApptRecord(ActionEvent e) throws IOException {
+       // Declare Local Variables
+        // record which button was clicked
+        String button = ((Button)e.getSource()).getText();
+        System.out.println(button);
+        String action = "add";
+        if ( button.contains("New") ) {
+            action = "add";
+        } else if ( button.contains("Update") ) {
+            action = "edit";
+        }
+        System.out.println("Action needed = " + action);
+
+        // capture selected appointment from table
+        Appointment appointment = allAppointmentsTable.getSelectionModel().getSelectedItem();
+
+        if (appointment != null || action == "add") {
+            // TODO: Transfer parameters to Controller
+            //System.out.println(getSceneLoader("ApptRecord").getController().toString());
+            FXMLLoader loader = setLoader("ApptRecord");
+            Parent root = loader.load();
+
+            ApptRecord controller = loader.getController();
+            controller.getParams(action, appointment);
+
+            popupScene(root, "Appointment Record");
+
+             // send button action and table row item
+        } else if ( action == "edit" && appointment == null){
+            infoMessage("Please select a record for modification.");
+        }
+
     }
 
 }

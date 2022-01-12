@@ -19,7 +19,6 @@
    <children>
       <VBox>
          <children>
-            <Button onAction="#handleBackButton" mnemonicParsing="false" text="Back" />
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Add New Customer">
                <VBox.margin>
                   <Insets bottom="25.0" top="25.0" />
