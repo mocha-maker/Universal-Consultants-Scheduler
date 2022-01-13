@@ -1,5 +1,6 @@
 package application.controller;
 
+import application.model.User;
 import application.util.Loc;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -14,6 +15,8 @@ import java.time.ZonedDateTime;
 import java.util.ResourceBundle;
 
 import static application.util.Alerts.*;
+import static application.util.DAOimpl.setActiveUser;
+import static java.lang.Integer.parseInt;
 
 
 public class Login extends Base implements Initializable {
@@ -72,6 +75,8 @@ public class Login extends Base implements Initializable {
                 passwordTF.setText("");
             }
             Reports.loginActivity(Loc.toUTCZDT(ZonedDateTime.now()), user, result);
+            User loggedUser = new User((int) userID,usernameTF.getText());
+            setActiveUser(loggedUser);
 
         } else {
             errorMessage("Login Error", Loc.getBundle().getString("error.loginEmpty"));

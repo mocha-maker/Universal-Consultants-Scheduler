@@ -3,6 +3,7 @@ package application.util;
 import application.model.Appointment;
 import application.model.Contact;
 import application.model.Customer;
+import application.model.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -13,6 +14,25 @@ import static application.util.Loc.*;
 
 public class DAOimpl extends DAO {
 
+    // for use in appointment creation and logging other activity
+    private static User activeUser;
+
+    /**
+     * setActiveUser
+     * Record Active User upon log in
+     * @param loggedUser the user who successfully logged into this session
+     */
+    public static void setActiveUser(User loggedUser) {
+        activeUser = loggedUser;
+    }
+
+    /**
+     * getActiveUser
+     * @return activeUser - the recorded user who logged into this session
+     */
+    public static User getActiveUser() {
+        return activeUser;
+    }
 
     /*  ======================
         ADD OBJECTS
@@ -20,15 +40,34 @@ public class DAOimpl extends DAO {
         Adds objects to Database.
         */
 
+    /**
+     *
+     * @param newCust
+     */
     public static void addCust(Customer newCust) {
+        // sqlquery to add new customer
 
     }
 
+    /**
+     *
+     * @param newAppt
+     */
     public static void addAppt(Appointment newAppt) {
 
+        // check if new appointments times are valid
+        // 1. Appointment is on the same day locally
+        // 2. Appointment is within business hours
+            // error if invalid
+
+        // check if new appointments times overlap with another appointment for the same customer and contact
+            // error if overlap
+
+        // if no issues -> sqlquery to add appointment
+
     }
 
-        /*  ======================
+    /*  ======================
         UPDATE OBJECTS
         ======================
         retrieves existing object using the record id
@@ -74,6 +113,10 @@ public class DAOimpl extends DAO {
         For use for TableViews
        ======================*/
 
+    /**
+     * Queries DB to build a new Observable list
+     * @return
+     */
     public static ObservableList<Customer> getAllCustomers() {
         ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
 
@@ -118,6 +161,10 @@ public class DAOimpl extends DAO {
         return allCustomers;
     }
 
+    /**
+     *
+     * @return
+     */
     public static ObservableList<Appointment> getAllAppointments() {
         ObservableList<Appointment> allAppointments = FXCollections.observableArrayList();
 
@@ -140,7 +187,7 @@ public class DAOimpl extends DAO {
                 String apptStart = dateToString(getLocalDateTime(rs.getTimestamp("Start")),"hh:mm a");
                 String apptEnd = dateToString(getLocalDateTime(rs.getTimestamp("End")),"hh:mm a");
 
-                int apptContact = rs.getInt("Contact_ID");
+                Contact apptContact = getAllContacts().get(rs.getInt("Contact_ID") - 1);
                 int apptCustID = rs.getInt("Customer_ID");
                 int apptUserID = rs.getInt("User_ID");
 
@@ -204,6 +251,69 @@ public class DAOimpl extends DAO {
         }
         System.out.println("Retrieving Observable List.");
         return allContacts;
+    }
+
+    public static ObservableList<String> getAppointmentTypes() {
+        ObservableList<String> allTypes = FXCollections.observableArrayList();
+
+        try {
+            System.out.println("Querying Appointments Database for Unique Types.");
+            prepQuery("SELECT DISTINCT Type FROM appointments");
+            ResultSet rs = getResult();
+            System.out.println("Retrieved Results.");
+            int i = 0;
+            while (rs.next()) {
+
+                // set result to variables
+                System.out.println("Setting Results to Appointment Type.");
+                String typeResult = rs.getString("Type");
+                // add Type String to Observable List
+                allTypes.add(typeResult);
+                i++;
+                System.out.println(typeResult + " Type added to Observable List. (" + i + ")");
+            }
+        } catch (SQLException ex) {
+            printSQLException(ex);
+        }
+        System.out.println("Retrieving Observable List.");
+        return allTypes;
+    }
+
+    /*  ======================
+        DELETE OBJECTS
+        ======================
+        Deleted objects from Database.
+        */
+
+    /**
+     * TODO: create customer deletion
+     * @param cust
+     */
+    public static void deleteCust(Customer cust) {
+        // retrieve customer id
+
+        // sqlquery to check # of appointments associated with customer
+
+        // if no appointments -> delete
+
+            // sqlquery to delete record
+
+            // give alert on successful deletion
+
+        // if appointments exist -> give error
+
+    }
+
+    /**
+     * TODO: create appointment cancellation
+     * @param appt
+     */
+    public static void cancelAppt(Appointment appt) {
+        // retrieve customer id
+
+        // sqlquery to delete record
+
+        // give alert on successful deletion
     }
 
     // end of class

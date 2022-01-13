@@ -60,7 +60,7 @@
             <TableColumn prefWidth="75.0" text="Type" fx:id="apptType"/>
             <TableColumn prefWidth="75.0" text="Start" fx:id="apptStart"/>
             <TableColumn prefWidth="75.0" text="End" fx:id="apptEnd"/>
-            <TableColumn prefWidth="75.0" text="ContactID" fx:id="apptContactID"/>
+            <TableColumn prefWidth="75.0" text="Contact" fx:id="apptContact"/>
             <TableColumn prefWidth="75.0" text="CustomerID" fx:id="apptCustID"/>
             <TableColumn prefWidth="75.0" text="UserID" fx:id="apptUserID"/>
          </columns>

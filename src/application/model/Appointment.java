@@ -8,11 +8,11 @@ public class Appointment extends Record {
     private String type;
     private String start;
     private String end;
-    private int contactId;
+    private Contact contact;
     private int customerId;
     private int userId;
 
-    public Appointment(int id, String title, String description, String location, String type, String start, String end, int contactId, int customerID, int userID) {
+    public Appointment(int id, String title, String description, String location, String type, String start, String end, Contact contact, int customerID, int userID) {
         super(id);
         setTitle(title);
         setDescription(description);
@@ -20,7 +20,7 @@ public class Appointment extends Record {
         setType(type);
         setStart(start);
         setEnd(end);
-        setContactId(contactId);
+        setContact(contact);
         setCustomerId(customerID);
         setUserId(userID);
     }
@@ -53,8 +53,8 @@ public class Appointment extends Record {
         this.end = end;
     }
 
-    public void setContactId(int contactId) {
-        this.contactId = contactId;
+    public void setContact(Contact contact) {
+        this.contact = contact;
     }
 
     public void setCustomerId(int customerId) {
@@ -91,8 +91,8 @@ public class Appointment extends Record {
         return end;
     }
 
-    public int getContactId() {
-        return contactId;
+    public Contact getContact() {
+        return contact;
     }
 
     public int getCustomerId() {

@@ -3,24 +3,23 @@ package application.controller;
 import application.model.Appointment;
 import application.model.Contact;
 import application.model.Customer;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ResourceBundle;
 
-import static application.util.DAOimpl.getAllContacts;
-import static application.util.DAOimpl.getAllCustomers;
+import static application.util.DAOimpl.*;
 
-public class ApptRecord extends Base{
+public class ApptRecord extends Base {
 
     Boolean formTypeNew = true;
     Appointment formAppointment = null;
@@ -33,7 +32,7 @@ public class ApptRecord extends Base{
     @FXML
     TextField userId;
     @FXML
-    ComboBox<String> apptType;
+    ComboBox<String> apptTypeComboBox;
     @FXML
     ComboBox<Customer> customerComboBox;
     @FXML
@@ -45,15 +44,19 @@ public class ApptRecord extends Base{
     @FXML
     TextField apptLoc;
     @FXML
-    DatePicker apptStart;
+    DatePicker apptDate;
     @FXML
-    DatePicker apptEnd;
+    ChoiceBox apptStart;
+    @FXML
+    ChoiceBox apptEnd;
 
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        // Set up form structures
         setComboBoxes();
-        populateForm();
+
+
     }
 
     // set record title depending on button pressed (pass variable from controller)
@@ -71,6 +74,8 @@ public class ApptRecord extends Base{
     // receive parameters
     public void getParams(String action, Appointment appointment) {
         System.out.println("Transferring parameters to new controller.");
+        System.out.println("Setting Selected Appointment.");
+        formAppointment = appointment;
 
         System.out.println("Updating Title String...");
         switch (action) {
@@ -85,32 +90,58 @@ public class ApptRecord extends Base{
             default:
                 break;
         }
-        formAppointment = appointment;
 
+        populateForm();
     }
 
     // TODO: Populate Form
     private void populateForm() {
         System.out.println("Populating Form...");
-        // set id
 
         if (!formTypeNew) {
+            userId.setText(String.valueOf(formAppointment.getUserId()));
             apptId.setText(String.valueOf(formAppointment.getId()));
             apptTitle.setText(formAppointment.getTitle());
             apptDesc.setText(formAppointment.getDescription());
             apptLoc.setText(formAppointment.getLocation());
 
+
             // TODO: Set combo box values
-            Contact apptContact = allContacts.get(formAppointment.getContactId() - 1);
+            Contact apptContact = formAppointment.getContact();
             System.out.println(apptContact);
             contactComboBox.setValue(apptContact);
 
-            Customer apptCustomer = getAllCustomers().get(formAppointment.getCustomerId() - 1);
+            Customer apptCustomer = getAllCustomers().get((formAppointment.getCustomerId() - 1));
             customerComboBox.setValue(apptCustomer);
 
-            // TODO: Set dates
+            apptTypeComboBox.setValue(formAppointment.getType());
+
+            // TODO: Set dates in datepicker
+            //apptStart.setValue(formAppointment.getStart());
+        } else {
+            // TODO: set id (auto-gen if new record)
+            apptId.setText(String.valueOf(genId()));
+            userId.setText(String.valueOf(getActiveUser().getId()));
 
         }
+    }
+
+    private int genId() {
+        // find the highest id of the table\
+        int id = 1;
+        try {
+            prepQuery("SELECT MAX(Appointment_ID) FROM appointments");
+            ResultSet rs = getResult();
+
+            while (rs.next()) {
+                id = rs.getInt("MAX(Appointment_ID)") + 1;
+
+            }
+        } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        System.out.println("Generated ID = " + id);
+        return id;
     }
 
     /*  ======================
@@ -118,19 +149,22 @@ public class ApptRecord extends Base{
         ======================*/
     private void setComboBoxes() {
         System.out.println("Starting Combo box Population...");
+        setAppointmentType();
         setContactComboBox();
         setCustomerComboBox();
-        setAppointmentType();
-
     }
 
 
     private void setContactComboBox() {
         System.out.println("Setting Contacts Combo Box...");
-        allContacts = getAllContacts();
-        contactComboBox.setItems(allContacts);
-        contactComboBox.setPromptText("You must select a contact.");
+        contactComboBox.setPromptText("Select a contact.");
 
+        try {
+            allContacts = getAllContacts();
+            contactComboBox.getItems().addAll(allContacts);
+        } catch (NullPointerException ex) {
+            System.out.println("No Contacts Found");
+        }
 
     }
 
@@ -146,10 +180,28 @@ public class ApptRecord extends Base{
 
     private void setCustomerComboBox() {
         System.out.println("Setting Customer Combo Box...");
-        customerComboBox.setItems(getAllCustomers());
-        customerComboBox.setPromptText("You must select a customer.");
+        customerComboBox.setPromptText("Select a customer.");
+
+        try {
+            customerComboBox.getItems().addAll(getAllCustomers());
+        } catch (NullPointerException ex) {
+            System.out.println("No Customers Found");
+        }
+
     }
 
     private void setAppointmentType() {
+        System.out.println("Setting Appointment Type Choices...");
+        apptTypeComboBox.setEditable(true);
+
+        try {
+            apptTypeComboBox.getItems().addAll(getAppointmentTypes());
+
+        } catch (NullPointerException ex) {
+            System.out.println("No Appointment Types Found");
+        }
+
     }
+
+
 }

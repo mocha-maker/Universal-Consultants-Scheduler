@@ -5,6 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
+<?import javafx.scene.control.cell.ChoiceBoxListCell?>
 <AnchorPane prefHeight="768.0" prefWidth="754.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.ApptRecord">
    <children>
       <VBox>
@@ -75,16 +76,17 @@
                         <Insets right="10.0" />
                      </GridPane.margin>
                   </Label>
-                  <TextField fx:id="apptId" GridPane.columnIndex="1" />
-                  <ComboBox fx:id="apptType" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <TextField fx:id="apptId" disable="true" editable="false" focusTraversable="false" mouseTransparent="true" GridPane.columnIndex="1" />
+                  <ComboBox fx:id="apptTypeComboBox" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <ComboBox fx:id="customerComboBox" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                  <TextField fx:id="userId" GridPane.columnIndex="3" />
+                  <TextField fx:id="userId" disable="true" editable="false" focusTraversable="false" mouseTransparent="true" GridPane.columnIndex="3" />
                   <ComboBox fx:id="contactComboBox" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
                   <TextField fx:id="apptTitle" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="3" />
                   <TextField fx:id="apptDesc" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="4" />
                   <TextField fx:id="apptLoc" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="5" />
-                  <DatePicker fx:id="apptStart" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                  <DatePicker fx:id="apptEnd"  layoutX="168.0" layoutY="193.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+                  <DatePicker fx:id="apptDate" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                  <ChoiceBox fx:id="apptStart" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                  <ChoiceBox fx:id="apptEnd"  layoutX="168.0" layoutY="193.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
                   <Label text="UserID:" GridPane.columnIndex="2" GridPane.halignment="RIGHT">
                      <GridPane.margin>
                         <Insets right="10.0" />

@@ -4,6 +4,7 @@ import application.util.Alerts;
 import application.util.DAO;
 import application.util.Loc;
 import javafx.collections.ObservableArray;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -121,7 +122,20 @@ public abstract class Base extends DAO implements Initializable {
 
     }
 
-
+/*    public <T> int generateID(ObservableList<T> list) {
+        // Generate ID and Validate against existing IDs - if exists regenerate, else continue
+        int newId = 1; // Initial ID (ID generation begins at 1, IDs are reused)
+        boolean isUnique = false; // initialize Uniqueness
+        while (!isUnique) {
+            for (T record : list) {
+                if (record.getId() == newId) {
+                    newId++;
+                }
+            }
+            isUnique = true; // boolean is updated only if no newId is created to break the loop
+        }
+        return newId;
+    }*/
 
 
     // end of class
