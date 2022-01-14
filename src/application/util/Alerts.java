@@ -56,7 +56,7 @@ public final class Alerts {
      * @param msg the message to show in dialog
      * @return boolean confirmation input
      */
-    static boolean confirmMessage(String title, String msg) {
+    public static boolean confirmMessage(String title, String msg) {
 
         // Create alert and set parameters
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);

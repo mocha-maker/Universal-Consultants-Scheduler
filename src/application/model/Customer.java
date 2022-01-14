@@ -74,6 +74,6 @@ public class Customer extends Record {
 
     @Override
     public String toString() {
-        return ("#" + id + " - " + customerName);
+        return (customerName + " (" + phone + ")");
     }
 }

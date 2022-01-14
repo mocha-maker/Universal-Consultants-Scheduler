@@ -1,6 +1,7 @@
 package application.controller;
 
 import application.model.Appointment;
+import application.model.Customer;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -19,9 +20,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import static application.util.Alerts.errorMessage;
-import static application.util.Alerts.infoMessage;
-import static application.util.DAOimpl.getAllAppointments;
+import static application.util.Alerts.*;
+import static application.util.DAOimpl.*;
 
 public class ApptTable extends Base {
     
@@ -115,5 +115,22 @@ public class ApptTable extends Base {
         }
 
     }
+    public void deleteApptRecord(ActionEvent e) {
+        Appointment appointment = allAppointmentsTable.getSelectionModel().getSelectedItem();
 
+        if (appointment != null) {
+            // prompt for confirmation
+            boolean confirm = confirmMessage("Delete Appointment", "Are you sure you want to delete Appointment ID " + appointment.getId() + " at " + appointment.getStart() + "?");
+
+            if (confirm) {
+                cancelAppt(appointment);
+                updateAppointmentsTable();
+            }
+
+        } else {
+            infoMessage("Please select a record for deletion.");
+        }
+    }
+
+    // end of class
 }

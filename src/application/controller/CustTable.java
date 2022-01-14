@@ -15,7 +15,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import static application.util.Alerts.confirmMessage;
 import static application.util.Alerts.infoMessage;
+import static application.util.DAOimpl.deleteCust;
 import static application.util.DAOimpl.getAllCustomers;
 
 
@@ -104,4 +106,21 @@ public class CustTable extends Base {
 
     }
 
+    public void deleteCustRecord(ActionEvent e) {
+        Customer customer = allCustomersTable.getSelectionModel().getSelectedItem();
+
+        if (customer != null) {
+            boolean confirm = confirmMessage("Delete Customer", "Are you sure you want to delete " + customer.getCustomerName() + " with  ID " + customer.getCustomerName() + "?");
+
+            if (confirm) {
+                deleteCust(customer);
+                updateCustomersTable();
+            }
+        } else {
+            infoMessage("Please select a record for deletion.");
+        }
+
+    }
+
+    // end of class
 }

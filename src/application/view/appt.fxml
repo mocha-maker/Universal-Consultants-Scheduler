@@ -33,7 +33,7 @@
                      <Insets right="10.0"/>
                   </HBox.margin>
                </Button>
-               <Button mnemonicParsing="false" text="Delete">
+               <Button mnemonicParsing="false" text="Delete" onAction="#deleteApptRecord">
                   <HBox.margin>
                      <Insets right="10.0"/>
                   </HBox.margin>

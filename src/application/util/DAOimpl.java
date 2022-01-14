@@ -7,9 +7,12 @@ import application.model.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import javax.xml.transform.Result;
 import java.sql.*;
 import java.time.LocalDateTime;
 
+import static application.util.Alerts.errorMessage;
+import static application.util.Alerts.infoMessage;
 import static application.util.Loc.*;
 
 public class DAOimpl extends DAO {
@@ -170,7 +173,7 @@ public class DAOimpl extends DAO {
 
         try {
             System.out.println("Querying Countries Database for Unique Items.");
-            prepQuery("SELECT * FROM countries");
+            prepQuery("SELECT * FROM countries ORDER BY Country ASC");
             ResultSet rs = getResult();
             System.out.println("Retrieved Results.");
             int i = 0;
@@ -196,7 +199,7 @@ public class DAOimpl extends DAO {
 
         try {
             System.out.println("Querying Regions Database for Unique Items.");
-            prepQuery("SELECT * FROM first_level_divisions JOIN countries USING (Country_ID) WHERE Country = '" + country +"'");
+            prepQuery("SELECT * FROM first_level_divisions JOIN countries USING (Country_ID) WHERE Country = '" + country +"' ORDER BY Division ASC");
             ResultSet rs = getResult();
             System.out.println("Retrieved Results.");
             int i = 0;
@@ -346,17 +349,49 @@ public class DAOimpl extends DAO {
      * @param cust
      */
     public static void deleteCust(Customer cust) {
-        // retrieve customer id
+        System.out.println("Attempting to delete customer record.");
 
-        // sqlquery to check # of appointments associated with customer
+        // retrieve customer id from object
+        int custId = cust.getId();
+        // sqlquery to count # of appointments associated with customer
+        try {
+            prepQuery("SELECT COUNT(*) AS Total_Appointments FROM appointments JOIN customers USING (Customer_ID) WHERE Customer_ID = " + custId);
+            ResultSet rs = getResult();
+            while (rs.next()) {
+                int apptCount = 0;
+                apptCount = rs.getInt("Total_Appointments");
 
-        // if no appointments -> delete
+                // if no appointments -> delete
+                if (apptCount == 0) {
 
-            // sqlquery to delete record
+                    try {
 
-            // give alert on successful deletion
+                        // sqlquery to delete record
+                        prepQuery("DELETE FROM customers WHERE Customer_ID = " + custId);
 
-        // if appointments exist -> give error
+                        // sqlquery to check if record no longer exists
+                        prepQuery("SELECT COUNT(*) AS Count FROM customers WHERE Customer_ID = " + custId);
+                        rs = getResult();
+                        while (rs.next()) {
+                            Integer count = getResult().getInt("Count");
+                            if ( count == 0 ) {
+                                // give alert on successful deletion
+                                infoMessage("Customer ID " + custId + " and Name '" + cust.getCustomerName() + "' Successfully deleted.");
+                            } else {
+                                errorMessage("Delete Customer", "Unable to delete customer.");
+                            }
+                        }
+                    } catch (SQLException e) {
+                        printSQLException(e);
+                    }
+                    } else {
+                    // if appointments exist -> give error
+                    errorMessage("Referential Integrity", "Cannot delete this customer record due to having " + apptCount + " associated appointments.");
+                }
+            }
+        } catch (SQLException ex) {
+            printSQLException(ex);
+        }
 
     }
 
@@ -365,12 +400,34 @@ public class DAOimpl extends DAO {
      * @param appt
      */
     public static void cancelAppt(Appointment appt) {
-        // retrieve customer id
+        System.out.println("Attempting to delete appointment record.");
 
-        // sqlquery to delete record
+        // retrieve customer id from object
+        int apptId = appt.getId();
 
-        // give alert on successful deletion
+        try {
+            // sqlquery to delete record
+            prepQuery("DELETE FROM appointments WHERE Appointment_ID = " + apptId);
+
+            // check for record
+            prepQuery("SELECT COUNT(*) AS Count FROM appointments WHERE Appointment_ID = " + apptId);
+            ResultSet rs = getResult();
+            while (rs.next()) {
+                Integer count = getResult().getInt("Count");
+                if (count == 0) {
+                    // give alert on successful deletion
+                    infoMessage("Appointment with ID " + apptId + " successfully deleted.");
+                } else {
+                    errorMessage("Appointment Deletion", "Appointment not deleted.");
+                }
+            }
+
+        } catch (SQLException ex) {
+            printSQLException(ex);
+        }
+
     }
+
 
     // end of class
 }

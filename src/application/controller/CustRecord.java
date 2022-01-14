@@ -46,17 +46,17 @@ public class CustRecord extends Base {
 
     public void getParams(String action, Customer customer) {
         System.out.println("Transferring parameters to new controller.");
-        System.out.println("Setting Selected Appointment.");
+        System.out.println("Setting Selected Customer.");
         formCustomer = customer;
 
         System.out.println("Updating Title String...");
         switch (action) {
             case "add":
-                custRecordTitle.setText("Add New Appointment");
+                custRecordTitle.setText("Add New Customer");
                 formTypeNew = true;
                 break;
             case "edit" :
-                custRecordTitle.setText("Edit Existing Appointment");
+                custRecordTitle.setText("Edit Existing Customer");
                 formTypeNew = false;
                 break;
             default:

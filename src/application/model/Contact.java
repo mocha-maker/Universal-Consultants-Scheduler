@@ -38,6 +38,10 @@ public class Contact extends Record {
     // Override toString
     @Override
     public String toString() {
-        return ("#" + Integer.toString(id) + " - " + name + " (" + email + ")");
+        return ( name );
+    }
+
+    public String toReportString() {
+        return ( name + " (" + email + ")" );
     }
 }
