@@ -44,7 +44,7 @@
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Button mnemonicParsing="false" text="Submit" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="7" />
+                  <Button fx:id="saveButton" onAction="#saveCustomer" mnemonicParsing="false" text="Submit" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="7" />
                   <Label text="Customer ID:" GridPane.halignment="RIGHT">
                      <GridPane.margin>
                         <Insets right="10.0" />
@@ -80,7 +80,7 @@
                         <Insets right="10.0" />
                      </GridPane.margin>
                   </Label>
-                  <TextField fx:id="custID" maxWidth="100.0" prefHeight="23.0" prefWidth="103.0" GridPane.columnIndex="1" />
+                  <TextField fx:id="custID" disable="true" maxWidth="100.0" prefHeight="23.0" prefWidth="103.0" GridPane.columnIndex="1" />
                   <TextField fx:id="custName" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <ComboBox fx:id="country" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                   <TextField fx:id="address" GridPane.columnIndex="1" GridPane.rowIndex="3" />

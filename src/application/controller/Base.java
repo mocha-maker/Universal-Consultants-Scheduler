@@ -11,10 +11,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -114,12 +111,27 @@ public abstract class Base extends DAO implements Initializable {
             errorMessage("Loading Error", "Failed to load login window.");
         }
     }
+
+    /**
+     * Generic Pattern Validator
+     * @param field the text field to validate
+     * @param pattern the regex pattern to match input against
+     * @param msg the message to display on error
+     * @return validation status (true or false)
+     */
+    public boolean validation(TextField field, String pattern, String msg) {
+        if (!field.getText().matches(pattern)) {
+            errorMessage("", "Input contains invalid characters. " + msg);
+            return false;
+        }
+        return true;
+    }
+
 // TODO: Remove Back Buttons
     @FXML
-    private void handleBackButton(ActionEvent event) throws IOException {
-/*        sceneHistory.pop();
-        mainPane.getChildren().setAll(sceneHistory.pop());*/
-
+    public void exitButton(ActionEvent event) {
+        Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
+        stage.close();
     }
 
 /*    public <T> int generateID(ObservableList<T> list) {

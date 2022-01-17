@@ -10,6 +10,8 @@ import javafx.collections.ObservableList;
 import javax.xml.transform.Result;
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 
 import static application.util.Alerts.errorMessage;
 import static application.util.Alerts.infoMessage;
@@ -19,6 +21,7 @@ public class DAOimpl extends DAO {
 
     // for use in appointment creation and logging other activity
     private static User activeUser;
+    private static ObservableList<String> divisions = FXCollections.observableArrayList();
 
     /**
      * setActiveUser
@@ -38,9 +41,9 @@ public class DAOimpl extends DAO {
     }
 
     /*  ======================
-        ADD OBJECTS
+        ADD RECORDS
         ======================
-        Adds objects to Database.
+        Adds records to Database.
         */
 
     /**
@@ -48,8 +51,33 @@ public class DAOimpl extends DAO {
      * @param newCust
      */
     public static void addCust(Customer newCust) {
+        int index = newCust.getId();
+        Timestamp current = Timestamp.valueOf(LocalDateTime.now());
         // sqlquery to add new customer
+        try {
+            PreparedStatement ps = getConnection().prepareStatement("INSERT INTO customers VALUES (?,?,?,?,?,?,?,?,?,?)");
 
+            System.out.println("Setting Parameters.");
+            ps.setInt(1, index);
+            ps.setString(2, newCust.getCustomerName());
+            ps.setString(3, newCust.getAddress());
+            ps.setString(4, newCust.getPostalCode());
+            ps.setString(5, newCust.getPhone());
+            ps.setTimestamp(6, current);
+            ps.setString(7, getActiveUser().getUserName());
+            ps.setTimestamp(8, current);
+            ps.setString(9, getActiveUser().getUserName());
+            ps.setInt(10, getDivisionID(newCust.getDivision()));
+
+            try {
+                ps.executeUpdate();
+            } catch (SQLException ex2) {
+                ex2.printStackTrace();
+            }
+            infoMessage("Customer Created.");
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 
     /**
@@ -80,15 +108,58 @@ public class DAOimpl extends DAO {
         retrieves existing object using the record id
         */
 
-    public static void updateCust(int index, Customer newCust) {
-        // Check if customer exists at index
-        if (getAllCustomers().get(index) != null) {
-            getAllCustomers().set(index,newCust); // Replace customer data at index with newCust data
+    public static void updateCust(Customer newCust) {
+        int index = newCust.getId();
+        System.out.println("Customer ID is " + index);
+        Timestamp current = Timestamp.valueOf(LocalDateTime.now());
+        // sql query if customer record exists in db
+        try {
+            System.out.println("Querying Customer DB for existence of customer id.");
+            prepQuery("SELECT COUNT(Customer_ID) AS COUNT FROM customers WHERE Customer_ID = " + index);
+            ResultSet rs = getResult();
+            int count = 0;
+            while (rs.next()) {
+                 count = rs.getInt("COUNT");
+                }
+            if (count > 0) {
+                PreparedStatement ps = getConnection().prepareStatement("UPDATE customers SET " +
+                        "Customer_Name = ?," +
+                        "Phone = ?, " +
+                        "Address = ?, " +
+                        "Postal_Code = ?, " +
+                        "Last_Update = ?, " +
+                        "Last_Updated_By = ?, " +
+                        "Division_ID = ? " +
+                        "WHERE Customer_ID = " + index);
+
+                System.out.println("Setting Parameters.");
+                ps.setString(1,newCust.getCustomerName());
+                ps.setString(2,newCust.getPhone());
+                ps.setString(3,newCust.getAddress());
+                ps.setString(4,newCust.getPostalCode());
+                ps.setTimestamp(5,current);
+                ps.setString(6,getActiveUser().getUserName());
+                ps.setInt(7,getDivisionID(newCust.getDivision()));
+
+                try {
+                    ps.executeUpdate();
+                } catch (SQLException ex2) {
+                    ex2.printStackTrace();
+                }
+                infoMessage("Customer Updated.");
+            } else {
+                errorMessage("Update Customer", "Customer does not exist.");
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
+
     }
 
-    public static void updateAppt(int index, Appointment newAppt) {
-        // Check if appointment exists at index
+    public static void updateAppt(Appointment newAppt) {
+        int index = newAppt.getId();
+
+        // sql query if appointment record exists in db
         if (getAllAppointments().get(index) != null) {
             getAllAppointments().set(index,newAppt); // Replace appointment data at index with newAppt data
         }
@@ -104,9 +175,9 @@ public class DAOimpl extends DAO {
     public static boolean deleteCust(int custId) {
         // Retrieve Part Index from allParts
 
-        for (Customer c : getAllCustomers()) { // loop through all products
+        for (Customer c : getAllCustomers()) { // loop through all Customers
             if (c.getId() == custId) {
-                // if partId found, Remove Part
+                // if found, Remove Customer
                 getAllCustomers().remove(c); //
                 return true;
             }
@@ -428,6 +499,46 @@ public class DAOimpl extends DAO {
 
     }
 
+    public static int getDivisionID(String divisionName) {
+        System.out.println("Retrieving Division ID for Division " + divisionName);
+        int divId = 0;
+        try {
+            prepQuery("SELECT * FROM first_level_divisions WHERE Division = '" + divisionName +"'");
+            ResultSet rs = getResult();
+            while (rs.next()) {
+                divId = rs.getInt("Division_ID");
+                System.out.println("Division ID Retrieved = " + divId);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return divId;
+    }
+
+    /**
+     * Queries table for the first available ID to use in a new record
+     * @param table the table to be queried
+     * @return availableID the first available ID in the table queried
+     */
+    public static int getAvailableID(String table) {
+        int availableID = 1;
+
+        try {
+            prepQuery("SELECT * FROM " + table);
+            ResultSet rs = getResult();
+            while (rs.next()) {
+                if (availableID == rs.getInt(1)) {
+                    availableID++;
+                } else {
+                    break;
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return availableID;
+    }
 
     // end of class
 }

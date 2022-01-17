@@ -61,10 +61,7 @@ public class CustTable extends Base {
      * Updates Customer Table
      * used to populate tableview
      */
-    public void updateCustomersTable() {
-        allCustomersTable.setItems(getAllCustomers());
-
-    }
+    public void updateCustomersTable() { allCustomersTable.setItems(getAllCustomers()); }
 
     /*  ======================
         Event Handling
@@ -98,6 +95,7 @@ public class CustTable extends Base {
             controller.getParams(action, customer);
 
             popupScene(root, "Customer Record");
+            updateCustomersTable();
 
             // send button action and table row item
         } else if ( action == "edit" && customer == null){
@@ -110,7 +108,7 @@ public class CustTable extends Base {
         Customer customer = allCustomersTable.getSelectionModel().getSelectedItem();
 
         if (customer != null) {
-            boolean confirm = confirmMessage("Delete Customer", "Are you sure you want to delete " + customer.getCustomerName() + " with  ID " + customer.getCustomerName() + "?");
+            boolean confirm = confirmMessage("Delete Customer", "Are you sure you want to delete " + customer.getCustomerName() + " with  ID " + customer.getId() + "?");
 
             if (confirm) {
                 deleteCust(customer);

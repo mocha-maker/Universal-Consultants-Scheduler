@@ -1,5 +1,6 @@
 package application.util;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -25,9 +26,10 @@ public abstract class DAO extends DBC{
      *
      * @param q
      */
-    public static void prepQuery(String q) {
-
+    public static PreparedStatement prepQuery(String q) {
+        PreparedStatement ps = null;
         try {
+            ps = DBC.getConnection().prepareStatement(q);
             sm = DBC.getConnection().createStatement();
 
             if(q.toLowerCase().startsWith("select"))
@@ -39,6 +41,7 @@ public abstract class DAO extends DBC{
         } catch (SQLException ex) {
             printSQLException(ex);
         }
+        return ps;
     }
 
     /**

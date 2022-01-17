@@ -61,6 +61,7 @@ public abstract class Loc {
     // TODO: Convert LocalDateTime to Timestamp for recording into database
     public static Timestamp toTimestamp(LocalDateTime localDateTime) {
         Timestamp timestamp = Timestamp.valueOf(localDateTime);
+        
         return timestamp;
     }
 

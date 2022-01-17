@@ -10,7 +10,7 @@
       <padding>
          <Insets left="30.0" right="30.0" top="30.0" />
       </padding>
-      <Button mnemonicParsing="false" onAction="#handleBackButton" text="Back" />
+      <Button mnemonicParsing="false" text="Back" />
       <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Customers">
          <VBox.margin>
             <Insets bottom="25.0" top="25.0" />
