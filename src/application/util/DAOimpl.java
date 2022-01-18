@@ -51,6 +51,7 @@ public class DAOimpl extends DAO {
      * @param newCust
      */
     public static void addCust(Customer newCust) {
+
         int index = newCust.getId();
         Timestamp current = Timestamp.valueOf(LocalDateTime.now());
         // sqlquery to add new customer
@@ -86,6 +87,9 @@ public class DAOimpl extends DAO {
      */
     public static void addAppt(Appointment newAppt) {
 
+        int index = newAppt.getId();
+        Timestamp current = Timestamp.valueOf(LocalDateTime.now());
+
         // check if new appointments times are valid
         // 1. Appointment is on the same day locally
         // 2. Appointment is within business hours
@@ -95,9 +99,29 @@ public class DAOimpl extends DAO {
             // error if overlap
 
         // if no issues -> sqlquery to add appointment "INSERT INTO table (cols) VALUES(?,?,...)"
-        prepQuery("INSERT INTO appointments (" +
-                "VALUES(" +
-                "?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,)");
+        try {
+            PreparedStatement ps = getConnection().prepareStatement("INSERT INTO appointments " +
+                    "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+
+            System.out.println("Setting Parameters.");
+            ps.setInt(1, index);
+            ps.setString(2, newAppt.getTitle());
+            ps.setString(3, newAppt.getDescription());
+            ps.setString(4, newAppt.getLocation());
+            ps.setString(5, newAppt.getType());
+            ps.setTimestamp(6, Timestamp.valueOf(newAppt.getStart()));
+            ps.setTimestamp(7, Timestamp.valueOf(newAppt.getEnd()));
+            ps.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setString(9, getActiveUser().getUserName());
+            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setString(11, getActiveUser().getUserName());
+            ps.setInt(12, newAppt.getCustomerId());
+            ps.setInt(13, newAppt.getUserId());
+            ps.setInt(14, newAppt.getContact().getId());
+
+        } catch (SQLException ex) {
+
+        }
 
 
     }
@@ -512,7 +536,6 @@ public class DAOimpl extends DAO {
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
-
         return divId;
     }
 

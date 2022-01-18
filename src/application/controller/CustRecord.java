@@ -233,7 +233,6 @@ public class CustRecord extends Base {
             updateCust(newCust);
             exitButton(actionEvent);
         }
-
     }
 
 

@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
 import static application.util.DAOimpl.*;
@@ -43,12 +45,16 @@ public class ApptRecord extends Base {
     TextField apptDesc;
     @FXML
     TextField apptLoc;
+
     @FXML
-    DatePicker apptDate;
+    DatePicker apptStartDate;
     @FXML
-    ChoiceBox apptStart;
+    ChoiceBox apptStartHour, apptStartMinute, apptStartMeridiem;
+
     @FXML
-    ChoiceBox apptEnd;
+    DatePicker apptEndDate;
+    @FXML
+    ChoiceBox apptEndHour, apptEndMinute, apptEndMeridiem;
 
 
     @Override
@@ -152,6 +158,7 @@ public class ApptRecord extends Base {
         setAppointmentType();
         setContactComboBox();
         setCustomerComboBox();
+        setTimeChoices();
     }
 
 
@@ -168,15 +175,6 @@ public class ApptRecord extends Base {
 
     }
 
-    private void getContact(ActionEvent event) {
-        StringBuilder sb = new StringBuilder("");
-        Contact contact = contactComboBox.getSelectionModel().getSelectedItem();
-        if (contact == null) {
-            System.out.println("CB: Null");
-        } else {
-            System.out.println("CB: " + contact.getName());
-        }
-    }
 
     private void setCustomerComboBox() {
         System.out.println("Setting Customer Combo Box...");
@@ -187,7 +185,30 @@ public class ApptRecord extends Base {
         } catch (NullPointerException ex) {
             System.out.println("No Customers Found");
         }
+    }
 
+    private void setTimeChoices() {
+        ObservableList<Integer> hours = FXCollections.observableArrayList();
+        ObservableList<String> minutes = FXCollections.observableArrayList();
+        ObservableList<String> meridiems = FXCollections.observableArrayList();
+
+        for (int i = 1; i < 13; i++) {
+            hours.add(i);
+        }
+        for (int i = 0; i < 60; i+=5) {
+            minutes.add(String.format("%02d",i));
+        }
+
+        meridiems.addAll("AM","PM");
+
+        apptStartHour.setItems(hours);
+        apptEndHour.setItems(hours);
+
+        apptStartMinute.setItems(minutes);
+        apptEndMinute.setItems(minutes);
+
+        apptStartMeridiem.setItems(meridiems);
+        apptEndMeridiem.setItems(meridiems);
     }
 
     private void setAppointmentType() {
@@ -203,5 +224,39 @@ public class ApptRecord extends Base {
 
     }
 
+    @FXML
+    private void saveAppointment(ActionEvent actionEvent) {
+        // Record Time Values
+        String start = formatDateTime(apptStartDate.getValue(),apptStartHour.getValue().toString(),apptStartMinute.getValue().toString(),apptStartMeridiem.getValue().toString());
+        String end = formatDateTime(apptEndDate.getValue(),apptEndHour.getValue().toString(),apptEndMinute.getValue().toString(),apptEndMeridiem.getValue().toString());;
 
+        Appointment newAppt = new Appointment(Integer.parseInt(apptId.getText()),
+                apptTitle.getText(),
+                apptDesc.getText(),
+                apptLoc.getText(),
+                apptTypeComboBox.getValue(),
+                start,
+                end,
+                contactComboBox.getValue(),
+                customerComboBox.getValue().getId(),
+                Integer.parseInt(userId.getText()));
+
+        // check form type
+        if (formTypeNew) {
+            addAppt(newAppt);
+            exitButton(actionEvent);
+        } else {
+            updateAppt(newAppt);
+            exitButton(actionEvent);
+        }
+    }
+
+    // TODO: Move to Loc.java and add a LocalDateTime.parse(str, formatter); DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a")
+    private String formatDateTime(LocalDate date, String hour, String minute, String meridiem) {
+        String dateTime = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " " + hour + ":" + minute + " " + meridiem;
+        System.out.println(dateTime);
+        return dateTime;
+    }
+
+// end of class
 }
