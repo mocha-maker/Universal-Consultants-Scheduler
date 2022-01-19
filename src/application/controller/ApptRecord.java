@@ -15,13 +15,15 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
 import static application.util.DAOimpl.*;
+import static application.util.Loc.*;
 
-public class ApptRecord extends Base {
+public class ApptRecord extends RecordBase<Appointment> {
 
     Boolean formTypeNew = true;
     Appointment formAppointment = null;
@@ -113,7 +115,7 @@ public class ApptRecord extends Base {
 
 
             // TODO: Set combo box values
-            Contact apptContact = formAppointment.getContact();
+            Contact apptContact = getAllContacts().get(formAppointment.getContactId()-1);
             System.out.println(apptContact);
             contactComboBox.setValue(apptContact);
 
@@ -122,13 +124,22 @@ public class ApptRecord extends Base {
 
             apptTypeComboBox.setValue(formAppointment.getType());
 
-            // TODO: Set dates in datepicker
-            //apptStart.setValue(formAppointment.getStart());
+            // TODO: Set dates in datepicker and time choice boxes
+            apptStartDate.setValue(formAppointment.getStart().toLocalDateTime().toLocalDate());
+            apptStartHour.setValue(getHour(formAppointment.getStart().toLocalDateTime()));
+            apptStartMinute.setValue(getMinute(formAppointment.getStart().toLocalDateTime()));
+            apptStartMeridiem.setValue(getMeridiem(formAppointment.getStart().toLocalDateTime()));
+
+
+            apptEndDate.setValue(formAppointment.getEnd().toLocalDateTime().toLocalDate());
+            apptEndHour.setValue(getHour(formAppointment.getEnd().toLocalDateTime()));
+            apptEndMinute.setValue(getMinute(formAppointment.getEnd().toLocalDateTime()));
+            apptEndMeridiem.setValue(getMeridiem(formAppointment.getEnd().toLocalDateTime()));
+
         } else {
-            // TODO: set id (auto-gen if new record)
+            // set id (auto-gen if new record)
             apptId.setText(String.valueOf(genId()));
             userId.setText(String.valueOf(getActiveUser().getId()));
-
         }
     }
 
@@ -188,12 +199,12 @@ public class ApptRecord extends Base {
     }
 
     private void setTimeChoices() {
-        ObservableList<Integer> hours = FXCollections.observableArrayList();
+        ObservableList<String> hours = FXCollections.observableArrayList();
         ObservableList<String> minutes = FXCollections.observableArrayList();
         ObservableList<String> meridiems = FXCollections.observableArrayList();
 
         for (int i = 1; i < 13; i++) {
-            hours.add(i);
+            hours.add(String.format("%02d",i));
         }
         for (int i = 0; i < 60; i+=5) {
             minutes.add(String.format("%02d",i));
@@ -227,8 +238,8 @@ public class ApptRecord extends Base {
     @FXML
     private void saveAppointment(ActionEvent actionEvent) {
         // Record Time Values
-        String start = formatDateTime(apptStartDate.getValue(),apptStartHour.getValue().toString(),apptStartMinute.getValue().toString(),apptStartMeridiem.getValue().toString());
-        String end = formatDateTime(apptEndDate.getValue(),apptEndHour.getValue().toString(),apptEndMinute.getValue().toString(),apptEndMeridiem.getValue().toString());;
+        Timestamp start = toTimestamp(apptStartDate.getValue(),apptStartHour.getValue().toString(),apptStartMinute.getValue().toString(),apptStartMeridiem.getValue().toString());
+        Timestamp end = toTimestamp(apptEndDate.getValue(),apptEndHour.getValue().toString(),apptEndMinute.getValue().toString(),apptEndMeridiem.getValue().toString());;
 
         Appointment newAppt = new Appointment(Integer.parseInt(apptId.getText()),
                 apptTitle.getText(),
@@ -237,25 +248,59 @@ public class ApptRecord extends Base {
                 apptTypeComboBox.getValue(),
                 start,
                 end,
-                contactComboBox.getValue(),
+                contactComboBox.getValue().getId(),
                 customerComboBox.getValue().getId(),
                 Integer.parseInt(userId.getText()));
 
+        ObservableList<Object> params;
+
         // check form type
         if (formTypeNew) {
-            addAppt(newAppt);
+            params = toObservableList(newAppt.getId(),
+                    newAppt.getTitle(),
+                    newAppt.getDescription(),
+                    newAppt.getLocation(),
+                    newAppt.getType(),
+                    newAppt.getStart(),
+                    newAppt.getEnd(),
+                    getCurrentTime(),
+                    getActiveUser().getUserName(),
+                    getCurrentTime(),
+                    getActiveUser().getUserName(),
+                    newAppt.getCustomerId(),
+                    newAppt.getUserId(),
+                    newAppt.getContactId()
+            );
+            addRecord(newAppt,params);
             exitButton(actionEvent);
         } else {
-            updateAppt(newAppt);
+            params = toObservableList(newAppt.getTitle(),
+                    newAppt.getDescription(),
+                    newAppt.getLocation(),
+                    newAppt.getType(),
+                    newAppt.getStart(),
+                    newAppt.getEnd(),
+                    getCurrentTime(),
+                    getActiveUser().getUserName(),
+                    newAppt.getCustomerId(),
+                    newAppt.getUserId(),
+                    newAppt.getContactId(),
+                    newAppt.getId());
+            updateRecord(newAppt, params);
             exitButton(actionEvent);
         }
     }
 
-    // TODO: Move to Loc.java and add a LocalDateTime.parse(str, formatter); DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a")
-    private String formatDateTime(LocalDate date, String hour, String minute, String meridiem) {
-        String dateTime = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " " + hour + ":" + minute + " " + meridiem;
-        System.out.println(dateTime);
-        return dateTime;
+
+    public String getInsertStatement() {
+        return "INSERT INTO appointments " +
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    }
+
+    public String getUpdateStatement() {
+        return "UPDATE appointments " +
+                "SET Title = ?, Description = ?, Location = ?, Type = ?, Start = ?, End = ?, Last_Update = ?, Last_Updated_By = ?, Customer_ID = ?, User_ID = ?, Contact_ID = ? " +
+                "WHERE Appointment_ID = ?";
     }
 
 // end of class

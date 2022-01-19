@@ -31,7 +31,6 @@ public abstract class DAO extends DBC{
         try {
             ps = DBC.getConnection().prepareStatement(q);
             sm = DBC.getConnection().createStatement();
-
             if(q.toLowerCase().startsWith("select"))
                 rs=sm.executeQuery(q);
             if(q.toLowerCase().startsWith("delete")||

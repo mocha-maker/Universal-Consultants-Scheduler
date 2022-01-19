@@ -2,6 +2,8 @@ package application.controller;
 
 import application.model.Customer;
 import javafx.beans.binding.BooleanBinding;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -9,13 +11,16 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 
-import java.io.IOException;
+
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 import static application.util.DAOimpl.*;
+import static application.util.Loc.getCurrentTime;
 
-public class CustRecord extends Base {
+
+public class CustRecord extends RecordBase<Customer> {
 
     Customer formCustomer;
     Boolean formTypeNew = true;
@@ -225,14 +230,53 @@ public class CustRecord extends Base {
                                         division.getValue(),
                                         country.getValue());
 
+        ObservableList<Object> params;
+
+
         // check form type
         if (formTypeNew) {
-            addCust(newCust);
+            params = toObservableList(
+                    newCust.getId(),
+                    newCust.getCustomerName(),
+                    newCust.getPhone(),
+                    newCust.getAddress(),
+                    newCust.getPostalCode(),
+                    getCurrentTime(),
+                    getActiveUser().getUserName(),
+                    getCurrentTime(),
+                    getActiveUser().getUserName(),
+                    getDivisionID(newCust.getDivision())
+            );
+            addRecord(newCust,params);
             exitButton(actionEvent);
         } else {
-            updateCust(newCust);
+            params = toObservableList(newCust.getCustomerName(),
+                    newCust.getPhone(),
+                    newCust.getAddress(),
+                    newCust.getPostalCode(),
+                    getCurrentTime(),
+                    getActiveUser().getUserName(),
+                    getDivisionID(newCust.getDivision()),
+                    newCust.getId());
+            updateRecord(newCust,params);
             exitButton(actionEvent);
         }
+    }
+
+    public String getInsertStatement() {
+        return "INSERT INTO customers VALUES (?,?,?,?,?,?,?,?,?,?)";
+    }
+
+    public String getUpdateStatement() {
+        return "UPDATE customers SET " +
+                "Customer_Name = ?," +
+                "Phone = ?, " +
+                "Address = ?, " +
+                "Postal_Code = ?, " +
+                "Last_Update = ?, " +
+                "Last_Updated_By = ?, " +
+                "Division_ID = ? " +
+                "WHERE Customer_ID = ?";
     }
 
 

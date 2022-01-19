@@ -7,15 +7,14 @@ import application.model.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import javax.xml.transform.Result;
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Locale;
 
 import static application.util.Alerts.errorMessage;
 import static application.util.Alerts.infoMessage;
-import static application.util.Loc.*;
+import static application.util.Loc.getCurrentTime;
 
 public class DAOimpl extends DAO {
 
@@ -46,148 +45,12 @@ public class DAOimpl extends DAO {
         Adds records to Database.
         */
 
-    /**
-     *
-     * @param newCust
-     */
-    public static void addCust(Customer newCust) {
-
-        int index = newCust.getId();
-        Timestamp current = Timestamp.valueOf(LocalDateTime.now());
-        // sqlquery to add new customer
-        try {
-            PreparedStatement ps = getConnection().prepareStatement("INSERT INTO customers VALUES (?,?,?,?,?,?,?,?,?,?)");
-
-            System.out.println("Setting Parameters.");
-            ps.setInt(1, index);
-            ps.setString(2, newCust.getCustomerName());
-            ps.setString(3, newCust.getAddress());
-            ps.setString(4, newCust.getPostalCode());
-            ps.setString(5, newCust.getPhone());
-            ps.setTimestamp(6, current);
-            ps.setString(7, getActiveUser().getUserName());
-            ps.setTimestamp(8, current);
-            ps.setString(9, getActiveUser().getUserName());
-            ps.setInt(10, getDivisionID(newCust.getDivision()));
-
-            try {
-                ps.executeUpdate();
-            } catch (SQLException ex2) {
-                ex2.printStackTrace();
-            }
-            infoMessage("Customer Created.");
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    /**
-     *
-     * @param newAppt
-     */
-    public static void addAppt(Appointment newAppt) {
-
-        int index = newAppt.getId();
-        Timestamp current = Timestamp.valueOf(LocalDateTime.now());
-
-        // check if new appointments times are valid
-        // 1. Appointment is on the same day locally
-        // 2. Appointment is within business hours
-            // error if invalid
-
-        // check if new appointments times overlap with another appointment for the same customer and contact
-            // error if overlap
-
-        // if no issues -> sqlquery to add appointment "INSERT INTO table (cols) VALUES(?,?,...)"
-        try {
-            PreparedStatement ps = getConnection().prepareStatement("INSERT INTO appointments " +
-                    "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-
-            System.out.println("Setting Parameters.");
-            ps.setInt(1, index);
-            ps.setString(2, newAppt.getTitle());
-            ps.setString(3, newAppt.getDescription());
-            ps.setString(4, newAppt.getLocation());
-            ps.setString(5, newAppt.getType());
-            ps.setTimestamp(6, Timestamp.valueOf(newAppt.getStart()));
-            ps.setTimestamp(7, Timestamp.valueOf(newAppt.getEnd()));
-            ps.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
-            ps.setString(9, getActiveUser().getUserName());
-            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
-            ps.setString(11, getActiveUser().getUserName());
-            ps.setInt(12, newAppt.getCustomerId());
-            ps.setInt(13, newAppt.getUserId());
-            ps.setInt(14, newAppt.getContact().getId());
-
-        } catch (SQLException ex) {
-
-        }
 
 
-    }
 
-    /*  ======================
-        UPDATE OBJECTS
-        ======================
-        retrieves existing object using the record id
-        */
 
-    public static void updateCust(Customer newCust) {
-        int index = newCust.getId();
-        System.out.println("Customer ID is " + index);
-        Timestamp current = Timestamp.valueOf(LocalDateTime.now());
-        // sql query if customer record exists in db
-        try {
-            System.out.println("Querying Customer DB for existence of customer id.");
-            prepQuery("SELECT COUNT(Customer_ID) AS COUNT FROM customers WHERE Customer_ID = " + index);
-            ResultSet rs = getResult();
-            int count = 0;
-            while (rs.next()) {
-                 count = rs.getInt("COUNT");
-                }
-            if (count > 0) {
-                PreparedStatement ps = getConnection().prepareStatement("UPDATE customers SET " +
-                        "Customer_Name = ?," +
-                        "Phone = ?, " +
-                        "Address = ?, " +
-                        "Postal_Code = ?, " +
-                        "Last_Update = ?, " +
-                        "Last_Updated_By = ?, " +
-                        "Division_ID = ? " +
-                        "WHERE Customer_ID = " + index);
 
-                System.out.println("Setting Parameters.");
-                ps.setString(1,newCust.getCustomerName());
-                ps.setString(2,newCust.getPhone());
-                ps.setString(3,newCust.getAddress());
-                ps.setString(4,newCust.getPostalCode());
-                ps.setTimestamp(5,current);
-                ps.setString(6,getActiveUser().getUserName());
-                ps.setInt(7,getDivisionID(newCust.getDivision()));
 
-                try {
-                    ps.executeUpdate();
-                } catch (SQLException ex2) {
-                    ex2.printStackTrace();
-                }
-                infoMessage("Customer Updated.");
-            } else {
-                errorMessage("Update Customer", "Customer does not exist.");
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-
-    }
-
-    public static void updateAppt(Appointment newAppt) {
-        int index = newAppt.getId();
-
-        // sql query if appointment record exists in db
-        if (getAllAppointments().get(index) != null) {
-            getAllAppointments().set(index,newAppt); // Replace appointment data at index with newAppt data
-        }
-    }
 
     /*  ======================
         DELETE OBJECTS
@@ -196,18 +59,9 @@ public class DAOimpl extends DAO {
         Parts can be deleted if it is assigned to a Product
         Products cannot be deleted if they have associated Parts
         */
-    public static boolean deleteCust(int custId) {
-        // Retrieve Part Index from allParts
 
-        for (Customer c : getAllCustomers()) { // loop through all Customers
-            if (c.getId() == custId) {
-                // if found, Remove Customer
-                getAllCustomers().remove(c); //
-                return true;
-            }
-        }
-        return false; // return deletion success to caller
-    }
+
+
 
 
     /* ======================
@@ -215,10 +69,18 @@ public class DAOimpl extends DAO {
         For use for TableViews
        ======================*/
 
-    /**
-     * Queries DB to build a new Observable list
-     * @return
-     */
+
+
+
+
+
+
+
+
+        /**
+         * Queries DB to build a new Observable list
+         * @return
+         */
     public static ObservableList<Customer> getAllCustomers() {
         ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
 
@@ -338,10 +200,10 @@ public class DAOimpl extends DAO {
                 String apptLoc = rs.getString("Location");
                 String apptType = rs.getString("Type");
 
-                String apptStart = dateToString(getLocalDateTime(rs.getTimestamp("Start")),"hh:mm a");
-                String apptEnd = dateToString(getLocalDateTime(rs.getTimestamp("End")),"hh:mm a");
+                Timestamp apptStart = rs.getTimestamp("Start");
+                Timestamp apptEnd = rs.getTimestamp("End");
 
-                Contact apptContact = getAllContacts().get(rs.getInt("Contact_ID") - 1);
+                int apptContactID = rs.getInt("Contact_ID");
                 int apptCustID = rs.getInt("Customer_ID");
                 int apptUserID = rs.getInt("User_ID");
 
@@ -354,7 +216,7 @@ public class DAOimpl extends DAO {
                         apptType,
                         apptStart,
                         apptEnd,
-                        apptContact,
+                        apptContactID,
                         apptCustID,
                         apptUserID);
 
@@ -537,6 +399,22 @@ public class DAOimpl extends DAO {
             ex.printStackTrace();
         }
         return divId;
+    }
+
+    public static String getRelatedValue(int id, String table, String fieldName) {
+        System.out.println("Retrieving related value for " + table);
+        String fieldValue = "";
+        try {
+            prepQuery("SELECT * FROM " + table + " WHERE " + table.substring(0,1).toUpperCase() +"_ID = " + id);
+            ResultSet rs = getResult();
+            while (rs.next()) {
+                fieldValue = rs.getString(fieldName);
+                System.out.println("Field Value Retrieved = " + fieldValue);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return fieldValue;
     }
 
     /**

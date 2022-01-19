@@ -1,5 +1,8 @@
 package application.util;
 
+import application.model.Appointment;
+
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -52,6 +55,10 @@ public abstract class Loc {
         TIME CONVERSION & FORMATTING
         ======================*/
 
+    public static Timestamp getCurrentTime() {
+        return (toTimestamp(LocalDateTime.now()));
+    }
+
     // TODO: Convert java.sql.Date from database to LocalDateTime
     public static LocalDateTime getLocalDateTime(Timestamp timestamp) {
         LocalDateTime localDateTime = timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
@@ -102,9 +109,9 @@ public abstract class Loc {
     }
     
     // TODO: Format Local Time
-    public static String dateTimeFormatter(LocalDateTime localDateTime) {
-        String formatDateTime = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S a"));
-        return formatDateTime;
+    public static String dateTimeFormatter(LocalDateTime localDateTime, String pattern) {
+        String formattedDateTime = localDateTime.format(DateTimeFormatter.ofPattern(pattern));
+        return formattedDateTime;
     }
 
     public static String eastTime(ZonedDateTime zdt) {
@@ -133,4 +140,27 @@ public abstract class Loc {
         LocalDateTime localDateTime = LocalDateTime.parse(string);
         return localDateTime;
     }
+
+    public static String getHour(LocalDateTime dt) {
+        return dateTimeFormatter(dt,"hh");
+    }
+    public static String getMinute(LocalDateTime dt) {
+        return dateTimeFormatter(dt,"mm");
+    }
+    public static String getMeridiem(LocalDateTime dt) {
+        return dateTimeFormatter(dt,"a").toUpperCase();
+    }
+
+    // TODO: Move to Loc.java and add a LocalDateTime.parse(str, formatter); DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a")
+
+    public static Timestamp toTimestamp(LocalDate date, String hour, String minute, String meridiem) {
+
+        if (meridiem=="PM") {
+            hour = String.valueOf(Integer.parseInt(hour) + 12 );
+        }
+        Timestamp dateTime = Timestamp.valueOf(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " " + hour + ":" + minute + ":00");
+        System.out.println(dateTime);
+        return dateTime;
+    }
+
 }

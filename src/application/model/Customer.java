@@ -5,7 +5,7 @@ public class Customer extends Record {
     private String address;
     private String postalCode;
     private String phone;
-    private String division;
+    private String division; //TODO: change to mimic SQL setup so that it's easier to retrieve details e.g. remove country and change division to divisionId
     private String country;
 
     public Customer(int id, String customerName, String phone, String address, String postalCode, String division, String country) {
