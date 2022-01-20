@@ -11,13 +11,15 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 
-
-import java.lang.reflect.Field;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.ResourceBundle;
 
-import static application.util.DAOimpl.*;
-import static application.util.Loc.getCurrentTime;
+import static application.util.Alerts.infoMessage;
+
+import static application.util.Loc.getCurrentTimestamp;
 
 
 public class CustRecord extends RecordBase<Customer> {
@@ -81,23 +83,26 @@ public class CustRecord extends RecordBase<Customer> {
 
     public void addListeners() {
 
-        custName.textProperty().addListener((observable, oldValue, newValue) -> {
+
+
+        custName.getTextFormatter();
+        custName.selectedTextProperty().addListener((observable, oldValue, newValue) -> {
             System.out.println("Checking name input...");
-            if(!custName.getText().isEmpty() && oldValue != newValue) {
+            if(!custName.getText().isEmpty() && oldValue != newValue ) {
                 newNameValid = validation(custName, "[a-zA-Z0-9 ]*", "Please only use alphanumeric characters and spaces.");
             }
         });
 
         address.textProperty().addListener((observable, oldValue, newValue) -> {
             System.out.println("Checking address input...");
-            if(!address.getText().isEmpty() && oldValue != newValue) {
+            if(!address.getText().isEmpty() && oldValue != newValue ) {
                 newAddressValid = validation(address, "[a-zA-Z0-9 ]*", "Please only use alphanumeric characters and spaces.");
             }
         });
 
         code.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("Checking address code input...");
-            if(!code.getText().isEmpty() && oldValue != newValue) {
+            System.out.println("Checking postal code input...");
+            if(!code.getText().isEmpty() && oldValue != newValue ) {
                 switch (country.getValue()) {
                     case "U.S.":
                         newCodeValid = validation(code, "^[0-9]{5}(?:-[0-9]{4})?$", "Please enter a valid US zipcode with 5 digits.");
@@ -115,8 +120,8 @@ public class CustRecord extends RecordBase<Customer> {
         });
 
         phone.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("Checking name input...");
-            if(!phone.getText().isEmpty() && oldValue != newValue) {
+            System.out.println("Checking phone input...");
+            if(!phone.getText().isEmpty() && oldValue != newValue ) {
                 newPhoneValid = validation(phone, "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$", "Please enter a valid phone number with 10-digits");
             }
         });
@@ -165,7 +170,7 @@ public class CustRecord extends RecordBase<Customer> {
         } else {
             division.setDisable(true);
             // generate id
-            generateId();
+            custID.setText(genId("customer"));
         }
 
     }
@@ -209,11 +214,6 @@ public class CustRecord extends RecordBase<Customer> {
 
     }
 
-    // TODO: Generate ID method
-    private void generateId() {
-
-        custID.setText(String.valueOf(getAvailableID("customers")));
-    }
 
     // TODO: Set Customer-related Appointments tableview (see apptTable)
 
@@ -230,36 +230,37 @@ public class CustRecord extends RecordBase<Customer> {
                                         division.getValue(),
                                         country.getValue());
 
-        ObservableList<Object> params;
+        List<Object> params;
 
 
         // check form type
         if (formTypeNew) {
-            params = toObservableList(
+            params = toList(
                     newCust.getId(),
                     newCust.getCustomerName(),
                     newCust.getPhone(),
                     newCust.getAddress(),
                     newCust.getPostalCode(),
-                    getCurrentTime(),
+                    getCurrentTimestamp(),
                     getActiveUser().getUserName(),
-                    getCurrentTime(),
+                    getCurrentTimestamp(),
                     getActiveUser().getUserName(),
                     getDivisionID(newCust.getDivision())
             );
             addRecord(newCust,params);
             exitButton(actionEvent);
         } else {
-            params = toObservableList(newCust.getCustomerName(),
+            params = toList(newCust.getCustomerName(),
                     newCust.getPhone(),
                     newCust.getAddress(),
                     newCust.getPostalCode(),
-                    getCurrentTime(),
+                    getCurrentTimestamp(),
                     getActiveUser().getUserName(),
                     getDivisionID(newCust.getDivision()),
                     newCust.getId());
-            updateRecord(newCust,params);
+            boolean updated = updateRecord(newCust,params);
             exitButton(actionEvent);
+            if (updated) { infoMessage("Customer ID: " + newCust.getId() + "\nSuccessfully Updated");}
         }
     }
 
@@ -279,5 +280,72 @@ public class CustRecord extends RecordBase<Customer> {
                 "WHERE Customer_ID = ?";
     }
 
+    public static int getDivisionID(String divisionName) {
+        System.out.println("Retrieving Division ID for Division " + divisionName);
+        int divId = 0;
+        try {
+            prepQuery("SELECT * FROM first_level_divisions WHERE Division = '" + divisionName +"'");
+            ResultSet rs = getResult();
+            while (rs.next()) {
+                divId = rs.getInt("Division_ID");
+                System.out.println("Division ID Retrieved = " + divId);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return divId;
+    }
+
+    public static ObservableList<String> getAllCountries() {
+        ObservableList<String> allCountries = FXCollections.observableArrayList();
+
+        try {
+            System.out.println("Querying Countries Database for Unique Items.");
+            prepQuery("SELECT * FROM countries ORDER BY Country ASC");
+            ResultSet rs = getResult();
+            System.out.println("Retrieved Results.");
+            int i = 0;
+            while (rs.next()) {
+
+                // set result to variables
+                System.out.println("Setting Results to Countries.");
+                String countryResult = rs.getString("Country");
+                // add Type String to Observable List
+                allCountries.add(countryResult);
+                i++;
+                System.out.println(countryResult + " Type added to Observable List. (" + i + ")");
+            }
+        } catch (SQLException ex) {
+            printSQLException(ex);
+        }
+        System.out.println("Retrieving Observable List.");
+        return allCountries;
+    }
+
+    public static ObservableList<String> getAllRegions(String country) {
+        ObservableList<String> allRegions = FXCollections.observableArrayList();
+
+        try {
+            System.out.println("Querying Regions Database for Unique Items.");
+            prepQuery("SELECT * FROM first_level_divisions JOIN countries USING (Country_ID) WHERE Country = '" + country +"' ORDER BY Division ASC");
+            ResultSet rs = getResult();
+            System.out.println("Retrieved Results.");
+            int i = 0;
+            while (rs.next()) {
+
+                // set result to variables
+                System.out.println("Setting Results to Regions.");
+                String regionResult = rs.getString("Division");
+                // add Type String to Observable List
+                allRegions.add(regionResult);
+                i++;
+                System.out.println(regionResult + " Type added to Observable List. (" + i + ")");
+            }
+        } catch (SQLException ex) {
+            printSQLException(ex);
+        }
+        System.out.println("Retrieving Observable List.");
+        return allRegions;
+    }
 
 }

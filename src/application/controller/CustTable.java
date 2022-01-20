@@ -2,7 +2,8 @@ package application.controller;
 
 import application.model.Appointment;
 import application.model.Customer;
-
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -13,18 +14,21 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
+import static application.controller.ApptTable.allAppointments;
 import static application.util.Alerts.confirmMessage;
 import static application.util.Alerts.infoMessage;
-import static application.util.DAOimpl.getAllCustomers;
+
 
 
 public class CustTable extends TableBase<Customer> implements Initializable {
     /*  ======================
         CUSTOMER TABLE ELEMENTS
         ======================*/
+
+    public static ObservableList<Customer> allCustomers;
 
     public TableView<Customer> allCustomersTable;
     public TableColumn<?,?> custID;
@@ -81,7 +85,7 @@ public class CustTable extends TableBase<Customer> implements Initializable {
 
 
 
-        if (customer != null || action == "add") {
+        if (customer != null || action.equals("add")) {
             // Transfer parameters to Controller
             FXMLLoader loader = setLoader("CustRecord");
             Parent root = loader.load();
@@ -93,7 +97,7 @@ public class CustTable extends TableBase<Customer> implements Initializable {
             updateTable();
 
             // send button action and table row item
-        } else if ( action == "edit" && customer == null){
+        } else if ( action.equals("edit") ){
             infoMessage("Please select a record for modification.");
         }
 
@@ -103,10 +107,22 @@ public class CustTable extends TableBase<Customer> implements Initializable {
         Customer customer = allCustomersTable.getSelectionModel().getSelectedItem();
 
         if (customer != null) {
-            boolean confirm = confirmMessage("Delete Customer", "Are you sure you want to delete " + customer.getCustomerName() + " with  ID " + customer.getId() + "?");
+            boolean confirm = confirmMessage("Delete Customer", "Are you sure you want to delete " + customer.getCustomerName() + " with  ID " + customer.getId() + "? \n" +
+                    "All related appointments will also be deleted.");
+
+            int count = 0;
+            for (Appointment appointment : allAppointments) {
+                if (appointment.getCustomerId() == customer.getId()) {
+                    count++;
+                }
+            }
 
             if (confirm) {
-                deleteRecord(customer);
+                boolean deleted = deleteRecord(customer);
+                if (deleted) {
+
+                    infoMessage("Customer ID: " + customer.getId() + "\nCustomer Name: " + customer.getCustomerName() + "\nSuccessfully Deleted with " + count + " Appointment(s)");
+                }
                 updateTable();
             }
         } else {
@@ -116,10 +132,70 @@ public class CustTable extends TableBase<Customer> implements Initializable {
     }
 
 
-
+    /**
+     *
+     * @return SQL statement to delete customer record
+     */
     protected String getDeleteStatement() {
         return "DELETE FROM customers WHERE Customer_ID = ?";
     }
+
+    /**
+     *
+     * @return SQL statement to delete appointment dependencies
+     */
+    protected String getDeleteDependencies() {return "DELETE FROM appointments WHERE Customer_ID = ?";}
+
+
+    /**
+     * Queries DB to build a new Observable list
+     *
+     */
+    public static ObservableList<Customer> getAllCustomers() {
+        allCustomers = FXCollections.observableArrayList();
+
+        try {
+            System.out.println("Querying Customers Database.");
+            prepQuery("SELECT * FROM customers JOIN first_level_divisions USING (Division_ID) JOIN countries USING (Country_ID)");
+
+            ResultSet rs = getResult();
+            System.out.println("Retrieved Results.");
+
+            int i = 0;
+            while(rs.next()) {
+                // set result to variables
+                System.out.println("Setting Results to Customer Variables.");
+                int custId = rs.getInt("Customer_ID");
+                String custName = rs.getString("Customer_Name");
+                String custPhone = rs.getString("Phone");
+                String custAddress = rs.getString("Address");
+                String custCode = rs.getString("Postal_Code");
+                String custState = rs.getString("Division");
+                String custCountry = rs.getString("Country");
+
+                // construct Customer object using result
+                System.out.println("Constructing Customer Object.");
+                Customer custResult = new Customer(custId,
+                        custName,
+                        custPhone,
+                        custAddress,
+                        custCode,
+                        custState,
+                        custCountry);
+
+                // add Customer object to Observable List
+                allCustomers.add(custResult);
+                i++;
+                System.out.println("Customer added to Observable List. (" + i + ")");
+            }
+        } catch (SQLException ex) {
+            printSQLException(ex);
+        }
+        System.out.println("Retrieving Observable List.");
+        return allCustomers;
+    }
+
+
 
     // end of class
 }

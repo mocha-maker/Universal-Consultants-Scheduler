@@ -11,12 +11,11 @@ import javafx.scene.control.TextField;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 
-import static application.util.Alerts.*;
-import static application.util.DAOimpl.setActiveUser;
-import static java.lang.Integer.parseInt;
+import static application.util.Alerts.errorMessage;
+import static application.util.Loc.*;
 
 
 public class Login extends Base implements Initializable {
@@ -32,8 +31,8 @@ public class Login extends Base implements Initializable {
 
 
     // Validate Credentials with Database
-    private long validateCredentials(ResultSet rs, String user, String password) {
-        long result = -1L;
+    private int validateCredentials(ResultSet rs, String user, String password) {
+        int result = -1;
                 try {
                     if ((rs.next() && (rs.getString("Password").trim().equals(password.trim()) || user == "test" && password == "test"))) {
                         result = rs.getInt("User_ID");
@@ -56,7 +55,8 @@ public class Login extends Base implements Initializable {
 
             String stmt = "SELECT User_ID, Password FROM users WHERE User_Name = '" + user + "'";
             prepQuery(stmt);
-            final long userID = validateCredentials(getResult(), user, pass);
+            final int userID = validateCredentials(getResult(), user, pass);
+            System.out.println(userID);
 
             if (userID != -1) {
                 System.out.println(user);
@@ -64,7 +64,10 @@ public class Login extends Base implements Initializable {
                 result = true;
                 System.out.println("Successfully Logged In.");
 
-                // Stay connected to DB
+                // Set Active User
+
+                User loggedUser = new User((int) userID,usernameTF.getText());
+                setActiveUser(loggedUser);
 
                 // Change Window
                 vController.loadMainWindow();
@@ -74,9 +77,8 @@ public class Login extends Base implements Initializable {
                 usernameTF.setText("");
                 passwordTF.setText("");
             }
-            Reports.loginActivity(Loc.toUTCZDT(ZonedDateTime.now()), user, result);
-            User loggedUser = new User((int) userID,usernameTF.getText());
-            setActiveUser(loggedUser);
+            Reports.loginActivity(toUTCZDT(LocalDateTime.now()), user, result);
+
 
         } else {
             errorMessage("Login Error", Loc.getBundle().getString("error.loginEmpty"));
@@ -89,10 +91,15 @@ public class Login extends Base implements Initializable {
 
         // Set Locale and update labels
         location.setText(Loc.getZone().getID()); // timezone label
+
+        // TODO: Remove autofill
+        autoFillLoginAsTest();
     }
 
-    public void onEnter(ActionEvent event) {
-        loginHandler(event);
+
+    private void autoFillLoginAsTest() {
+        usernameTF.setText("test");
+        passwordTF.setText("test");
     }
 
 

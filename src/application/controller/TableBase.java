@@ -1,7 +1,6 @@
 package application.controller;
 
-import application.model.Appointment;
-import application.model.Contact;
+import application.model.Customer;
 import application.model.Record;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,17 +12,13 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.ResourceBundle;
 
 import static application.util.Alerts.errorMessage;
-import static application.util.Alerts.infoMessage;
 
 public abstract class TableBase<T extends Record> extends Base implements Initializable {
 
@@ -129,37 +124,63 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
 
     protected abstract String getDeleteStatement();
 
-    public void deleteRecord(T record) {
+    protected abstract String getDeleteDependencies();
+
+    public boolean deleteRecord(T record) {
+        boolean deleted;
+        if (record.getClass() == Customer.class) {
+            deleted = deleteFromDB(record, getDeleteDependencies());
+                if (deleted) {
+                    deleted = deleteFromDB(record, getDeleteStatement());
+                } else {
+                    errorMessage("Delete Dependencies", "Issues with deleting dependencies. Unable to delete customer.");
+                }
+        } else {
+            deleted = deleteFromDB(record, getDeleteStatement());
+        }
+        return deleted;
+    }
+
+    private boolean deleteFromDB(T record, String statement) {
+        boolean deleted = false;
         String table = record.getClass().getSimpleName().toLowerCase();
 
         System.out.println("Attempting to delete " + table + " record.");
 
-        // retrieve customer id from object
+        // retrieve id from object
         int id = record.getId();
         String tableCapitalized = table.substring(0,1).toUpperCase() + table.substring(1);
 
         try {
             // sqlquery to delete record
-            PreparedStatement ps = getConnection().prepareStatement(getDeleteStatement());
+            PreparedStatement ps = getConnection().prepareStatement(statement);
             ps.setInt(1, id);
             ps.executeUpdate();
-            ResultSet rs = getResult();
-            while (rs.next()) {
-                Integer count = getResult().getInt("Count");
-                if (count == 0) {
-                    // give alert on successful deletion
-                    infoMessage(tableCapitalized + " Record with ID " + id + " successfully deleted.");
-                } else {
-                    errorMessage(tableCapitalized + " Record Deletion", "Appointment not deleted.");
-                }
-            }
+            System.out.println(deleted);
+            deleted = true;
 
         } catch (SQLException ex) {
+            errorMessage(tableCapitalized + " Record Deletion", "Record could not be deleted.");
             printSQLException(ex);
         }
-
+        return deleted;
     }
 
+    public static String getRelatedValue(int id, String table, String fieldName) {
+        System.out.println("Retrieving related value for " + table);
+        String fieldValue = "";
+        try {
+            prepQuery("SELECT * FROM " + table + " WHERE " + table.substring(0,1).toUpperCase() +"_ID = " + id);
+            ResultSet rs = getResult();
+            while (rs.next()) {
+                fieldValue = rs.getString(fieldName);
+                System.out.println("Field Value Retrieved = " + fieldValue);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return fieldValue;
+    }
 
     /*
     EVENT HANDLING

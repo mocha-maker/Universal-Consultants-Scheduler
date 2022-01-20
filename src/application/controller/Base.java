@@ -1,10 +1,8 @@
 package application.controller;
 
-import application.util.Alerts;
 import application.util.DAO;
 import application.util.Loc;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableArray;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -12,7 +10,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -21,10 +20,15 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.List;
+import java.util.ResourceBundle;
 
-import static application.util.Alerts.*;
+import static application.util.Alerts.confirmMessage;
+import static application.util.Alerts.errorMessage;
 
+/**
+ * Abstract Base Controller Class
+ */
 public abstract class Base extends DAO implements Initializable {
     @FXML
     private AnchorPane mainPane; // main viewing pane
@@ -135,16 +139,23 @@ public abstract class Base extends DAO implements Initializable {
         stage.close();
     }
 
-    public ObservableList<Object> toObservableList(Object... args) {
-        final ObservableList<Object> list = FXCollections.observableArrayList();
-        if (args != null) {
-            for (Object arg : args) {
-                list.add(arg);
-            }
-        } else {
-            list.add(null);
+    /**
+     * Cancel Button on returns to the previous scene.
+     * @param actionEvent when clicking the "Cancel" button
+     * @throws IOException exceptions unload
+     */
+    @FXML
+    private void cancelButton(ActionEvent actionEvent) {
+        Boolean confirm = confirmMessage("Cancel Activity","Are you sure you want to cancel? \nAny changes you've made will not be saved.");
+
+        if (confirm) {
+            Stage stage = (Stage) ((Button) actionEvent.getSource()).getScene().getWindow();
+            stage.close();
         }
-        return list;
+    }
+
+    public List<Object> toList(Object... args) {
+        return List.of(args);
     }
 
     // end of class

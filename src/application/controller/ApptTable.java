@@ -2,27 +2,29 @@ package application.controller;
 
 import application.model.Appointment;
 import application.model.Contact;
-
-import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 
-
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Optional;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 
-import static application.util.Alerts.*;
-import static application.util.DAOimpl.*;
+import static application.util.Alerts.confirmMessage;
+import static application.util.Alerts.infoMessage;
+import static application.util.Loc.dateToString;
 
 public final class ApptTable extends TableBase<Appointment> implements Initializable {
     
@@ -30,8 +32,8 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         APPOINTMENT TABLE ELEMENTS
         ======================*/
 
-    // To access Contact Name
-    private final HashMap<Integer, Contact> contactMap = new HashMap<>();
+    public static ObservableList<Contact> allContacts;
+    public static ObservableList<Appointment> allAppointments;
 
     // TODO TableColumn Factory
 
@@ -41,9 +43,9 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
     public TableColumn<?,?> apptDesc;
     public TableColumn<?,?> apptLoc;
     public TableColumn<?,?> apptType;
-    public TableColumn<?,?> apptStart;
-    public TableColumn<?,?> apptEnd;
-    public TableColumn<Contact,String> apptContact;
+    public TableColumn<Appointment, Timestamp> apptStart;
+    public TableColumn<Appointment, Timestamp> apptEnd;
+    public TableColumn<?,?> apptContact;
     public TableColumn<?,?> apptCustID;
     public TableColumn<?,?> apptUserID;
 
@@ -52,7 +54,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         TABLEVIEW MANAGEMENT
         ======================*/
     public void setColumns() {
-        makeContactMap();
+
         System.out.println("Setting Appointment Table Columns.");
         apptID.setCellValueFactory(new PropertyValueFactory<>("id"));
         apptTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
@@ -60,12 +62,38 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         apptLoc.setCellValueFactory(new PropertyValueFactory<>("location"));
         apptType.setCellValueFactory(new PropertyValueFactory<>("type"));
         apptStart.setCellValueFactory(new PropertyValueFactory<>("start"));
+apptStart.setCellFactory(column -> {
+    TableCell<Appointment, Timestamp> cell = new TableCell<Appointment, Timestamp>() {
+
+        @Override
+        protected void updateItem(Timestamp item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty) {
+                setText("");
+            } else {
+                this.setText(dateToString(item.toLocalDateTime(),"yyyy-MM-dd hh:mm a"));
+            }
+        }
+    };
+    return cell;
+});
         apptEnd.setCellValueFactory(new PropertyValueFactory<>("end"));
-/*        apptContact.setCellValueFactory(param -> {
-            final Optional<Contact> contact = Optional.ofNullable(contactMap.get(param.getValue().getId()));
-            return new SimpleStringProperty(contact.map(Contact::getName).orElse(""));
-        });*/
-        apptContact.setCellValueFactory(new PropertyValueFactory<>("contactId"));
+        apptEnd.setCellFactory(column -> {
+            TableCell<Appointment, Timestamp> cell = new TableCell<Appointment, Timestamp>() {
+
+                @Override
+                protected void updateItem(Timestamp item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setText("");
+                    } else {
+                        this.setText(dateToString(item.toLocalDateTime(),"yyyy-MM-dd hh:mm a"));
+                    }
+                }
+            };
+            return cell;
+        });
+        apptContact.setCellValueFactory(new PropertyValueFactory<>("contact"));
         apptCustID.setCellValueFactory(new PropertyValueFactory<>("customerId"));
         apptUserID.setCellValueFactory(new PropertyValueFactory<>("userId"));
     }
@@ -76,6 +104,99 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
      */
     public void updateTable() {
          allAppointmentsTable.setItems(getAllAppointments());
+    }
+
+
+    /**
+     *
+     * @return
+     */
+    public static ObservableList<Appointment> getAllAppointments() {
+        allAppointments = FXCollections.observableArrayList();
+
+        try {
+            System.out.println("Querying Appointment Database.");
+            prepQuery("SELECT * FROM appointments JOIN contacts USING (Contact_ID) JOIN customers USING (Customer_ID) JOIN users USING (User_ID)");
+            ResultSet rs = getResult();
+            System.out.println("Retrieved Results.");
+            int i = 0;
+            while (rs.next()) {
+
+                // set result to variables
+                System.out.println("Setting Results to Appointment Variables.");
+                int apptID = rs.getInt("Appointment_ID");
+                String apptTitle = rs.getString("Title");
+                String apptDesc = rs.getString("Description");
+                String apptLoc = rs.getString("Location");
+                String apptType = rs.getString("Type");
+
+                Timestamp apptStart = rs.getTimestamp("Start");
+                Timestamp apptEnd = rs.getTimestamp("End");
+
+                Contact apptContact = getAllContacts().get(rs.getInt("Contact_ID")-1);
+                int apptCustID = rs.getInt("Customer_ID");
+                int apptUserID = rs.getInt("User_ID");
+
+                // construct Appointment object using result
+                System.out.println("Constructing Appointment Object.");
+                Appointment apptResult = new Appointment(apptID,
+                        apptTitle,
+                        apptDesc,
+                        apptLoc,
+                        apptType,
+                        apptStart,
+                        apptEnd,
+                        apptContact,
+                        apptCustID,
+                        apptUserID);
+
+                // add Appointment object to Observable List
+                allAppointments.add(apptResult);
+                i++;
+                System.out.println("Appointment added to Observable List. (" + i + ")");
+
+            }
+        } catch (SQLException ex) {
+            printSQLException(ex);
+        }
+        System.out.println("Retrieving Observable List.");
+        return allAppointments;
+    }
+
+    public static ObservableList<Contact> getAllContacts() {
+        allContacts = FXCollections.observableArrayList();
+
+        try {
+            System.out.println("Querying Contacts Database.");
+            prepQuery("SELECT * FROM contacts");
+            ResultSet rs = getResult();
+            System.out.println("Retrieved Results.");
+            int i = 0;
+            while (rs.next()) {
+
+                // set result to variables
+                System.out.println("Setting Results to Contact Variables.");
+                int contact_id = rs.getInt("Contact_ID");
+                String contact_name = rs.getString("Contact_Name");
+                String email = rs.getString("Email");
+
+                // construct Contact object using result
+                System.out.println("Constructing Contact Object.");
+                Contact contactResult = new Contact(contact_id,
+                        contact_name,
+                        email);
+
+                // add Contact object to Observable List
+                allContacts.add(contactResult);
+                i++;
+                System.out.println("Contact added to Observable List. (" + i + ")");
+
+            }
+        } catch (SQLException ex) {
+            printSQLException(ex);
+        }
+        System.out.println("Retrieving Observable List.");
+        return allContacts;
     }
 
 
@@ -118,17 +239,17 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         } else if ( action == "edit" && appointment == null){
             infoMessage("Please select a record for modification.");
         }
-
         updateTable();
     }
 
 
-
+    /**
+     *
+     * @return SQL statement to delete appointment record
+     */
     protected String getDeleteStatement() {
         return "DELETE FROM appointments WHERE Appointment_ID = ?";
     }
-
-
 
     public void deleteApptRecord(ActionEvent e) {
         Appointment appointment = allAppointmentsTable.getSelectionModel().getSelectedItem();
@@ -138,7 +259,11 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
             boolean confirm = confirmMessage("Delete Appointment", "Are you sure you want to delete Appointment ID " + appointment.getId() + " at " + appointment.getStart() + "?");
 
             if (confirm) {
-                deleteRecord(appointment);
+                boolean deleted = deleteRecord(appointment);
+                System.out.println(deleted);
+                if (deleted) {
+                    infoMessage("Appointment ID: " + appointment.getId() + "\nAppointment Type: " + appointment.getType() + "\nSuccessfully cancelled.");
+                }
                 updateTable();
             }
 
@@ -147,19 +272,12 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         }
     }
 
-    // Contact Map Maker
-    private void makeContactMap() {
-        try {
-            prepQuery("SELECT * FROM contacts");
-            ResultSet rs = getResult();
-            while (rs.next()) {
-                final Contact contact = new Contact(rs.getInt(1), rs.getString(2), rs.getString((3)));
-                contactMap.put(contact.getId(), contact);
-            }
-        } catch (SQLException exception) {
-            printSQLException(exception);
-        }
-    }
+    /**
+     * empty method
+     * @return empty string
+     */
+    protected String getDeleteDependencies() { return "";}
+
 
     // end of class
 }

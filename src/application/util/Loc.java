@@ -1,8 +1,7 @@
 package application.util;
 
-import application.model.Appointment;
+import application.model.User;
 
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -17,6 +16,7 @@ import java.util.TimeZone;
 public abstract class Loc {
     static ResourceBundle rb;
     static Locale activeLocale;
+    static TimeZone timezone;
 
 
     /*  ======================
@@ -55,110 +55,108 @@ public abstract class Loc {
         TIME CONVERSION & FORMATTING
         ======================*/
 
-    public static Timestamp getCurrentTime() {
+    // GETTERS
+
+    public static Timestamp getCurrentTimestamp() {
         return (toTimestamp(LocalDateTime.now()));
     }
 
+    public static LocalDate getCurrentLocalDate() { return (LocalDateTime.now().toLocalDate()); }
+
+    public static LocalTime getCurrentLocalTime() { return (LocalDateTime.now().toLocalTime()); }
+
+    // CONVERSIONS
+
     // TODO: Convert java.sql.Date from database to LocalDateTime
-    public static LocalDateTime getLocalDateTime(Timestamp timestamp) {
-        LocalDateTime localDateTime = timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-        return localDateTime;
+    public static LocalDateTime toLocalDateTime(Timestamp timestamp) {
+        return timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 
     // TODO: Convert LocalDateTime to Timestamp for recording into database
     public static Timestamp toTimestamp(LocalDateTime localDateTime) {
-        Timestamp timestamp = Timestamp.valueOf(localDateTime);
-        
-        return timestamp;
+        return Timestamp.valueOf(localDateTime);
     }
-
-    // TODO: Convert LocalDateTime to LocalDate
-    public static LocalDate toLocalDate(LocalDateTime localDateTime) {
-        LocalDate localDate = localDateTime.toLocalDate();
-        return localDate;
-    }
-
-    // TODO: Convert LocalDateTime to LocalTime
-    public static LocalTime toLocalTime(LocalDateTime localDateTime) {
-        LocalTime localTime = localDateTime.toLocalTime();
-        return localTime;
-    }
-
 
     // TODO: Get default Timezone and ZoneID
     public static TimeZone getZone() {
-        TimeZone zone = TimeZone.getDefault();
-        return zone;
+        return TimeZone.getDefault();
     }
-    public static ZoneId getZoneId() {
-        ZoneId zoneId = TimeZone.getDefault().toZoneId();
-        return zoneId;
+
+    private static ZonedDateTime toZDT(LocalDateTime localDateTime) {
+        System.out.println("Converting to Zoned Date Time.");
+        return ZonedDateTime.of(localDateTime, ZoneId.systemDefault());
     }
 
     // TODO: Zoned Date Times to Eastern Time (Business Timezone) given LocalDateTime
-    public static ZonedDateTime toEastZDT(ZonedDateTime zonedDateTime) {
-        ZonedDateTime eastZDT = toUTCZDT(zonedDateTime).withZoneSameInstant(ZoneId.of("US/Eastern"));
-        return eastZDT;
+    public static ZonedDateTime toEastZDT(LocalDateTime localDateTime) {
+        return toZDT(localDateTime).withZoneSameInstant(ZoneId.of("US/Eastern"));
     }
 
     // TODO: Zoned Date Times to UTC Time (DB timezone) given LocalDateTime
-    public static ZonedDateTime toUTCZDT(ZonedDateTime zonedDateTime) {
-        Instant instantUTC = zonedDateTime.toInstant();
-        ZonedDateTime zoneUTC = instantUTC.atZone(ZoneId.of("UTC"));
-        return zoneUTC;
+    public static ZonedDateTime toUTCZDT(LocalDateTime localDateTime) {
+        System.out.println("Retrieving converted time in ZDT.");
+        return toZDT(localDateTime).withZoneSameInstant(ZoneId.of("UTC"));
     }
-    
+
+    /**
+     * Conversion to Database time - UTC
+     * @param localDateTime - time to be converted
+     * @return converted time
+     */
+    public static LocalDateTime toUTC(LocalDateTime localDateTime) {
+        System.out.println("Retrieving converted time in LDT form.");
+        return toUTCZDT(localDateTime).toLocalDateTime();
+    }
+
+    /**
+     * Conversion to Eastern Time for business hours
+     * @param localDateTime - time to be converted
+     * @return converted time
+     */
+    public static LocalDateTime toEast(LocalDateTime localDateTime) {
+        System.out.println("Retrieving converted time in LDT form.");
+        return toEastZDT(localDateTime).toLocalDateTime();
+    }
+
+
+    // FORMATTERS
+
     // TODO: Format Local Time
-    public static String dateTimeFormatter(LocalDateTime localDateTime, String pattern) {
-        String formattedDateTime = localDateTime.format(DateTimeFormatter.ofPattern(pattern));
-        return formattedDateTime;
+    public static String dateToString(LocalDateTime localDateTime, String pattern) {
+        return localDateTime.format(DateTimeFormatter.ofPattern(pattern));
     }
 
-    public static String eastTime(ZonedDateTime zdt) {
-        String time = dateToString(toEastZDT(zdt), "hh:mm:ss");
-        return time;
+    public static String dateToString(ZonedDateTime zonedDateTime, String pattern) {
+        return zonedDateTime.format(DateTimeFormatter.ofPattern(pattern));
     }
 
-    public static String UTCTime(ZonedDateTime zdt) {
-        String time = dateToString(toUTCZDT(zdt),"hh:mm:ss");
-        return time;
-    }
-
-
-    public static String dateToString(ZonedDateTime toUTCZDT, String pattern) {
-        String formatDateTime = toUTCZDT.format(DateTimeFormatter.ofPattern(pattern));
-        return formatDateTime;
-    }
-
-    public static String dateToString(LocalDateTime dateTime, String pattern) {
-        String formatDateTime = dateTime.format(DateTimeFormatter.ofPattern(pattern));
-        return formatDateTime;
-    }
+    // PARSERS
 
     // TODO: Read formatted date times
     public static LocalDateTime toLocalDateTime(String string) {
-        LocalDateTime localDateTime = LocalDateTime.parse(string);
-        return localDateTime;
+        return LocalDateTime.parse(string);
     }
 
     public static String getHour(LocalDateTime dt) {
-        return dateTimeFormatter(dt,"hh");
+        return dateToString(dt,"hh");
     }
     public static String getMinute(LocalDateTime dt) {
-        return dateTimeFormatter(dt,"mm");
+        return dateToString(dt,"mm");
     }
     public static String getMeridiem(LocalDateTime dt) {
-        return dateTimeFormatter(dt,"a").toUpperCase();
+        return dateToString(dt,"a").toUpperCase();
     }
 
     // TODO: Move to Loc.java and add a LocalDateTime.parse(str, formatter); DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a")
 
-    public static Timestamp toTimestamp(LocalDate date, String hour, String minute, String meridiem) {
+    public static Timestamp getTimestamp(LocalDate date, String hour, String minute, String meridiem) {
 
-        if (meridiem=="PM") {
+        // Convert hour to 24-clock
+        if (meridiem.equals("PM")) {
             hour = String.valueOf(Integer.parseInt(hour) + 12 );
         }
-        Timestamp dateTime = Timestamp.valueOf(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " " + hour + ":" + minute + ":00");
+
+        Timestamp dateTime = Timestamp.valueOf(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " " + hour + ":" + minute + ":00 ");
         System.out.println(dateTime);
         return dateTime;
     }

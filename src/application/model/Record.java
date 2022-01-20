@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 
-public abstract class Record<T> {
+public abstract class Record {
 
     // variables
     protected int id;

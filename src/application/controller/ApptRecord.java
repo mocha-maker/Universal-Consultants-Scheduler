@@ -7,27 +7,34 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
-import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.ResourceBundle;
 
-import static application.util.DAOimpl.*;
+import static application.controller.ApptTable.allContacts;
+import static application.controller.ApptTable.getAllContacts;
+import static application.controller.CustTable.allCustomers;
+import static application.controller.CustTable.getAllCustomers;
+import static application.util.Alerts.infoMessage;
 import static application.util.Loc.*;
 
+@SuppressWarnings("rawtypes")
 public class ApptRecord extends RecordBase<Appointment> {
 
     Boolean formTypeNew = true;
     Appointment formAppointment = null;
-    ObservableList<Contact> allContacts;
+
+    private static List<Object> params;
+
 
     @FXML
     Text apptRecordTitle;
@@ -51,12 +58,20 @@ public class ApptRecord extends RecordBase<Appointment> {
     @FXML
     DatePicker apptStartDate;
     @FXML
-    ChoiceBox apptStartHour, apptStartMinute, apptStartMeridiem;
+    ChoiceBox<String> apptStartHour;
+    @FXML
+    ChoiceBox<String> apptStartMinute;
+    @FXML
+    ChoiceBox<String> apptStartMeridiem;
 
     @FXML
     DatePicker apptEndDate;
     @FXML
-    ChoiceBox apptEndHour, apptEndMinute, apptEndMeridiem;
+    ChoiceBox<String> apptEndHour;
+    @FXML
+    ChoiceBox<String> apptEndMinute;
+    @FXML
+    ChoiceBox<String> apptEndMeridiem;
 
 
     @Override
@@ -64,20 +79,10 @@ public class ApptRecord extends RecordBase<Appointment> {
         // Set up form structures
         setComboBoxes();
 
-
     }
 
     // set record title depending on button pressed (pass variable from controller)
-    /**
-     * Cancel Button on returns to the previous scene.
-     * @param actionEvent when clicking the "Cancel" button
-     * @throws IOException exceptions unload
-     */
-    @FXML
-    private void cancelButton(ActionEvent actionEvent) throws IOException {
-        Stage stage = (Stage)((Button)actionEvent.getSource()).getScene().getWindow();
-        stage.close();
-    }
+
 
     // receive parameters
     public void getParams(String action, Appointment appointment) {
@@ -98,7 +103,6 @@ public class ApptRecord extends RecordBase<Appointment> {
             default:
                 break;
         }
-
         populateForm();
     }
 
@@ -115,11 +119,11 @@ public class ApptRecord extends RecordBase<Appointment> {
 
 
             // TODO: Set combo box values
-            Contact apptContact = getAllContacts().get(formAppointment.getContactId()-1);
+            Contact apptContact = allContacts.get(formAppointment.getContact().getId()-1);
             System.out.println(apptContact);
             contactComboBox.setValue(apptContact);
 
-            Customer apptCustomer = getAllCustomers().get((formAppointment.getCustomerId() - 1));
+            Customer apptCustomer = allCustomers.get((formAppointment.getCustomerId() - 1));
             customerComboBox.setValue(apptCustomer);
 
             apptTypeComboBox.setValue(formAppointment.getType());
@@ -137,28 +141,9 @@ public class ApptRecord extends RecordBase<Appointment> {
             apptEndMeridiem.setValue(getMeridiem(formAppointment.getEnd().toLocalDateTime()));
 
         } else {
-            // set id (auto-gen if new record)
-            apptId.setText(String.valueOf(genId()));
+            apptId.setText(genId("appointment"));
             userId.setText(String.valueOf(getActiveUser().getId()));
         }
-    }
-
-    private int genId() {
-        // find the highest id of the table\
-        int id = 1;
-        try {
-            prepQuery("SELECT MAX(Appointment_ID) FROM appointments");
-            ResultSet rs = getResult();
-
-            while (rs.next()) {
-                id = rs.getInt("MAX(Appointment_ID)") + 1;
-
-            }
-        } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        System.out.println("Generated ID = " + id);
-        return id;
     }
 
     /*  ======================
@@ -166,6 +151,9 @@ public class ApptRecord extends RecordBase<Appointment> {
         ======================*/
     private void setComboBoxes() {
         System.out.println("Starting Combo box Population...");
+        if (allCustomers == null) { getAllCustomers(); }
+        if (allContacts == null) { getAllContacts(); }
+
         setAppointmentType();
         setContactComboBox();
         setCustomerComboBox();
@@ -178,7 +166,6 @@ public class ApptRecord extends RecordBase<Appointment> {
         contactComboBox.setPromptText("Select a contact.");
 
         try {
-            allContacts = getAllContacts();
             contactComboBox.getItems().addAll(allContacts);
         } catch (NullPointerException ex) {
             System.out.println("No Contacts Found");
@@ -192,7 +179,7 @@ public class ApptRecord extends RecordBase<Appointment> {
         customerComboBox.setPromptText("Select a customer.");
 
         try {
-            customerComboBox.getItems().addAll(getAllCustomers());
+            customerComboBox.getItems().addAll(allCustomers);
         } catch (NullPointerException ex) {
             System.out.println("No Customers Found");
         }
@@ -235,63 +222,6 @@ public class ApptRecord extends RecordBase<Appointment> {
 
     }
 
-    @FXML
-    private void saveAppointment(ActionEvent actionEvent) {
-        // Record Time Values
-        Timestamp start = toTimestamp(apptStartDate.getValue(),apptStartHour.getValue().toString(),apptStartMinute.getValue().toString(),apptStartMeridiem.getValue().toString());
-        Timestamp end = toTimestamp(apptEndDate.getValue(),apptEndHour.getValue().toString(),apptEndMinute.getValue().toString(),apptEndMeridiem.getValue().toString());;
-
-        Appointment newAppt = new Appointment(Integer.parseInt(apptId.getText()),
-                apptTitle.getText(),
-                apptDesc.getText(),
-                apptLoc.getText(),
-                apptTypeComboBox.getValue(),
-                start,
-                end,
-                contactComboBox.getValue().getId(),
-                customerComboBox.getValue().getId(),
-                Integer.parseInt(userId.getText()));
-
-        ObservableList<Object> params;
-
-        // check form type
-        if (formTypeNew) {
-            params = toObservableList(newAppt.getId(),
-                    newAppt.getTitle(),
-                    newAppt.getDescription(),
-                    newAppt.getLocation(),
-                    newAppt.getType(),
-                    newAppt.getStart(),
-                    newAppt.getEnd(),
-                    getCurrentTime(),
-                    getActiveUser().getUserName(),
-                    getCurrentTime(),
-                    getActiveUser().getUserName(),
-                    newAppt.getCustomerId(),
-                    newAppt.getUserId(),
-                    newAppt.getContactId()
-            );
-            addRecord(newAppt,params);
-            exitButton(actionEvent);
-        } else {
-            params = toObservableList(newAppt.getTitle(),
-                    newAppt.getDescription(),
-                    newAppt.getLocation(),
-                    newAppt.getType(),
-                    newAppt.getStart(),
-                    newAppt.getEnd(),
-                    getCurrentTime(),
-                    getActiveUser().getUserName(),
-                    newAppt.getCustomerId(),
-                    newAppt.getUserId(),
-                    newAppt.getContactId(),
-                    newAppt.getId());
-            updateRecord(newAppt, params);
-            exitButton(actionEvent);
-        }
-    }
-
-
     public String getInsertStatement() {
         return "INSERT INTO appointments " +
                 "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
@@ -301,6 +231,92 @@ public class ApptRecord extends RecordBase<Appointment> {
         return "UPDATE appointments " +
                 "SET Title = ?, Description = ?, Location = ?, Type = ?, Start = ?, End = ?, Last_Update = ?, Last_Updated_By = ?, Customer_ID = ?, User_ID = ?, Contact_ID = ? " +
                 "WHERE Appointment_ID = ?";
+    }
+
+    @FXML
+    private void saveAppointment(ActionEvent actionEvent) {
+        // Record Time Values
+        Timestamp start = getTimestamp(apptStartDate.getValue(),apptStartHour.getValue().toString(),apptStartMinute.getValue().toString(),apptStartMeridiem.getValue().toString());
+        Timestamp end = getTimestamp(apptEndDate.getValue(),apptEndHour.getValue().toString(),apptEndMinute.getValue().toString(),apptEndMeridiem.getValue().toString());;
+
+        // Create appointment object
+        Appointment newAppt = new Appointment(Integer.parseInt(apptId.getText()),
+                apptTitle.getText(),
+                apptDesc.getText(),
+                apptLoc.getText(),
+                apptTypeComboBox.getValue(),
+                start,
+                end,
+                contactComboBox.getValue(),
+                customerComboBox.getValue().getId(),
+                Integer.parseInt(userId.getText()));
+
+        // Create parameters list
+
+        // check form type
+        if (formTypeNew) {
+            //
+            params = toList(newAppt.getId(),
+                    newAppt.getTitle(),
+                    newAppt.getDescription(),
+                    newAppt.getLocation(),
+                    newAppt.getType(),
+                    newAppt.getStart(),
+                    newAppt.getEnd(),
+                    getCurrentTimestamp(),
+                    getActiveUser().getUserName(),
+                    getCurrentTimestamp(),
+                    getActiveUser().getUserName(),
+                    newAppt.getCustomerId(),
+                    newAppt.getUserId(),
+                    newAppt.getContact().getId()
+            );
+            addRecord(newAppt,params);
+            exitButton(actionEvent);
+        } else {
+            params = toList(newAppt.getTitle(),
+                    newAppt.getDescription(),
+                    newAppt.getLocation(),
+                    newAppt.getType(),
+                    newAppt.getStart(),
+                    newAppt.getEnd(),
+                    getCurrentTimestamp(),
+                    getActiveUser().getUserName(),
+                    newAppt.getCustomerId(),
+                    newAppt.getUserId(),
+                    newAppt.getContact().getId(),
+                    newAppt.getId());
+            boolean updated = updateRecord(newAppt, params);
+            exitButton(actionEvent);
+            if (updated) { infoMessage("Appointment ID: " + newAppt.getId() + "\nSuccessfully Updated");}
+        }
+    }
+
+    // GETTERS
+
+    public static ObservableList<String> getAppointmentTypes() {
+        ObservableList<String> allTypes = FXCollections.observableArrayList();
+        try {
+            System.out.println("Querying Appointments Database for Unique Types.");
+            prepQuery("SELECT DISTINCT Type FROM appointments");
+            ResultSet rs = getResult();
+            System.out.println("Retrieved Results.");
+            int i = 0;
+            while (rs.next()) {
+
+                // set result to variables
+                System.out.println("Setting Results to Appointment Type.");
+                String typeResult = rs.getString("Type");
+                // add Type String to Observable List
+                allTypes.add(typeResult);
+                i++;
+                System.out.println(typeResult + " Type added to Observable List. (" + i + ")");
+            }
+        } catch (SQLException ex) {
+            printSQLException(ex);
+        }
+        System.out.println("Retrieving Observable List.");
+        return allTypes;
     }
 
 // end of class

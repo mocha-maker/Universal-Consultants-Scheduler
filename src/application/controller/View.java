@@ -40,8 +40,8 @@ public final class View extends Base {
             primaryStage.hide();
             final FXMLLoader loader = new FXMLLoader(getClass().getResource("/application/view/main.fxml"), rb);
             scene.setRoot(loader.load());
-            Main mainController = loader.getController();
-            mainController.setViewController(this);
+            MainView mainViewController = loader.getController();
+            mainViewController.setViewController(this);
             primaryStage.show();
         } catch (Exception ex) {
             System.out.println("Error opening Main Window:");
@@ -49,21 +49,5 @@ public final class View extends Base {
         }
     }
 
-
-    public void loadPopup(ActionEvent actionEvent, String title, Parent root) {
-        Stage stage = new Stage(); // new Stage
-        setViewController(this);
-        // Create New Scene
-        Scene scene = new Scene(root);
-
-        stage.setTitle(title); // Title
-        stage.setScene(scene); // Load Scene on Stage
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.showAndWait(); // Show Stage
-    }
-
-    public Stage getStage() {
-        return primaryStage;
-    }
 
 }

@@ -6,7 +6,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-
+/**
+ * Database connection utility class
+ */
 abstract class DBC {
 
     // Set SQL Database connector variables
