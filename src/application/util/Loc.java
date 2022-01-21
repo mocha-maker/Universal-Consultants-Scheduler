@@ -68,8 +68,8 @@ public abstract class Loc {
     // CONVERSIONS
 
     // TODO: Convert java.sql.Date from database to LocalDateTime
-    public static LocalDateTime toLocalDateTime(Timestamp timestamp) {
-        return timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    public static LocalDateTime convertToLocal(Timestamp timestamp) {
+        return ZonedDateTime.ofInstant(timestamp.toInstant(),ZoneId.of("UTC")).toLocalDateTime();
     }
 
     // TODO: Convert LocalDateTime to Timestamp for recording into database
@@ -133,7 +133,7 @@ public abstract class Loc {
     // PARSERS
 
     // TODO: Read formatted date times
-    public static LocalDateTime toLocalDateTime(String string) {
+    public static LocalDateTime convertToLocal(String string) {
         return LocalDateTime.parse(string);
     }
 

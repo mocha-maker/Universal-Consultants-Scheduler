@@ -22,7 +22,7 @@ import static application.util.Alerts.errorMessage;
 
 public abstract class TableBase<T extends Record> extends Base implements Initializable {
 
-    // set Base Table members
+    // TODO: set Base Table members
     @FXML
     protected TableView<T> tableView;
     @FXML

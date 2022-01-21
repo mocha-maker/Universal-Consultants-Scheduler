@@ -20,5 +20,9 @@ public class User extends Record {
         return userName;
     }
 
+    @Override
+    public String toString() {
+        return "ID: " + id + " - " + userName;
+    }
 
 }

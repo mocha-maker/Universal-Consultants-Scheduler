@@ -17,6 +17,7 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -129,16 +130,19 @@ public class ApptRecord extends RecordBase<Appointment> {
             apptTypeComboBox.setValue(formAppointment.getType());
 
             // TODO: Set dates in datepicker and time choice boxes
-            apptStartDate.setValue(formAppointment.getStart().toLocalDateTime().toLocalDate());
-            apptStartHour.setValue(getHour(formAppointment.getStart().toLocalDateTime()));
-            apptStartMinute.setValue(getMinute(formAppointment.getStart().toLocalDateTime()));
-            apptStartMeridiem.setValue(getMeridiem(formAppointment.getStart().toLocalDateTime()));
+            LocalDateTime startLocal = convertToLocal(formAppointment.getStart());
+            apptStartDate.setValue(startLocal.toLocalDate());
+            apptStartHour.setValue(getHour(startLocal));
+            apptStartMinute.setValue(getMinute(startLocal));
+            apptStartMeridiem.setValue(getMeridiem(startLocal));
 
-
-            apptEndDate.setValue(formAppointment.getEnd().toLocalDateTime().toLocalDate());
-            apptEndHour.setValue(getHour(formAppointment.getEnd().toLocalDateTime()));
-            apptEndMinute.setValue(getMinute(formAppointment.getEnd().toLocalDateTime()));
-            apptEndMeridiem.setValue(getMeridiem(formAppointment.getEnd().toLocalDateTime()));
+            LocalDateTime endLocal = convertToLocal(formAppointment.getEnd());
+            System.out.println(formAppointment.getEnd());
+            System.out.println(endLocal);
+            apptEndDate.setValue(endLocal.toLocalDate());
+            apptEndHour.setValue(getHour(endLocal));
+            apptEndMinute.setValue(getMinute(endLocal));
+            apptEndMeridiem.setValue(getMeridiem(endLocal));
 
         } else {
             apptId.setText(genId("appointment"));
@@ -318,6 +322,11 @@ public class ApptRecord extends RecordBase<Appointment> {
         System.out.println("Retrieving Observable List.");
         return allTypes;
     }
+
+
+    // Date Time Validation
+
+    //
 
 // end of class
 }
