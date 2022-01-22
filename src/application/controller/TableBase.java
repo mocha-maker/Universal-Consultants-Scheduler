@@ -1,7 +1,11 @@
 package application.controller;
 
+import application.model.Appointment;
+import application.model.Contact;
 import application.model.Customer;
 import application.model.Record;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -12,6 +16,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -31,12 +36,17 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
     private Button deleteButton;
     protected RecordBase<T> recordForm;
 
+    public static ObservableList<Contact> allContacts = FXCollections.observableArrayList();
+    public static ObservableList<Appointment> allAppointments = FXCollections.observableArrayList();
+    public static ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
 
 
 
     public TableBase() {
 
     };
+
+
 
     /**
      *
@@ -50,12 +60,12 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         */
         final TableColumn<T, Long> idColumn = new TableColumn<>("ID");
 
+        idColumn.setCellValueFactory(param -> new SimpleLongProperty(param.getValue().getId()).asObject());
 
-        //idColumn.setCellValueFactory(param -> new SimpleLongProperty(param.getValue().getId()).asObject());
-        //tableView.getColumns().add(idColumn);
-        setColumns();
+        tableView.getColumns().add(idColumn);
+        addColumns();
         updateTable();
-        //tableView.refresh();
+        tableView.refresh();
     }
 
 
@@ -63,12 +73,30 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
     SET TABLEVIEW STRUCTURE
      */
 
+    protected abstract void addColumns();
 
+    protected TableColumn<T, String> getStringColumn(Class<T> tClass, String colName) {
+        try {
+            final Field field = tClass.getDeclaredField(colName);
+            field.setAccessible(true);
+            final String k = String.format("%s", toCapitalized(field.getName()));
+            System.out.println(k);
+            TableColumn<T,String> col = new TableColumn<>(k);
+            col.setCellValueFactory(param -> {
+                try {
+                    return new SimpleStringProperty(field.get(param.getValue()).toString());
+                } catch (IllegalAccessException ex) {
+                    ex.printStackTrace();
+                }
+                return null;
+            });
+            return col;
+        } catch (NoSuchFieldException e) {
+            System.out.println(e);
+        }
+        return null;
+    }
 
-    /**
-     * Adds columns to the table according to class T
-     */
-    protected abstract void setColumns();
 
     /**
      * Populates Table with class records
@@ -87,9 +115,6 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
 
     public static <T> ObservableList<T> getAllRecords(T obj) {
         ObservableList<T> allRecords = FXCollections.observableArrayList();
-
-
-
         return allRecords;
     }
 
@@ -233,18 +258,42 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         return foundRecord;
     }
 
-/*    private ObservableList<T> lookupRecords(String q) {
-        ObservableList<T> allRecords = getAllRecords(X);
-        ObservableList<T> foundRecords = FXCollections.observableArrayList();
+    public static ObservableList<Contact> getAllContacts() {
+        allContacts.clear();
 
-        for (T r : allRecords) {
-            if (r.getName().toLowerCase().contains(q)) {
-                foundRecords.add(r);
-                break;
+        try {
+            System.out.println("Querying Contacts Database.");
+            prepQuery("SELECT * FROM contacts");
+            ResultSet rs = getResult();
+            System.out.println("Retrieved Results.");
+            int i = 0;
+            while (rs.next()) {
+
+                // set result to variables
+                System.out.println("Setting Results to Contact Variables.");
+                int contact_id = rs.getInt("Contact_ID");
+                String contact_name = rs.getString("Contact_Name");
+                String email = rs.getString("Email");
+
+                // construct Contact object using result
+                System.out.println("Constructing Contact Object.");
+                Contact contactResult = new Contact(contact_id,
+                        contact_name,
+                        email);
+
+                // add Contact object to Observable List
+                allContacts.add(contactResult);
+                i++;
+                System.out.println("Contact added to Observable List. (" + i + ")");
+
             }
+        } catch (SQLException ex) {
+            printSQLException(ex);
         }
-        return foundRecords;
-    }*/
+        System.out.println("Retrieving Observable List.");
+        return allContacts;
+    }
+
 
 
 

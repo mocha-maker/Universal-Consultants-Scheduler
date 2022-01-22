@@ -71,8 +71,9 @@ public abstract class Base extends DAO implements Initializable {
     public void switchScene(String fileName) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(appf + fileName + ".fxml"));
         view = loader.load();
-        mainPane.getChildren().setAll(view);
         loader.getController();
+        mainPane.getChildren().setAll(view);
+
     }
 
     public void popupScene(Parent root, String title) throws IOException {
@@ -156,6 +157,10 @@ public abstract class Base extends DAO implements Initializable {
 
     public List<Object> toList(Object... args) {
         return List.of(args);
+    }
+
+    public String toCapitalized(String s) {
+        return s.substring(0,1).toUpperCase() + s.substring(1);
     }
 
     // end of class

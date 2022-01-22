@@ -1,6 +1,7 @@
 package application.model;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 public class Appointment extends Record {
 
@@ -8,13 +9,13 @@ public class Appointment extends Record {
     private String description;
     private String location;
     private String type;
-    private Timestamp start;
-    private Timestamp end;
+    private LocalDateTime start;
+    private LocalDateTime end;
     private Contact contact;
     private int customerId;
     private int userId;
 
-    public Appointment(int id, String title, String description, String location, String type, Timestamp start, Timestamp end, Contact contact, int customerID, int userID) {
+    public Appointment(int id, String title, String description, String location, String type, LocalDateTime start, LocalDateTime end, Contact contact, int customerID, int userID) {
         super(id);
         setTitle(title);
         setDescription(description);
@@ -47,11 +48,11 @@ public class Appointment extends Record {
 
     public void setType(String type) { this.type = type; }
 
-    public void setStart(Timestamp start) {
+    public void setStart(LocalDateTime start) {
         this.start = start;
     }
 
-    public void setEnd(Timestamp end) {
+    public void setEnd(LocalDateTime end) {
         this.end = end;
     }
 
@@ -85,11 +86,11 @@ public class Appointment extends Record {
 
     public String getType() { return type;}
 
-    public Timestamp getStart() {
+    public LocalDateTime getStart() {
         return start;
     }
 
-    public Timestamp getEnd() {
+    public LocalDateTime getEnd() {
         return end;
     }
 

@@ -1,10 +1,10 @@
 package application.util;
 
-import application.model.User;
-
 import java.sql.Timestamp;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.WeekFields;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
@@ -58,23 +58,55 @@ public abstract class Loc {
     // GETTERS
 
     public static Timestamp getCurrentTimestamp() {
-        return (toTimestamp(LocalDateTime.now()));
+        return (toTimestamp(toUTC(LocalDateTime.now())));
     }
 
     public static LocalDate getCurrentLocalDate() { return (LocalDateTime.now().toLocalDate()); }
 
     public static LocalTime getCurrentLocalTime() { return (LocalDateTime.now().toLocalTime()); }
 
+    // For use in Calendar Controller
+
+    public static LocalDate getFirstOfMonth(LocalDate localDate) {
+        return localDate.withDayOfMonth(1);
+    }
+
+    public static LocalDate getBeginOfWeek(LocalDate localDate) {
+        DayOfWeek firstDayofWeek = WeekFields.of(Locale.getDefault()).getFirstDayOfWeek();
+        return localDate.with(TemporalAdjusters.previousOrSame(firstDayofWeek));
+    }
+
+    public static LocalDate getNextMonth(LocalDate localDate) {
+        return getFirstOfMonth(localDate.plusMonths(1));
+    }
+
+    public static LocalDate getNextWeek(LocalDate localDate) {
+        return getBeginOfWeek(localDate.plusWeeks(1));
+    }
+
+    public static LocalDate getPrevMonth(LocalDate localDate) {
+        return getFirstOfMonth(localDate.minusMonths(1));
+    }
+
+    public static LocalDate getPrevWeek(LocalDate localDate) {
+        return getBeginOfWeek(localDate.minusWeeks(1));
+    }
+
+
     // CONVERSIONS
 
     // TODO: Convert java.sql.Date from database to LocalDateTime
-    public static LocalDateTime convertToLocal(Timestamp timestamp) {
-        return ZonedDateTime.ofInstant(timestamp.toInstant(),ZoneId.of("UTC")).toLocalDateTime();
+    public static LocalDateTime timeStampToLocal(Timestamp timestamp) {
+        return timestamp.toLocalDateTime().atZone(ZoneId.of("UTC")).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 
     // TODO: Convert LocalDateTime to Timestamp for recording into database
     public static Timestamp toTimestamp(LocalDateTime localDateTime) {
         return Timestamp.valueOf(localDateTime);
+    }
+
+    public static Timestamp toTimestamp(LocalDate localDate) {
+        return Timestamp.valueOf(localDate.atTime(0,0,0,0));
     }
 
     // TODO: Get default Timezone and ZoneID
@@ -105,7 +137,7 @@ public abstract class Loc {
      */
     public static LocalDateTime toUTC(LocalDateTime localDateTime) {
         System.out.println("Retrieving converted time in LDT form.");
-        return toUTCZDT(localDateTime).toLocalDateTime();
+        return localDateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
     }
 
     /**
@@ -133,7 +165,7 @@ public abstract class Loc {
     // PARSERS
 
     // TODO: Read formatted date times
-    public static LocalDateTime convertToLocal(String string) {
+    public static LocalDateTime stringToLocal(String string) {
         return LocalDateTime.parse(string);
     }
 
@@ -149,14 +181,13 @@ public abstract class Loc {
 
     // TODO: Move to Loc.java and add a LocalDateTime.parse(str, formatter); DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a")
 
-    public static Timestamp getTimestamp(LocalDate date, String hour, String minute, String meridiem) {
-
+    public static LocalDateTime formatTimeSelection(LocalDate date, int hour, int minute, String meridiem) {
         // Convert hour to 24-clock
-        if (meridiem.equals("PM")) {
-            hour = String.valueOf(Integer.parseInt(hour) + 12 );
+        if (meridiem.equals("PM") && hour < 12) {
+            hour = hour + 12 ;
         }
 
-        Timestamp dateTime = Timestamp.valueOf(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " " + hour + ":" + minute + ":00 ");
+        LocalDateTime dateTime = date.atTime(hour,minute,0,0);
         System.out.println(dateTime);
         return dateTime;
     }

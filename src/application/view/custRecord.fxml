@@ -121,14 +121,8 @@
                   </AnchorPane>
                </children>
             </AnchorPane>
-            <TableView prefHeight="200.0" prefWidth="200.0">
+            <TableView fx:id="tableView" prefHeight="200.0" prefWidth="200.0">
               <columns>
-                <TableColumn fx:id="apptStartDate" prefWidth="75.0" text="Start Date" />
-                <TableColumn fx:id="apptStartTime" prefWidth="75.0" text="Start Time" />
-                  <TableColumn fx:id="apptEndDate" prefWidth="75.0" text="End Date" />
-                  <TableColumn fx:id="apptEndTime" prefWidth="75.0" text="End Time" />
-                  <TableColumn fx:id="apptTitle" prefWidth="262.0" text="Appointment" />
-                  <TableColumn fx:id="apptContact" prefWidth="115.0" text="Contact" />
               </columns>
             </TableView>
          </children>

@@ -2,6 +2,7 @@ package application.controller;
 
 import application.model.Appointment;
 import application.model.Customer;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -20,7 +21,7 @@ import java.sql.SQLException;
 import static application.controller.ApptTable.allAppointments;
 import static application.util.Alerts.confirmMessage;
 import static application.util.Alerts.infoMessage;
-
+import static application.util.Loc.dateToString;
 
 
 public class CustTable extends TableBase<Customer> implements Initializable {
@@ -28,37 +29,32 @@ public class CustTable extends TableBase<Customer> implements Initializable {
         CUSTOMER TABLE ELEMENTS
         ======================*/
 
-    public static ObservableList<Customer> allCustomers;
-
-    public TableView<Customer> allCustomersTable;
-    public TableColumn<?,?> custID;
-    public TableColumn<?,?> custName;
-    public TableColumn<?,?> custPhone;
-    public TableColumn<?,?> custAddress;
-    public TableColumn<?,?> custCode;
-    public TableColumn<?,?> custState;
-    public TableColumn<?,?> custCountry;
-
 
     /*  ======================
         TABLEVIEW MANAGEMENT
         ======================*/
-    public void setColumns() {
-        System.out.println("Setting Customer Table Columns.");
-        custID.setCellValueFactory(new PropertyValueFactory<>("id"));
-        custName.setCellValueFactory(new PropertyValueFactory<>("customerName"));
-        custPhone.setCellValueFactory(new PropertyValueFactory<>("phone"));
-        custAddress.setCellValueFactory(new PropertyValueFactory<>("address"));
-        custCode.setCellValueFactory(new PropertyValueFactory<>("postalCode"));
-        custState.setCellValueFactory(new PropertyValueFactory<>("division"));
-        custCountry.setCellValueFactory(new PropertyValueFactory<>("country"));
+    public void addColumns() {
+        // Set specially formatted columns
+        final TableColumn<?, ?> nameCol = new TableColumn<>("Contact");
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("contact"));
+
+
+        tableView.getColumns().addAll(getStringColumn(Customer.class, "customerName"),
+                getStringColumn(Customer.class, "phone"),
+                getStringColumn(Customer.class, "address"),
+                getStringColumn(Customer.class,"postalCode"),
+                getStringColumn(Customer.class,"division"),
+                getStringColumn(Customer.class,"country"));
+
     }
 
     /**
      * Updates Customer Table
      * used to populate tableview
      */
-    public void updateTable() { allCustomersTable.setItems(getAllCustomers()); }
+    public void updateTable() {
+        tableView.getItems().clear();
+        tableView.setItems(getAllCustomers()); }
 
     /*  ======================
         Event Handling
@@ -69,7 +65,7 @@ public class CustTable extends TableBase<Customer> implements Initializable {
      */
     public void toCustRecord(ActionEvent e) throws IOException {
         // capture selected customer from table
-        Customer customer = allCustomersTable.getSelectionModel().getSelectedItem();
+        Customer customer = tableView.getSelectionModel().getSelectedItem();
 
         // record which button was clicked
         String button = ((Button)e.getSource()).getText();
@@ -104,7 +100,7 @@ public class CustTable extends TableBase<Customer> implements Initializable {
     }
 
     public void deleteCustRecord(ActionEvent e) {
-        Customer customer = allCustomersTable.getSelectionModel().getSelectedItem();
+        Customer customer = tableView.getSelectionModel().getSelectedItem();
 
         if (customer != null) {
             boolean confirm = confirmMessage("Delete Customer", "Are you sure you want to delete " + customer.getCustomerName() + " with  ID " + customer.getId() + "? \n" +
@@ -152,7 +148,8 @@ public class CustTable extends TableBase<Customer> implements Initializable {
      *
      */
     public static ObservableList<Customer> getAllCustomers() {
-        allCustomers = FXCollections.observableArrayList();
+        allAppointments.clear();
+
 
         try {
             System.out.println("Querying Customers Database.");

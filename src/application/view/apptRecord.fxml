@@ -53,7 +53,12 @@
                         <Insets right="10.0" />
                      </GridPane.margin>
                   </Label>
-                  <ComboBox fx:id="customerComboBox" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                     <children>
+                        <ComboBox fx:id="customerComboBox" prefWidth="150.0" />
+                        <Button mnemonicParsing="false" text="Add New" onAction="#addNewCust"/>
+                     </children>
+                  </HBox>
                   <Label text="UserID:" GridPane.columnIndex="2" GridPane.halignment="RIGHT">
                      <GridPane.margin>
                         <Insets right="10.0" />
@@ -105,8 +110,8 @@
                      </GridPane.margin>
                   </Label>
                   <HBox alignment="BOTTOM_LEFT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="3" GridPane.rowIndex="7">
-                     <ChoiceBox fx:id="apptEndHour"   />
-                     <ChoiceBox fx:id="apptEndMinute"  />
+                     <ChoiceBox fx:id="apptEndHour" />
+                     <ChoiceBox fx:id="apptEndMinute" />
                      <ChoiceBox fx:id="apptEndMeridiem" />
                   </HBox>
                   <HBox alignment="BOTTOM_RIGHT" prefHeight="100.0" prefWidth="200.0" spacing="4.0" GridPane.columnIndex="3" GridPane.rowIndex="8">

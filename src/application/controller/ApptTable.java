@@ -2,6 +2,7 @@ package application.controller;
 
 import application.model.Appointment;
 import application.model.Contact;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -10,20 +11,17 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 
 import static application.util.Alerts.confirmMessage;
 import static application.util.Alerts.infoMessage;
+import static application.util.Loc.timeStampToLocal;
 import static application.util.Loc.dateToString;
 
 public final class ApptTable extends TableBase<Appointment> implements Initializable {
@@ -32,12 +30,10 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         APPOINTMENT TABLE ELEMENTS
         ======================*/
 
-    public static ObservableList<Contact> allContacts;
-    public static ObservableList<Appointment> allAppointments;
 
     // TODO TableColumn Factory
 
-    public TableView<Appointment> allAppointmentsTable;
+/*    public TableView<Appointment> allAppointmentsTable;
     public TableColumn<?,?> apptID;
     public TableColumn<?,?> apptTitle;
     public TableColumn<?,?> apptDesc;
@@ -47,55 +43,43 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
     public TableColumn<Appointment, Timestamp> apptEnd;
     public TableColumn<?,?> apptContact;
     public TableColumn<?,?> apptCustID;
-    public TableColumn<?,?> apptUserID;
+    public TableColumn<?,?> apptUserID;*/
 
 
     /*  ======================
         TABLEVIEW MANAGEMENT
         ======================*/
-    public void setColumns() {
 
-        System.out.println("Setting Appointment Table Columns.");
-        apptID.setCellValueFactory(new PropertyValueFactory<>("id"));
-        apptTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
-        apptDesc.setCellValueFactory(new PropertyValueFactory<>("description"));
-        apptLoc.setCellValueFactory(new PropertyValueFactory<>("location"));
-        apptType.setCellValueFactory(new PropertyValueFactory<>("type"));
-        apptStart.setCellValueFactory(new PropertyValueFactory<>("start"));
-apptStart.setCellFactory(column -> {
-    TableCell<Appointment, Timestamp> cell = new TableCell<Appointment, Timestamp>() {
+    /**
+     * Adds Columns using Generic Table Column Adder
+     */
+    protected void addColumns() {
 
-        @Override
-        protected void updateItem(Timestamp item, boolean empty) {
-            super.updateItem(item, empty);
-            if (empty) {
-                setText("");
-            } else {
-                this.setText(dateToString(item.toLocalDateTime(),"yyyy-MM-dd hh:mm a"));
-            }
-        }
-    };
-    return cell;
-});
-        apptEnd.setCellValueFactory(new PropertyValueFactory<>("end"));
-        apptEnd.setCellFactory(column -> {
-            TableCell<Appointment, Timestamp> cell = new TableCell<Appointment, Timestamp>() {
+        // Set specially formatted columns
+        final TableColumn<Appointment, String> contactCol = new TableColumn<>("Contact");
+        contactCol.setCellValueFactory(new PropertyValueFactory<>("contact"));
 
-                @Override
-                protected void updateItem(Timestamp item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty) {
-                        setText("");
-                    } else {
-                        this.setText(dateToString(item.toLocalDateTime(),"yyyy-MM-dd hh:mm a"));
-                    }
-                }
-            };
-            return cell;
-        });
-        apptContact.setCellValueFactory(new PropertyValueFactory<>("contact"));
-        apptCustID.setCellValueFactory(new PropertyValueFactory<>("customerId"));
-        apptUserID.setCellValueFactory(new PropertyValueFactory<>("userId"));
+        final TableColumn<Appointment, String> startCol = new TableColumn<>("Start");
+        startCol.setCellValueFactory(param -> new SimpleStringProperty(dateToString(param.getValue().getStart(),"yyyy-MM-dd hh:mm a")));
+
+        final TableColumn<Appointment, String> endCol =new TableColumn<>("End");
+        endCol.setCellValueFactory(param -> new SimpleStringProperty(dateToString(param.getValue().getEnd(),"yyyy-MM-dd hh:mm a")));
+
+        final TableColumn<Appointment, Integer> custIdCol =new TableColumn<>("CustomerId");
+        custIdCol.setCellValueFactory(new PropertyValueFactory<>("customerId"));
+
+        final TableColumn<Appointment, Integer> userIdCol =new TableColumn<>("UserId");
+        userIdCol.setCellValueFactory(new PropertyValueFactory<>("userId"));
+
+        tableView.getColumns().addAll(getStringColumn(Appointment.class, "title"),
+                getStringColumn(Appointment.class, "description"),
+                getStringColumn(Appointment.class, "location"),
+                contactCol,
+                getStringColumn(Appointment.class,"type"),
+                startCol,
+                endCol,
+                custIdCol,
+                userIdCol);
     }
 
     /**
@@ -103,16 +87,16 @@ apptStart.setCellFactory(column -> {
      * used to populate tableview
      */
     public void updateTable() {
-         allAppointmentsTable.setItems(getAllAppointments());
+        tableView.getItems().clear();
+        tableView.setItems(getAllAppointments());
     }
-
 
     /**
      *
      * @return
      */
     public static ObservableList<Appointment> getAllAppointments() {
-        allAppointments = FXCollections.observableArrayList();
+       allAppointments.clear();
 
         try {
             System.out.println("Querying Appointment Database.");
@@ -130,8 +114,8 @@ apptStart.setCellFactory(column -> {
                 String apptLoc = rs.getString("Location");
                 String apptType = rs.getString("Type");
 
-                Timestamp apptStart = rs.getTimestamp("Start");
-                Timestamp apptEnd = rs.getTimestamp("End");
+                LocalDateTime apptStart = timeStampToLocal(rs.getTimestamp("Start"));
+                LocalDateTime apptEnd = timeStampToLocal(rs.getTimestamp("End"));
 
                 Contact apptContact = getAllContacts().get(rs.getInt("Contact_ID")-1);
                 int apptCustID = rs.getInt("Customer_ID");
@@ -163,41 +147,7 @@ apptStart.setCellFactory(column -> {
         return allAppointments;
     }
 
-    public static ObservableList<Contact> getAllContacts() {
-        allContacts = FXCollections.observableArrayList();
 
-        try {
-            System.out.println("Querying Contacts Database.");
-            prepQuery("SELECT * FROM contacts");
-            ResultSet rs = getResult();
-            System.out.println("Retrieved Results.");
-            int i = 0;
-            while (rs.next()) {
-
-                // set result to variables
-                System.out.println("Setting Results to Contact Variables.");
-                int contact_id = rs.getInt("Contact_ID");
-                String contact_name = rs.getString("Contact_Name");
-                String email = rs.getString("Email");
-
-                // construct Contact object using result
-                System.out.println("Constructing Contact Object.");
-                Contact contactResult = new Contact(contact_id,
-                        contact_name,
-                        email);
-
-                // add Contact object to Observable List
-                allContacts.add(contactResult);
-                i++;
-                System.out.println("Contact added to Observable List. (" + i + ")");
-
-            }
-        } catch (SQLException ex) {
-            printSQLException(ex);
-        }
-        System.out.println("Retrieving Observable List.");
-        return allContacts;
-    }
 
 
     /*  ======================
@@ -222,7 +172,7 @@ apptStart.setCellFactory(column -> {
         System.out.println("Action needed = " + action);
 
         // capture selected appointment from table
-        Appointment appointment = allAppointmentsTable.getSelectionModel().getSelectedItem();
+        Appointment appointment = tableView.getSelectionModel().getSelectedItem();
 
         if (appointment !=  null || action == "add") {
             // TODO: Transfer parameters to Controller
@@ -252,7 +202,7 @@ apptStart.setCellFactory(column -> {
     }
 
     public void deleteApptRecord(ActionEvent e) {
-        Appointment appointment = allAppointmentsTable.getSelectionModel().getSelectedItem();
+        Appointment appointment = tableView.getSelectionModel().getSelectedItem();
 
         if (appointment != null) {
             // prompt for confirmation

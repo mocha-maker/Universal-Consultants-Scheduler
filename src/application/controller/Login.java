@@ -11,7 +11,11 @@ import javafx.scene.control.TextField;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLOutput;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ResourceBundle;
 
 import static application.util.Alerts.errorMessage;
@@ -94,6 +98,9 @@ public class Login extends Base implements Initializable {
 
         // TODO: Remove autofill
         autoFillLoginAsTest();
+
+
+
     }
 
 

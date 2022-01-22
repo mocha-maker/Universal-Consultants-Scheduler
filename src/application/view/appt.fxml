@@ -51,18 +51,9 @@
             </HBox>
          </AnchorPane>
       </AnchorPane>
-      <TableView prefHeight="500.0" prefWidth="200.0" fx:id="allAppointmentsTable">
+      <TableView prefHeight="500.0" prefWidth="200.0" fx:id="tableView">
          <columns>
-            <TableColumn prefWidth="75.0" text="ID" fx:id="apptID"/>
-            <TableColumn prefWidth="75.0" text="Title" fx:id="apptTitle"/>
-            <TableColumn prefWidth="75.0" text="Description" fx:id="apptDesc"/>
-            <TableColumn prefWidth="75.0" text="Location" fx:id="apptLoc"/>
-            <TableColumn prefWidth="75.0" text="Type" fx:id="apptType"/>
-            <TableColumn prefWidth="75.0" text="Start" fx:id="apptStart"/>
-            <TableColumn prefWidth="75.0" text="End" fx:id="apptEnd"/>
-            <TableColumn prefWidth="75.0" text="Contact" fx:id="apptContact"/>
-            <TableColumn prefWidth="75.0" text="CustomerID" fx:id="apptCustID"/>
-            <TableColumn prefWidth="75.0" text="UserID" fx:id="apptUserID"/>
+
          </columns>
       </TableView>
    </VBox>

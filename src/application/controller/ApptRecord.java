@@ -7,16 +7,20 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 
+import java.io.IOException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -35,7 +39,6 @@ public class ApptRecord extends RecordBase<Appointment> {
     Appointment formAppointment = null;
 
     private static List<Object> params;
-
 
     @FXML
     Text apptRecordTitle;
@@ -130,13 +133,13 @@ public class ApptRecord extends RecordBase<Appointment> {
             apptTypeComboBox.setValue(formAppointment.getType());
 
             // TODO: Set dates in datepicker and time choice boxes
-            LocalDateTime startLocal = convertToLocal(formAppointment.getStart());
+            LocalDateTime startLocal = formAppointment.getStart();
             apptStartDate.setValue(startLocal.toLocalDate());
             apptStartHour.setValue(getHour(startLocal));
             apptStartMinute.setValue(getMinute(startLocal));
             apptStartMeridiem.setValue(getMeridiem(startLocal));
 
-            LocalDateTime endLocal = convertToLocal(formAppointment.getEnd());
+            LocalDateTime endLocal = formAppointment.getEnd();
             System.out.println(formAppointment.getEnd());
             System.out.println(endLocal);
             apptEndDate.setValue(endLocal.toLocalDate());
@@ -179,9 +182,10 @@ public class ApptRecord extends RecordBase<Appointment> {
 
 
     private void setCustomerComboBox() {
+        customerComboBox.getItems().clear();
         System.out.println("Setting Customer Combo Box...");
         customerComboBox.setPromptText("Select a customer.");
-
+        getAllCustomers();
         try {
             customerComboBox.getItems().addAll(allCustomers);
         } catch (NullPointerException ex) {
@@ -240,8 +244,15 @@ public class ApptRecord extends RecordBase<Appointment> {
     @FXML
     private void saveAppointment(ActionEvent actionEvent) {
         // Record Time Values
-        Timestamp start = getTimestamp(apptStartDate.getValue(),apptStartHour.getValue().toString(),apptStartMinute.getValue().toString(),apptStartMeridiem.getValue().toString());
-        Timestamp end = getTimestamp(apptEndDate.getValue(),apptEndHour.getValue().toString(),apptEndMinute.getValue().toString(),apptEndMeridiem.getValue().toString());;
+
+        LocalDateTime start = formatTimeSelection(apptStartDate.getValue(),
+                Integer.parseInt(apptStartHour.getValue()),
+                Integer.parseInt(apptStartMinute.getValue()),
+                apptStartMeridiem.getValue());
+        LocalDateTime end = formatTimeSelection(apptEndDate.getValue(),
+                Integer.parseInt(apptEndHour.getValue()),
+                Integer.parseInt(apptEndMinute.getValue()),
+                apptEndMeridiem.getValue());;
 
         // Create appointment object
         Appointment newAppt = new Appointment(Integer.parseInt(apptId.getText()),
@@ -265,8 +276,8 @@ public class ApptRecord extends RecordBase<Appointment> {
                     newAppt.getDescription(),
                     newAppt.getLocation(),
                     newAppt.getType(),
-                    newAppt.getStart(),
-                    newAppt.getEnd(),
+                    toTimestamp(toUTC(newAppt.getStart())),
+                    toTimestamp(toUTC(newAppt.getEnd())),
                     getCurrentTimestamp(),
                     getActiveUser().getUserName(),
                     getCurrentTimestamp(),
@@ -282,8 +293,8 @@ public class ApptRecord extends RecordBase<Appointment> {
                     newAppt.getDescription(),
                     newAppt.getLocation(),
                     newAppt.getType(),
-                    newAppt.getStart(),
-                    newAppt.getEnd(),
+                    toTimestamp(toUTC(newAppt.getStart())),
+                    toTimestamp(toUTC(newAppt.getEnd())),
                     getCurrentTimestamp(),
                     getActiveUser().getUserName(),
                     newAppt.getCustomerId(),
@@ -323,6 +334,18 @@ public class ApptRecord extends RecordBase<Appointment> {
         return allTypes;
     }
 
+    // EVENT HANDLERS
+    @FXML
+    private void addNewCust(ActionEvent actionEvent) throws IOException {
+        String action = "add";
+        Customer customer = null;
+        FXMLLoader loader = setLoader("CustRecord");
+        Parent root = loader.load();
+        CustRecord controller = loader.getController();
+        controller.getParams(action, customer);
+        popupScene(root, "Customer Record");
+        setCustomerComboBox();
+    }
 
     // Date Time Validation
 
