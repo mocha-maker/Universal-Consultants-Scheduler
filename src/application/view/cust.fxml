@@ -22,17 +22,17 @@
       <AnchorPane prefHeight="25.0" prefWidth="680.0">
          <AnchorPane prefWidth="300.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
             <HBox prefWidth="200.0">
-               <Button mnemonicParsing="false" text="New" onAction="#toCustRecord">
+               <Button fx:id="addButton" mnemonicParsing="false" text="New" onAction="#toRecords">
                   <HBox.margin>
                      <Insets right="10.0" />
                   </HBox.margin>
                </Button>
-               <Button mnemonicParsing="false" text="Update" onAction="#toCustRecord">
+               <Button fx:id="editButton" mnemonicParsing="false" text="Edit" onAction="#toRecords">
                   <HBox.margin>
                      <Insets right="10.0" />
                   </HBox.margin>
                </Button>
-               <Button mnemonicParsing="false" text="Delete" onAction="#deleteCustRecord">
+               <Button fx:id="deleteButton" mnemonicParsing="false" text="Delete" onAction="#deleteCustRecord">
                   <HBox.margin>
                      <Insets right="10.0" />
                   </HBox.margin>

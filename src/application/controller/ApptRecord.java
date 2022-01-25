@@ -3,6 +3,8 @@ package application.controller;
 import application.model.Appointment;
 import application.model.Contact;
 import application.model.Customer;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -20,8 +22,7 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -29,14 +30,12 @@ import static application.controller.ApptTable.allContacts;
 import static application.controller.ApptTable.getAllContacts;
 import static application.controller.CustTable.allCustomers;
 import static application.controller.CustTable.getAllCustomers;
+import static application.util.Alerts.errorMessage;
 import static application.util.Alerts.infoMessage;
 import static application.util.Loc.*;
 
 @SuppressWarnings("rawtypes")
 public class ApptRecord extends RecordBase<Appointment> {
-
-    Boolean formTypeNew = true;
-    Appointment formAppointment = null;
 
     private static List<Object> params;
 
@@ -78,89 +77,116 @@ public class ApptRecord extends RecordBase<Appointment> {
     ChoiceBox<String> apptEndMeridiem;
 
 
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Set up form structures
-        setComboBoxes();
+    // Validation variables
+    Boolean typeValid;
+    Boolean customerValid;
+    Boolean titleValid;
+    Boolean descValid;
+    Boolean locValid;
+    Boolean startDateTimeValid;
+    Boolean endDateTimeValid;
 
+    @Override
+    protected void addListeners() {
+        apptTypeComboBox.valueProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String oldVal, String newVal) {
+                if (newVal != oldVal) {
+                    typeValid = validateField(apptTypeComboBox, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
+                }
+            }
+        });
     }
 
-    // set record title depending on button pressed (pass variable from controller)
 
 
-    // receive parameters
-    public void getParams(String action, Appointment appointment) {
+    /**
+     * Transfer parameters from other controllers to this one
+     * @param action
+     * @param appointment
+     */
+    @Override
+    protected void getParams(String action, Appointment appointment) {
         System.out.println("Transferring parameters to new controller.");
-        System.out.println("Setting Selected Appointment.");
-        formAppointment = appointment;
+        System.out.println("Setting Selected Customer.");
+        record = appointment;
+        LocalDateTime startLocal;
+        LocalDateTime endLocal;
 
-        System.out.println("Updating Title String...");
+        System.out.println(action);
+
         switch (action) {
-            case "add":
+            case "New":
+                System.out.println("Updating Title String...");
                 apptRecordTitle.setText("Add New Appointment");
                 formTypeNew = true;
+                System.out.println(formTypeNew);
+
+                apptId.setText(genId("appointment"));
+                userId.setText(String.valueOf(getActiveUser().getId()));
+
+                // TODO: Set Default times
+                startLocal = LocalDateTime.now();
+                apptStartDate.setValue(startLocal.toLocalDate());
+                apptStartHour.setValue(getHour(startLocal));
+                apptStartMinute.setValue(getMinute(startLocal));
+                apptStartMeridiem.setValue(getMeridiem(startLocal));
+
+                endLocal = LocalDateTime.now().plusMinutes(30);
+                apptEndDate.setValue(endLocal.toLocalDate());
+                apptEndHour.setValue(getHour(endLocal));
+                apptEndMinute.setValue(getMinute(endLocal));
+                apptEndMeridiem.setValue(getMeridiem(endLocal));
+
                 break;
-            case "edit" :
+            case "Edit" :
+                System.out.println("Updating Title String...");
                 apptRecordTitle.setText("Edit Existing Appointment");
                 formTypeNew = false;
+                System.out.println(formTypeNew);
+
+                userId.setText(String.valueOf(record.getUserId()));
+                apptId.setText(String.valueOf(record.getId()));
+                apptTitle.setText(record.getTitle());
+                apptDesc.setText(record.getDescription());
+                apptLoc.setText(record.getLocation());
+
+                Contact apptContact = allContacts.get(record.getContact().getId()-1);
+                contactComboBox.setValue(apptContact);
+
+                Customer apptCustomer = record.getCustomer();
+                customerComboBox.setValue(apptCustomer);
+
+                apptTypeComboBox.setValue(record.getType());
+
+                startLocal = record.getStart();
+                apptStartDate.setValue(startLocal.toLocalDate());
+                apptStartHour.setValue(getHour(startLocal));
+                apptStartMinute.setValue(getMinute(startLocal));
+                apptStartMeridiem.setValue(getMeridiem(startLocal));
+
+                endLocal = record.getEnd();
+                apptEndDate.setValue(endLocal.toLocalDate());
+                apptEndHour.setValue(getHour(endLocal));
+                apptEndMinute.setValue(getMinute(endLocal));
+                apptEndMeridiem.setValue(getMeridiem(endLocal));
+
                 break;
             default:
                 break;
         }
-        populateForm();
+
     }
 
-    // TODO: Populate Form
-    private void populateForm() {
-        System.out.println("Populating Form...");
-
-        if (!formTypeNew) {
-            userId.setText(String.valueOf(formAppointment.getUserId()));
-            apptId.setText(String.valueOf(formAppointment.getId()));
-            apptTitle.setText(formAppointment.getTitle());
-            apptDesc.setText(formAppointment.getDescription());
-            apptLoc.setText(formAppointment.getLocation());
-
-
-            // TODO: Set combo box values
-            Contact apptContact = allContacts.get(formAppointment.getContact().getId()-1);
-            System.out.println(apptContact);
-            contactComboBox.setValue(apptContact);
-
-            Customer apptCustomer = allCustomers.get((formAppointment.getCustomerId() - 1));
-            customerComboBox.setValue(apptCustomer);
-
-            apptTypeComboBox.setValue(formAppointment.getType());
-
-            // TODO: Set dates in datepicker and time choice boxes
-            LocalDateTime startLocal = formAppointment.getStart();
-            apptStartDate.setValue(startLocal.toLocalDate());
-            apptStartHour.setValue(getHour(startLocal));
-            apptStartMinute.setValue(getMinute(startLocal));
-            apptStartMeridiem.setValue(getMeridiem(startLocal));
-
-            LocalDateTime endLocal = formAppointment.getEnd();
-            System.out.println(formAppointment.getEnd());
-            System.out.println(endLocal);
-            apptEndDate.setValue(endLocal.toLocalDate());
-            apptEndHour.setValue(getHour(endLocal));
-            apptEndMinute.setValue(getMinute(endLocal));
-            apptEndMeridiem.setValue(getMeridiem(endLocal));
-
-        } else {
-            apptId.setText(genId("appointment"));
-            userId.setText(String.valueOf(getActiveUser().getId()));
-        }
-    }
 
     /*  ======================
         TODO: COMBO BOX MANAGEMENT
         ======================*/
-    private void setComboBoxes() {
+    @Override
+    protected void setComboBoxes() {
         System.out.println("Starting Combo box Population...");
-        if (allCustomers == null) { getAllCustomers(); }
-        if (allContacts == null) { getAllContacts(); }
-
+        getAllCustomers();
+        getAllContacts();
         setAppointmentType();
         setContactComboBox();
         setCustomerComboBox();
@@ -245,65 +271,66 @@ public class ApptRecord extends RecordBase<Appointment> {
     private void saveAppointment(ActionEvent actionEvent) {
         // Record Time Values
 
-        LocalDateTime start = formatTimeSelection(apptStartDate.getValue(),
-                Integer.parseInt(apptStartHour.getValue()),
-                Integer.parseInt(apptStartMinute.getValue()),
-                apptStartMeridiem.getValue());
-        LocalDateTime end = formatTimeSelection(apptEndDate.getValue(),
-                Integer.parseInt(apptEndHour.getValue()),
-                Integer.parseInt(apptEndMinute.getValue()),
-                apptEndMeridiem.getValue());;
+        LocalDateTime start = getStartDateTime();
+        LocalDateTime end = getEndDateTime();
 
-        // Create appointment object
-        Appointment newAppt = new Appointment(Integer.parseInt(apptId.getText()),
-                apptTitle.getText(),
-                apptDesc.getText(),
-                apptLoc.getText(),
-                apptTypeComboBox.getValue(),
-                start,
-                end,
-                contactComboBox.getValue(),
-                customerComboBox.getValue().getId(),
-                Integer.parseInt(userId.getText()));
+        if (validateDateTimes(start, end)) {
+            System.out.println("DateTimes are valid.");
 
-        // Create parameters list
+            // Create appointment object
+            Appointment newAppt = new Appointment(Integer.parseInt(apptId.getText()),
+                    apptTitle.getText(),
+                    apptDesc.getText(),
+                    apptLoc.getText(),
+                    apptTypeComboBox.getValue(),
+                    start,
+                    end,
+                    contactComboBox.getValue(),
+                    customerComboBox.getValue(),
+                    Integer.parseInt(userId.getText()));
 
-        // check form type
-        if (formTypeNew) {
-            //
-            params = toList(newAppt.getId(),
-                    newAppt.getTitle(),
-                    newAppt.getDescription(),
-                    newAppt.getLocation(),
-                    newAppt.getType(),
-                    toTimestamp(toUTC(newAppt.getStart())),
-                    toTimestamp(toUTC(newAppt.getEnd())),
-                    getCurrentTimestamp(),
-                    getActiveUser().getUserName(),
-                    getCurrentTimestamp(),
-                    getActiveUser().getUserName(),
-                    newAppt.getCustomerId(),
-                    newAppt.getUserId(),
-                    newAppt.getContact().getId()
-            );
-            addRecord(newAppt,params);
-            exitButton(actionEvent);
+            // Create parameters list
+
+            // check form type
+            if (formTypeNew) {
+                //
+                params = toList(newAppt.getId(),
+                        newAppt.getTitle(),
+                        newAppt.getDescription(),
+                        newAppt.getLocation(),
+                        newAppt.getType(),
+                        toTimestamp(convertTo(newAppt.getStart(),"UTC")),
+                        toTimestamp(convertTo(newAppt.getEnd(),"UTC")),
+                        getCurrentTimestamp(),
+                        getActiveUser().getUserName(),
+                        getCurrentTimestamp(),
+                        getActiveUser().getUserName(),
+                        newAppt.getCustomer().getId(),
+                        newAppt.getUserId(),
+                        newAppt.getContact().getId()
+                );
+                addRecord(newAppt,params);
+                exitButton(actionEvent);
+            } else {
+                params = toList(newAppt.getId(),
+                        newAppt.getTitle(),
+                        newAppt.getDescription(),
+                        newAppt.getLocation(),
+                        newAppt.getType(),
+                        toTimestamp(convertTo(newAppt.getStart(),"UTC")),
+                        toTimestamp(convertTo(newAppt.getEnd(),"UTC")),
+                        getCurrentTimestamp(),
+                        getActiveUser().getUserName(),
+                        newAppt.getCustomer().getId(),
+                        newAppt.getUserId(),
+                        newAppt.getContact().getId()
+                );
+                boolean updated = updateRecord(newAppt, params);
+                exitButton(actionEvent);
+                if (updated) { infoMessage("Appointment ID: " + newAppt.getId() + "\nSuccessfully Updated");}
+            }
         } else {
-            params = toList(newAppt.getTitle(),
-                    newAppt.getDescription(),
-                    newAppt.getLocation(),
-                    newAppt.getType(),
-                    toTimestamp(toUTC(newAppt.getStart())),
-                    toTimestamp(toUTC(newAppt.getEnd())),
-                    getCurrentTimestamp(),
-                    getActiveUser().getUserName(),
-                    newAppt.getCustomerId(),
-                    newAppt.getUserId(),
-                    newAppt.getContact().getId(),
-                    newAppt.getId());
-            boolean updated = updateRecord(newAppt, params);
-            exitButton(actionEvent);
-            if (updated) { infoMessage("Appointment ID: " + newAppt.getId() + "\nSuccessfully Updated");}
+            System.out.println("DateTimes are not valid.");
         }
     }
 
@@ -349,6 +376,64 @@ public class ApptRecord extends RecordBase<Appointment> {
 
     // Date Time Validation
 
+    private LocalDateTime getStartDateTime() {
+        return formatTimeSelection(apptStartDate.getValue(),
+                Integer.parseInt(apptStartHour.getValue()),
+                Integer.parseInt(apptStartMinute.getValue()),
+                apptStartMeridiem.getValue());
+    }
+
+    private LocalDateTime getEndDateTime() {
+        return formatTimeSelection(apptEndDate.getValue(),
+                Integer.parseInt(apptEndHour.getValue()),
+                Integer.parseInt(apptEndMinute.getValue()),
+                apptEndMeridiem.getValue());
+    }
+
+    public Boolean validateDateTimes(LocalDateTime start, LocalDateTime end) {
+        if (start.isBefore(end)) {
+            if( isInBusinessHours(start, end) ) {
+                if (isWithinBusinessDay(start, end)) {
+                    return true;
+                } else {
+                    errorMessage("Date Validation", "Appointment Duration is longer than a business day of 14 hours.");
+                }
+                errorMessage("Date Validation", "Appointment Times are outside of Business Hours.");
+            }
+            return false;
+        } else {
+            errorMessage("Date Validation", "Start time is after End time.");
+            return false;
+        }
+    }
+
+    private Boolean isWithinBusinessDay(LocalDateTime start, LocalDateTime end) {
+        Duration between = Duration.between(start,end);
+        Duration maxhours = Duration.ofHours(14);
+        if ( between.compareTo(maxhours) > 0) {
+            return false;
+        }
+        return true;
+    }
+
+    private Boolean isInBusinessHours(LocalDateTime start, LocalDateTime end) {
+        System.out.println("Business Starting Hours: " + getBusinessStart());
+        System.out.println("Business Closing Hours: " + getBusinessEnd());
+        if (start.isAfter(getBusinessEnd()) || start.isBefore(getBusinessStart())) {
+            errorMessage("Date Validation", "Start date is out of bounds.");
+        } else if (end.isBefore(getBusinessStart()) || end.isAfter(getBusinessEnd())) {
+            errorMessage("Date Validation", "End datetime is out of bounds.");
+        }
+        return true;
+    }
+
+    private LocalDateTime getBusinessStart() {
+        return LocalDateTime.of(LocalDate.now(), LocalTime.of(8,0,0,0)).atZone(ZoneId.of("America/New_York")).toLocalDateTime();
+    }
+
+    private LocalDateTime getBusinessEnd() {
+        return LocalDateTime.of(LocalDate.now(), LocalTime.of(22,0,0,0)).atZone(ZoneId.of("America/New_York")).toLocalDateTime();
+    }
     //
 
 // end of class

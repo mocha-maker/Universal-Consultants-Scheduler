@@ -2,8 +2,6 @@ package application.controller;
 
 import application.model.Appointment;
 import application.model.Customer;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
@@ -11,17 +9,14 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import static application.controller.ApptTable.allAppointments;
 import static application.util.Alerts.confirmMessage;
 import static application.util.Alerts.infoMessage;
-import static application.util.Loc.dateToString;
 
 
 public class CustTable extends TableBase<Customer> implements Initializable {
@@ -59,45 +54,6 @@ public class CustTable extends TableBase<Customer> implements Initializable {
     /*  ======================
         Event Handling
         ======================*/
-    /**
-     * Open Customer Record
-     * TODO: Update record title depending on which button is clicked
-     */
-    public void toCustRecord(ActionEvent e) throws IOException {
-        // capture selected customer from table
-        Customer customer = tableView.getSelectionModel().getSelectedItem();
-
-        // record which button was clicked
-        String button = ((Button)e.getSource()).getText();
-        System.out.println(button);
-        String action = "add";
-        if ( button.contains("New") ) {
-            action = "add";
-        } else if ( button.contains("Update") ) {
-            action = "edit";
-
-        }
-        System.out.println("Action needed = " + action);
-
-
-
-        if (customer != null || action.equals("add")) {
-            // Transfer parameters to Controller
-            FXMLLoader loader = setLoader("CustRecord");
-            Parent root = loader.load();
-
-            CustRecord controller = loader.getController();
-            controller.getParams(action, customer);
-
-            popupScene(root, "Customer Record");
-            updateTable();
-
-            // send button action and table row item
-        } else if ( action.equals("edit") ){
-            infoMessage("Please select a record for modification.");
-        }
-
-    }
 
     public void deleteCustRecord(ActionEvent e) {
         Customer customer = tableView.getSelectionModel().getSelectedItem();
@@ -108,7 +64,7 @@ public class CustTable extends TableBase<Customer> implements Initializable {
 
             int count = 0;
             for (Appointment appointment : allAppointments) {
-                if (appointment.getCustomerId() == customer.getId()) {
+                if (appointment.getCustomer().getId() == customer.getId()) {
                     count++;
                 }
             }
@@ -148,12 +104,11 @@ public class CustTable extends TableBase<Customer> implements Initializable {
      *
      */
     public static ObservableList<Customer> getAllCustomers() {
-        allAppointments.clear();
-
+        allCustomers.clear();
 
         try {
             System.out.println("Querying Customers Database.");
-            prepQuery("SELECT * FROM customers JOIN first_level_divisions USING (Division_ID) JOIN countries USING (Country_ID)");
+            prepQuery("SELECT * FROM customers JOIN first_level_divisions USING (Division_ID) JOIN countries USING (Country_ID) ORDER BY Customer_ID ASC");
 
             ResultSet rs = getResult();
             System.out.println("Retrieved Results.");
@@ -191,7 +146,6 @@ public class CustTable extends TableBase<Customer> implements Initializable {
         System.out.println("Retrieving Observable List.");
         return allCustomers;
     }
-
 
 
     // end of class

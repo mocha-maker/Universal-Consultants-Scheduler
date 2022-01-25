@@ -1,7 +1,10 @@
 package application.controller;
 
+import application.model.Appointment;
 import application.model.Customer;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -9,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.text.Text;
 
 import java.net.URL;
@@ -16,7 +20,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.UnaryOperator;
 
+import static application.util.Alerts.errorMessage;
 import static application.util.Alerts.infoMessage;
 
 import static application.util.Loc.getCurrentTimestamp;
@@ -24,14 +30,8 @@ import static application.util.Loc.getCurrentTimestamp;
 
 public class CustRecord extends RecordBase<Customer> {
 
-    Customer formCustomer;
-    Boolean formTypeNew = true;
-    @FXML
-    Button saveButton;
 
     // Set FXML Variables
-    @FXML
-    Text custRecordTitle;
     @FXML
     TextField custID;
     @FXML
@@ -47,33 +47,68 @@ public class CustRecord extends RecordBase<Customer> {
     @FXML
     TextField phone;
 
-    // Class Level Validation Booleans for Bindings
-    private boolean newNameValid = false;
-    private boolean newAddressValid = false;
-    private boolean newCodeValid = false;
-    private boolean newPhoneValid = false;
+    // Validation Variables
+    Boolean nameValid;
+    Boolean addressValid;
+    Boolean countryValid;
+    Boolean divisionValid;
+    Boolean phoneValid;
+    Boolean codeValid;
+
+
+    // TODO: Class Level Validation Booleans for Bindings
 
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Set up form structures
-        setComboBoxes();
-        addListeners();
+    protected void getParams(String action, Customer customer) {
+        System.out.println("Transferring parameters to new controller.");
+        System.out.println("Setting Selected Customer.");
+        record = customer;
 
+        System.out.println("Updating Title String...");
+        switch (action) {
+            case "New":
+                formTitle.setText("Add New Customer");
+                formTypeNew = true;
+                System.out.println(formTypeNew);
 
-        // TODO: Add data entry validation for phone and postal/zip code (depends on country)
+                division.setDisable(true);
+                // generate id
+                custID.setText(genId("customer"));
+
+                break;
+            case "Edit" :
+                formTitle.setText("Edit Existing Customer");
+                formTypeNew = false;
+                System.out.println(formTypeNew);
+
+                // populate from formCustomer
+                custID.setText(String.valueOf(record.getId()));
+                custName.setText(record.getCustomerName());
+                country.setValue(record.getCountry());
+                address.setText(record.getAddress());
+                division.setValue(record.getDivision());
+                code.setText(record.getPostalCode());
+                phone.setText(record.getPhone());
+                break;
+            default:
+                break;
+        }
+
+        bindSaveButton();
+
     }
 
     // FORM VALIDATION AND MANAGEMENT
 
     private void bindSaveButton() {
-        BooleanBinding isAllValid = new BooleanBinding() {
+       BooleanBinding isAllValid = new BooleanBinding() {
             @Override
             protected boolean computeValue() {
                 return (custName.getText().isEmpty()
-                        || country.getValue().isEmpty()
+                        || country.getValue().isBlank()
                         || address.getText().isEmpty()
-                        || division.getValue().isEmpty()
+                        || division.getValue().isBlank()
                         || code.getText().isEmpty()
                         || phone.getText().isEmpty());
             }
@@ -81,101 +116,94 @@ public class CustRecord extends RecordBase<Customer> {
         saveButton.disableProperty().bind(isAllValid);
     }
 
+    @FXML
     public void addListeners() {
 
+        custName.textProperty().addListener(new ChangeListener<String>() {
 
-
-        custName.getTextFormatter();
-        custName.selectedTextProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("Checking name input...");
-            if(!custName.getText().isEmpty() && oldValue != newValue ) {
-                newNameValid = validation(custName, "[a-zA-Z0-9 ]*", "Please only use alphanumeric characters and spaces.");
-            }
-        });
-
-        address.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("Checking address input...");
-            if(!address.getText().isEmpty() && oldValue != newValue ) {
-                newAddressValid = validation(address, "[a-zA-Z0-9 ]*", "Please only use alphanumeric characters and spaces.");
-            }
-        });
-
-        code.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("Checking postal code input...");
-            if(!code.getText().isEmpty() && oldValue != newValue ) {
-                switch (country.getValue()) {
-                    case "U.S.":
-                        newCodeValid = validation(code, "^[0-9]{5}(?:-[0-9]{4})?$", "Please enter a valid US zipcode with 5 digits.");
-                        break;
-                    case "UK":
-                        newCodeValid = validation(code, "^[A-Z]{1,2}[0-9R][0-9A-Z]?●[0-9][ABD-HJLNP-UW-Z]{2}$", "Please enter a valid UK post code in format AA1 1AA or AA1A 1AA.");
-                        break;
-                    case "Canada":
-                        newCodeValid = validation(code, "/^[ABCEGHJ-NPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z][ -]?\\d[ABCEGHJ-NPRSTV-Z]\\d$/i", "Please enter a valid Canadian postal code in format A1A 1A1.");
-                        break;
-                    default :
-                        break;
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String oldVal, String newVal) {
+                if (newVal != oldVal) {
+                    nameValid = validateField(custName, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
                 }
             }
         });
 
-        phone.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("Checking phone input...");
-            if(!phone.getText().isEmpty() && oldValue != newValue ) {
-                newPhoneValid = validation(phone, "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$", "Please enter a valid phone number with 10-digits");
+        address.textProperty().addListener(new ChangeListener<String>() {
+
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String oldVal, String newVal) {
+                if (newVal != oldVal) {
+                    addressValid = validateField(address, newVal, "^[a-zA-Z0-9\\s.,'-]{1,100}$");
+                }
             }
         });
 
+        phone.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String oldVal, String newVal) {
+                if (newVal != oldVal) {
+                    phoneValid = validateField(phone, newVal, "^\\s*(?:\\+?(\\d{1,3}))?[-. (]*(\\d{3})[-. )]*(\\d{3})[-. ]*(\\d{4})(?: *x(\\d+))?\\s*{1,12}$");
+                }
+            }
+        });
+
+        code.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String oldVal, String newVal) {
+                if (newVal != oldVal) {
+                    code.setText(code.getText().toUpperCase());
+                    try {
+                        switch (country.getValue()) {
+                            case "U.S":
+                                System.out.println("Checking US Postal Code...");
+                                codeValid = validateField(code, newVal, "(^\\d{5}$)|(^\\d{9}$)|(^\\d{5}-\\d{4}$)");
+                                break;
+                            case "Canada":
+                                System.out.println("Checking Canadian Postal Code...");
+                                codeValid = validateField(code, newVal, "^(?![DFIOQUWZ])[A-Z]{1}[0-9]{1}(?![DFIOQU])[A-Z]{1}[ ]{1}[0-9]{1}(?![DFIOQU])[A-Z]{1}[0-9]{1}$");
+                                break;
+                            case "UK":
+                                System.out.println("Checking UK Postal Code...");
+                                codeValid = validateField(code, newVal, "^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$");
+                                break;
+                            default:
+                                break;
+                        }
+                    }catch (Exception ex) {
+                        errorMessage("Data Validation", "No Country Selected. Unable to validate postal code.");
+
+                    }
+
+                }
+            }
+        });
+
+
     }
+
+
+
+    private Boolean isAllFieldsValid() {
+
+        countryValid = !country.getValue().isEmpty();
+        divisionValid = !division.getValue().isEmpty();
+
+        System.out.println("Country empty = " + countryValid);
+        System.out.println("Division empty = " + divisionValid);
+
+
+        if(nameValid && addressValid && countryValid && divisionValid && codeValid && phoneValid) {
+             return true;
+        } else
+        return false;
+    }
+
 
     // FORM SETUP
 
-    /**
-     * Transfer parameters from other controllers to this one
-     * @param action
-     * @param customer
-     */
-    public void getParams(String action, Customer customer) {
-        System.out.println("Transferring parameters to new controller.");
-        System.out.println("Setting Selected Customer.");
-        formCustomer = customer;
-
-        System.out.println("Updating Title String...");
-        switch (action) {
-            case "add":
-                custRecordTitle.setText("Add New Customer");
-                formTypeNew = true;
-                break;
-            case "edit" :
-                custRecordTitle.setText("Edit Existing Customer");
-                formTypeNew = false;
-                break;
-            default:
-                break;
-        }
-        populateForm();
-    }
-
-    private void populateForm() {
-
-        if (!formTypeNew) {
-            // populate from formCustomer
-            custID.setText(String.valueOf(formCustomer.getId()));
-            custName.setText(formCustomer.getCustomerName());
-            country.setValue(formCustomer.getCountry());
-            address.setText(formCustomer.getAddress());
-            division.setValue(formCustomer.getDivision());
-            code.setText(formCustomer.getPostalCode());
-            phone.setText(formCustomer.getPhone());
-        } else {
-            division.setDisable(true);
-            // generate id
-            custID.setText(genId("customer"));
-        }
-
-    }
-
-    private void setComboBoxes() {
+    @Override
+    protected void setComboBoxes() {
         setCountriesCB();
     }
 
@@ -219,48 +247,54 @@ public class CustRecord extends RecordBase<Customer> {
 
     // TODO: SAVE BUTTON
     @FXML
-    private void saveCustomer(ActionEvent actionEvent) {
+    private void saveRecord(ActionEvent actionEvent) {
         // Collect textfield values
 
-        Customer newCust = new Customer(Integer.parseInt(custID.getText()),
-                                        custName.getText(),
-                                        phone.getText(),
-                                        address.getText(),
-                                        code.getText(),
-                                        division.getValue(),
-                                        country.getValue());
+        if (isAllFieldsValid()) {
+            Customer newCust = new Customer(Integer.parseInt(custID.getText()),
+                    custName.getText(),
+                    phone.getText(),
+                    address.getText(),
+                    code.getText(),
+                    division.getValue(),
+                    country.getValue());
 
-        List<Object> params;
+            List<Object> params;
 
 
-        // check form type
-        if (formTypeNew) {
-            params = toList(
-                    newCust.getId(),
-                    newCust.getCustomerName(),
-                    newCust.getPhone(),
-                    newCust.getAddress(),
-                    newCust.getPostalCode(),
-                    getCurrentTimestamp(),
-                    getActiveUser().getUserName(),
-                    getCurrentTimestamp(),
-                    getActiveUser().getUserName(),
-                    getDivisionID(newCust.getDivision())
-            );
-            addRecord(newCust,params);
-            exitButton(actionEvent);
+            // check form type
+            if (formTypeNew) {
+                params = toList(
+                        newCust.getId(),
+                        newCust.getCustomerName(),
+                        newCust.getPhone(),
+                        newCust.getAddress(),
+                        newCust.getPostalCode(),
+                        getCurrentTimestamp(),
+                        getActiveUser().getUserName(),
+                        getCurrentTimestamp(),
+                        getActiveUser().getUserName(),
+                        getDivisionID(newCust.getDivision())
+                );
+                addRecord(newCust, params);
+                exitButton(actionEvent);
+            } else {
+                params = toList(newCust.getCustomerName(),
+                        newCust.getPhone(),
+                        newCust.getAddress(),
+                        newCust.getPostalCode(),
+                        getCurrentTimestamp(),
+                        getActiveUser().getUserName(),
+                        getDivisionID(newCust.getDivision()),
+                        newCust.getId());
+                boolean updated = updateRecord(newCust, params);
+                exitButton(actionEvent);
+                if (updated) {
+                    infoMessage("Customer ID: " + newCust.getId() + "\nSuccessfully Updated");
+                }
+            }
         } else {
-            params = toList(newCust.getCustomerName(),
-                    newCust.getPhone(),
-                    newCust.getAddress(),
-                    newCust.getPostalCode(),
-                    getCurrentTimestamp(),
-                    getActiveUser().getUserName(),
-                    getDivisionID(newCust.getDivision()),
-                    newCust.getId());
-            boolean updated = updateRecord(newCust,params);
-            exitButton(actionEvent);
-            if (updated) { infoMessage("Customer ID: " + newCust.getId() + "\nSuccessfully Updated");}
+            errorMessage("Data Validation", "Input is incomplete or invalid.");
         }
     }
 
@@ -347,7 +381,5 @@ public class CustRecord extends RecordBase<Customer> {
         System.out.println("Retrieving Observable List.");
         return allRegions;
     }
-
-
 
 }

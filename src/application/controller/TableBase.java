@@ -8,14 +8,18 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.css.StyleClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.sql.PreparedStatement;
@@ -24,6 +28,7 @@ import java.sql.SQLException;
 import java.util.ResourceBundle;
 
 import static application.util.Alerts.errorMessage;
+import static application.util.Alerts.infoMessage;
 
 public abstract class TableBase<T extends Record> extends Base implements Initializable {
 
@@ -33,20 +38,18 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
     @FXML
     protected Button filterButton;
     @FXML
-    private Button deleteButton;
+    protected Button addButton;
+    @FXML
+    protected Button editButton;
+    @FXML
+    protected Button deleteButton;
+
+
     protected RecordBase<T> recordForm;
 
     public static ObservableList<Contact> allContacts = FXCollections.observableArrayList();
     public static ObservableList<Appointment> allAppointments = FXCollections.observableArrayList();
     public static ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
-
-
-
-    public TableBase() {
-
-    };
-
-
 
     /**
      *
@@ -121,10 +124,15 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
 
 
     protected boolean updatable(T record) {
+        System.out.println("Checking for record existence in database.");
         boolean updatable = false;
         String table = record.getClass().getSimpleName().toLowerCase();
+        System.out.println(table);
+        int id = record.getId();
+        String tableCapitalized = table.substring(0,1).toUpperCase() + table.substring(1);
+
         try {
-            PreparedStatement ps = prepQuery("SELECT COUNT(*) AS count FROM " + table + "s");
+            PreparedStatement ps = prepQuery("SELECT COUNT(*) AS count FROM " + table + "s WHERE " + tableCapitalized + "_ID = " + id);
             ResultSet rs = getResult();
             while (rs.next()) {
                 System.out.println(rs.getInt("count"));
@@ -153,6 +161,7 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
 
     public boolean deleteRecord(T record) {
         boolean deleted;
+        // If record is a customer then delete appointment dependencies
         if (record.getClass() == Customer.class) {
             deleted = deleteFromDB(record, getDeleteDependencies());
                 if (deleted) {
@@ -170,11 +179,11 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         boolean deleted = false;
         String table = record.getClass().getSimpleName().toLowerCase();
 
-        System.out.println("Attempting to delete " + table + " record.");
 
         // retrieve id from object
         int id = record.getId();
         String tableCapitalized = table.substring(0,1).toUpperCase() + table.substring(1);
+        System.out.println("Attempting to delete " + table + " record.");
 
         try {
             // sqlquery to delete record
@@ -245,25 +254,13 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         }
     }
 
-    private T lookupRecords(T obj, Integer id) {
-        ObservableList<T> allRecords = getAllRecords(obj);
-        T foundRecord = null;
-
-        for (T r : allRecords) {
-            if (r.getId() == id) {
-                foundRecord = r;
-                break;
-            }
-        }
-        return foundRecord;
-    }
 
     public static ObservableList<Contact> getAllContacts() {
         allContacts.clear();
 
         try {
             System.out.println("Querying Contacts Database.");
-            prepQuery("SELECT * FROM contacts");
+            prepQuery("SELECT * FROM contacts ORDER BY Contact_ID ASC");
             ResultSet rs = getResult();
             System.out.println("Retrieved Results.");
             int i = 0;
@@ -296,6 +293,68 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
 
 
 
+
+    @FXML
+    protected void toRecords(ActionEvent actionEvent) {
+        // Declare Local Variables
+        // record which button was clicked
+        Button pressed = (Button) actionEvent.getSource();
+        System.out.println(pressed.getText());
+
+        // capture selected record from table
+        T obj = getSelection();
+        String tClass = this.getClass().getSimpleName();
+
+
+        if ( pressed.equals(addButton) || obj !=null) {
+
+            if (tClass.contains("CustTable")) {
+                loadCustomerRecord(obj, pressed);
+            } else if (tClass.contains("ApptTable") || tClass.contains("Calendar")) {
+                loadAppointmentRecord(obj, pressed);
+            }
+            updateTable();
+        } else if ( pressed.equals(editButton) ) {
+            infoMessage("Please select a record for modification.");
+        }
+    };
+
+    private void loadCustomerRecord(T obj, Button pressed) {
+        FXMLLoader loader = setLoader("custRecord");
+        try {
+            Parent root = loader.load();
+            CustRecord controller = loader.getController();
+            controller.getParams(pressed.getText(), (Customer) obj);
+            popupScene(root, "Customer Record");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void loadAppointmentRecord(T obj, Button pressed) {
+        FXMLLoader loader = setLoader("apptRecord");
+        try {
+            Parent root = loader.load();
+            ApptRecord controller = loader.getController();
+            controller.getParams(pressed.getText(), (Appointment) obj);
+            popupScene(root, "Appointment Record");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public T getIndex(int id, ObservableList<T> allRecords) {
+        T foundRecord = null;
+        for (T r : allRecords) {
+            if (r.getId() == id) {
+                foundRecord = r;
+                break;
+            }
+        }
+        return foundRecord;
+    }
 
     // end of class
 }

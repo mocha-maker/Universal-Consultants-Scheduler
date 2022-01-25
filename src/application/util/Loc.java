@@ -58,7 +58,7 @@ public abstract class Loc {
     // GETTERS
 
     public static Timestamp getCurrentTimestamp() {
-        return (toTimestamp(toUTC(LocalDateTime.now())));
+        return (toTimestamp(convertTo(LocalDateTime.now(),"UTC")));
     }
 
     public static LocalDate getCurrentLocalDate() { return (LocalDateTime.now().toLocalDate()); }
@@ -114,40 +114,24 @@ public abstract class Loc {
         return TimeZone.getDefault();
     }
 
-    private static ZonedDateTime toZDT(LocalDateTime localDateTime) {
-        System.out.println("Converting to Zoned Date Time.");
-        return ZonedDateTime.of(localDateTime, ZoneId.systemDefault());
-    }
 
-    // TODO: Zoned Date Times to Eastern Time (Business Timezone) given LocalDateTime
-    public static ZonedDateTime toEastZDT(LocalDateTime localDateTime) {
-        return toZDT(localDateTime).withZoneSameInstant(ZoneId.of("US/Eastern"));
-    }
-
-    // TODO: Zoned Date Times to UTC Time (DB timezone) given LocalDateTime
-    public static ZonedDateTime toUTCZDT(LocalDateTime localDateTime) {
-        System.out.println("Retrieving converted time in ZDT.");
-        return toZDT(localDateTime).withZoneSameInstant(ZoneId.of("UTC"));
-    }
 
     /**
-     * Conversion to Database time - UTC
+     * General Conversion to another zone
      * @param localDateTime - time to be converted
      * @return converted time
      */
-    public static LocalDateTime toUTC(LocalDateTime localDateTime) {
-        System.out.println("Retrieving converted time in LDT form.");
-        return localDateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+    public static LocalDateTime convertTo(LocalDateTime localDateTime, String zone) {
+        return localDateTime.atZone(ZoneId.systemDefault()).toInstant().atZone(ZoneId.of(zone)).toLocalDateTime();
     }
 
     /**
-     * Conversion to Eastern Time for business hours
+     * General Conversion to another zone
      * @param localDateTime - time to be converted
      * @return converted time
      */
-    public static LocalDateTime toEast(LocalDateTime localDateTime) {
-        System.out.println("Retrieving converted time in LDT form.");
-        return toEastZDT(localDateTime).toLocalDateTime();
+    public static ZonedDateTime convertToZDT(LocalDateTime localDateTime, String zone) {
+        return localDateTime.atZone(ZoneId.systemDefault()).toInstant().atZone(ZoneId.of(zone));
     }
 
 

@@ -2,6 +2,8 @@ package application.controller;
 
 import application.model.Appointment;
 import application.model.Contact;
+import application.model.Customer;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -9,19 +11,24 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.text.Text;
 
+import java.io.IOException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
-import static application.util.Alerts.errorMessage;
+import static application.controller.CustTable.getAllCustomers;
+import static application.util.Alerts.*;
 import static application.util.Loc.*;
 
 public final class Calendar extends TableBase<Appointment> implements Initializable {
@@ -32,7 +39,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
 
     // Set FXML Objects //
     @FXML
-    private Text calendarView;
+    private Text currentView;
 
     // Toggle Elements
     @FXML
@@ -53,16 +60,6 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
 
 
     // TODO: Create Weekly and Monthly Views that include Appointments in the respective dates
-
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Set up form structures
-        addColumns();
-
-        // set toggle listeners
-        setDefaults();
-        setToolTips();
-    }
 
     // Populate Data
 
@@ -87,6 +84,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         periodPicker.setValue(getFirstOfMonth(today));
         setPicked();
         setListener();
+        setToolTips();
     }
 
     // Create Structure
@@ -103,7 +101,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
      */
     protected void addColumns() {
 
-        // Set specially formatted columns
+        // Create and set specially formatted columns
         final TableColumn<Appointment, String> contactCol = new TableColumn<>("Contact");
         contactCol.setCellValueFactory(new PropertyValueFactory<>("contact"));
 
@@ -113,8 +111,8 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         final TableColumn<Appointment, String> endCol =new TableColumn<>("End");
         endCol.setCellValueFactory(param -> new SimpleStringProperty(dateToString(param.getValue().getEnd(),"yyyy-MM-dd hh:mm a")));
 
-        final TableColumn<Appointment, Integer> custIdCol =new TableColumn<>("CustomerId");
-        custIdCol.setCellValueFactory(new PropertyValueFactory<>("customerId"));
+        final TableColumn<Appointment, String> custIdCol =new TableColumn<>("CustomerId");
+        custIdCol.setCellValueFactory(cellData -> new ReadOnlyStringWrapper(String.valueOf(cellData.getValue().getCustomer().getId())));
 
         final TableColumn<Appointment, Integer> userIdCol =new TableColumn<>("UserId");
         userIdCol.setCellValueFactory(new PropertyValueFactory<>("userId"));
@@ -128,13 +126,28 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
                 endCol,
                 custIdCol,
                 userIdCol);
+
+        setDefaults();
+
     }
 
-    public void setColumns() {}
+    private String getViewTitle() {
+        String viewTitle = "";
+        Toggle selected = filterSelect.getSelectedToggle();
+
+        if (selected.equals(monthRadio)) {
+            viewTitle = "Appointments in the month of " + toCapitalized(periodPicker.getValue().getMonth().toString().toLowerCase());
+        } else if (selected.equals(weekRadio)) {
+            viewTitle = "Appointings within the week of " + periodPicker.getValue().toString();
+        }
+
+        return viewTitle;
+    }
 
     public void updateTable() {
         tableView.getItems().clear();
         tableView.setItems(getFilteredAppointments());
+        currentView.setText(getViewTitle());
     }
 
     public ObservableList<Appointment> getFilteredAppointments() {
@@ -164,7 +177,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
                 LocalDateTime apptEnd = timeStampToLocal(rs.getTimestamp("End"));
 
                 Contact apptContact = getAllContacts().get(rs.getInt("Contact_ID")-1);
-                int apptCustID = rs.getInt("Customer_ID");
+                Customer apptCust = getAllCustomers().get(rs.getInt("Customer_ID")-1);
                 int apptUserID = rs.getInt("User_ID");
 
                 // construct Appointment object using result
@@ -177,7 +190,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
                         apptStart,
                         apptEnd,
                         apptContact,
-                        apptCustID,
+                        apptCust,
                         apptUserID);
 
                 // add Appointment object to Observable List
@@ -197,12 +210,21 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         picked = periodPicker.getValue();
     }
 
-    protected String getDeleteStatement() { return ""; }
-
+    /**
+     *
+     * @return SQL statement to delete appointment record
+     */
+    protected String getDeleteStatement() {
+        return "DELETE FROM appointments WHERE Appointment_ID = ?";
+    }
     protected String getDeleteDependencies() { return ""; }
 
 
-    // EVENT HANDLING
+
+    /*  ======================
+    Event Handling
+    ======================*/
+
     @FXML
     private void toggleFilter(ActionEvent actionEvent) {
         if (monthRadio.isSelected()) {
@@ -290,8 +312,30 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         }
         return null;
     }
-    
-    
+
+
+
+
+    public void deleteApptRecord(ActionEvent e) {
+        Appointment appointment = tableView.getSelectionModel().getSelectedItem();
+
+        if (updatable(appointment)) {
+            // prompt for confirmation
+            boolean confirm = confirmMessage("Delete Appointment", "Are you sure you want to delete Appointment ID " + appointment.getId() + " at " + appointment.getStart() + "?");
+
+            if (confirm) {
+                boolean deleted = deleteRecord(appointment);
+                System.out.println(deleted);
+                if (deleted) {
+                    infoMessage("Appointment ID: " + appointment.getId() + "\nAppointment Type: " + appointment.getType() + "\nSuccessfully cancelled.");
+                }
+                updateTable();
+            }
+
+        } else {
+            infoMessage("Please select a record for deletion.");
+        }
+    }
 
 // end of class
 }

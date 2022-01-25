@@ -2,7 +2,8 @@ package application.controller;
 
 import application.model.Appointment;
 import application.model.Contact;
-import javafx.beans.property.SimpleStringProperty;
+import application.model.Customer;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -19,6 +20,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
+import static application.controller.CustTable.getAllCustomers;
 import static application.util.Alerts.confirmMessage;
 import static application.util.Alerts.infoMessage;
 import static application.util.Loc.timeStampToLocal;
@@ -30,20 +32,6 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         APPOINTMENT TABLE ELEMENTS
         ======================*/
 
-
-    // TODO TableColumn Factory
-
-/*    public TableView<Appointment> allAppointmentsTable;
-    public TableColumn<?,?> apptID;
-    public TableColumn<?,?> apptTitle;
-    public TableColumn<?,?> apptDesc;
-    public TableColumn<?,?> apptLoc;
-    public TableColumn<?,?> apptType;
-    public TableColumn<Appointment, Timestamp> apptStart;
-    public TableColumn<Appointment, Timestamp> apptEnd;
-    public TableColumn<?,?> apptContact;
-    public TableColumn<?,?> apptCustID;
-    public TableColumn<?,?> apptUserID;*/
 
 
     /*  ======================
@@ -65,8 +53,8 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         final TableColumn<Appointment, String> endCol =new TableColumn<>("End");
         endCol.setCellValueFactory(param -> new SimpleStringProperty(dateToString(param.getValue().getEnd(),"yyyy-MM-dd hh:mm a")));
 
-        final TableColumn<Appointment, Integer> custIdCol =new TableColumn<>("CustomerId");
-        custIdCol.setCellValueFactory(new PropertyValueFactory<>("customerId"));
+        final TableColumn<Appointment, String> custIdCol =new TableColumn<>("CustomerId");
+        custIdCol.setCellValueFactory(cellData -> new ReadOnlyStringWrapper(String.valueOf(cellData.getValue().getCustomer().getId())));
 
         final TableColumn<Appointment, Integer> userIdCol =new TableColumn<>("UserId");
         userIdCol.setCellValueFactory(new PropertyValueFactory<>("userId"));
@@ -100,7 +88,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
 
         try {
             System.out.println("Querying Appointment Database.");
-            prepQuery("SELECT * FROM appointments JOIN contacts USING (Contact_ID) JOIN customers USING (Customer_ID) JOIN users USING (User_ID)");
+            prepQuery("SELECT * FROM appointments JOIN contacts USING (Contact_ID) JOIN customers USING (Customer_ID) JOIN users USING (User_ID) ORDER BY Appointment_ID ASC");
             ResultSet rs = getResult();
             System.out.println("Retrieved Results.");
             int i = 0;
@@ -118,7 +106,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
                 LocalDateTime apptEnd = timeStampToLocal(rs.getTimestamp("End"));
 
                 Contact apptContact = getAllContacts().get(rs.getInt("Contact_ID")-1);
-                int apptCustID = rs.getInt("Customer_ID");
+                Customer apptCust = getAllCustomers().get(rs.getInt("Customer_ID")-1);
                 int apptUserID = rs.getInt("User_ID");
 
                 // construct Appointment object using result
@@ -131,7 +119,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
                         apptStart,
                         apptEnd,
                         apptContact,
-                        apptCustID,
+                        apptCust,
                         apptUserID);
 
                 // add Appointment object to Observable List
@@ -148,49 +136,9 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
     }
 
 
-
-
     /*  ======================
         Event Handling
         ======================*/
-    /**
-     * Open Appointment Record
-     * TODO: Update record title depending on which button is clicked
-     */
-    @FXML
-    public void toApptRecord(ActionEvent e) throws IOException {
-       // Declare Local Variables
-        // record which button was clicked
-        String button = ((Button)e.getSource()).getText();
-        System.out.println(button);
-        String action = "add";
-        if ( button.contains("New") ) {
-            action = "add";
-        } else if ( button.contains("Update") ) {
-            action = "edit";
-        }
-        System.out.println("Action needed = " + action);
-
-        // capture selected appointment from table
-        Appointment appointment = tableView.getSelectionModel().getSelectedItem();
-
-        if (appointment !=  null || action == "add") {
-            // TODO: Transfer parameters to Controller
-            //System.out.println(getSceneLoader("ApptRecord").getController().toString());
-            FXMLLoader loader = setLoader("ApptRecord");
-            Parent root = loader.load();
-
-            ApptRecord controller = loader.getController();
-            controller.getParams(action, appointment);
-
-            popupScene(root, "Appointment Record");
-
-             // send button action and table row item
-        } else if ( action == "edit" && appointment == null){
-            infoMessage("Please select a record for modification.");
-        }
-        updateTable();
-    }
 
 
     /**
@@ -204,7 +152,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
     public void deleteApptRecord(ActionEvent e) {
         Appointment appointment = tableView.getSelectionModel().getSelectedItem();
 
-        if (appointment != null) {
+        if (updatable(appointment)) {
             // prompt for confirmation
             boolean confirm = confirmMessage("Delete Appointment", "Are you sure you want to delete Appointment ID " + appointment.getId() + " at " + appointment.getStart() + "?");
 
@@ -227,6 +175,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
      * @return empty string
      */
     protected String getDeleteDependencies() { return "";}
+
 
 
     // end of class

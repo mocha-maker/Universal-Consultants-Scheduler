@@ -163,6 +163,7 @@ public abstract class Base extends DAO implements Initializable {
         return s.substring(0,1).toUpperCase() + s.substring(1);
     }
 
+
     // end of class
 }
 

@@ -12,11 +12,9 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLOutput;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.ResourceBundle;
+import java.util.TimeZone;
 
 import static application.util.Alerts.errorMessage;
 import static application.util.Loc.*;
@@ -81,7 +79,7 @@ public class Login extends Base implements Initializable {
                 usernameTF.setText("");
                 passwordTF.setText("");
             }
-            Reports.loginActivity(toUTCZDT(LocalDateTime.now()), user, result);
+            Reports.loginActivity(convertToZDT(LocalDateTime.now(),"UTC"), user, result);
 
 
         } else {
@@ -98,8 +96,6 @@ public class Login extends Base implements Initializable {
 
         // TODO: Remove autofill
         autoFillLoginAsTest();
-
-
 
     }
 

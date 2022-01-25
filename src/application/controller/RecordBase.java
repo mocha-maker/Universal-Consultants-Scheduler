@@ -3,19 +3,72 @@ package application.controller;
 import application.model.Record;
 import application.model.User;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextField;
+import javafx.scene.text.Text;
 
+import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 import static application.util.Alerts.infoMessage;
 
 public abstract class RecordBase<T extends Record> extends Base implements Initializable {
 
+    @FXML
+    Text formTitle = new Text();
+    Boolean formTypeNew;
+    T record = null;
 
+
+    @FXML
+    Button saveButton;
+    
+    protected abstract void getParams(String action,T obj) ;
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        // Set up form structures
+        setComboBoxes();
+        addListeners();
+
+    }
+
+    protected abstract void addListeners();
+
+    protected abstract void setComboBoxes();
+
+    Boolean validateField(TextField field, String input, String pattern) {
+        if (input.matches(pattern)) {
+            field.setStyle("");
+            return true;
+        } else {
+            field.setStyle("-fx-text-box-border: red;-fx-focus-color: red;;");
+            System.out.println("Invalid Entry.");
+            return false;
+        }
+    }
+
+    Boolean validateField(ComboBox field, String input, String pattern) {
+        if (input.matches(pattern)) {
+            field.setStyle("");
+            return true;
+        } else {
+            field.setStyle("-fx-text-box-border: red;-fx-focus-color: red;;");
+            System.out.println("Invalid Entry.");
+            return false;
+        }
+    }
+
+    
     /*  ======================
         ADD RECORDS
         ======================
@@ -103,12 +156,12 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
         return updated;
     }
 
-    public List<Object> getParameters(Object... args) {
-        List<Object> params = FXCollections.observableArrayList();
+    public List<Object> getFieldValues(Object... args) {
+        List<Object> values = FXCollections.observableArrayList();
         for (Object arg : args) {
-            params.add(arg);
+            values.add(arg);
         }
-        return params;
+        return values;
     }
 
     /**
@@ -148,7 +201,17 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
         }
     }
 
-
+    public T lookupRecords(T obj, ObservableList<T> allRecords) {
+        T foundRecord = null;
+        int id = obj.getId();
+        for (T r : allRecords) {
+            if (r.getId() == id) {
+                foundRecord = r;
+                break;
+            }
+        }
+        return foundRecord;
+    }
     // end of class
 }
 
