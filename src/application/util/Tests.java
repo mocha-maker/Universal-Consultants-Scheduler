@@ -5,6 +5,11 @@ import java.util.Scanner;
 
 public abstract class Tests {
 
+    public void importData() {
+
+    }
+
+
     public void overrideSystemDefaults() {
         testTimeZone();
         testLang();
