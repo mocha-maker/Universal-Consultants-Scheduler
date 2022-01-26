@@ -19,6 +19,7 @@ import javafx.scene.text.Text;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -37,7 +38,9 @@ import static application.util.Loc.*;
 @SuppressWarnings("rawtypes")
 public class ApptRecord extends RecordBase<Appointment> {
 
+    Appointment newAppt;
     private static List<Object> params;
+    private String printOverlaps;
 
     @FXML
     Text apptRecordTitle;
@@ -88,22 +91,18 @@ public class ApptRecord extends RecordBase<Appointment> {
 
     @Override
     protected void addListeners() {
-        apptTypeComboBox.valueProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observableValue, String oldVal, String newVal) {
-                if (newVal != oldVal) {
-                    typeValid = validateField(apptTypeComboBox, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
-                }
+        apptTypeComboBox.valueProperty().addListener((observableValue, oldVal, newVal) -> {
+            if (newVal != oldVal) {
+                typeValid = validateField(apptTypeComboBox, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
             }
         });
     }
 
 
-
     /**
      * Transfer parameters from other controllers to this one
-     * @param action
-     * @param appointment
+     * @param action what the user is intending to do
+     * @param appointment the selected appointment from the table
      */
     @Override
     protected void getParams(String action, Appointment appointment) {
@@ -129,13 +128,13 @@ public class ApptRecord extends RecordBase<Appointment> {
                 startLocal = LocalDateTime.now();
                 apptStartDate.setValue(startLocal.toLocalDate());
                 apptStartHour.setValue(getHour(startLocal));
-                apptStartMinute.setValue(getMinute(startLocal));
+                apptStartMinute.setValue(getMinute(startLocal.plusMinutes((65-startLocal.getMinute())%5)));
                 apptStartMeridiem.setValue(getMeridiem(startLocal));
 
                 endLocal = LocalDateTime.now().plusMinutes(30);
                 apptEndDate.setValue(endLocal.toLocalDate());
                 apptEndHour.setValue(getHour(endLocal));
-                apptEndMinute.setValue(getMinute(endLocal));
+                apptEndMinute.setValue(getMinute(endLocal.plusMinutes((65-endLocal.getMinute())%5)));
                 apptEndMeridiem.setValue(getMeridiem(endLocal));
 
                 break;
@@ -274,20 +273,22 @@ public class ApptRecord extends RecordBase<Appointment> {
         LocalDateTime start = getStartDateTime();
         LocalDateTime end = getEndDateTime();
 
+        newAppt = new Appointment(Integer.parseInt(apptId.getText()),
+                apptTitle.getText(),
+                apptDesc.getText(),
+                apptLoc.getText(),
+                apptTypeComboBox.getValue(),
+                start,
+                end,
+                contactComboBox.getValue(),
+                customerComboBox.getValue(),
+                Integer.parseInt(userId.getText()));
+
         if (validateDateTimes(start, end)) {
             System.out.println("DateTimes are valid.");
 
             // Create appointment object
-            Appointment newAppt = new Appointment(Integer.parseInt(apptId.getText()),
-                    apptTitle.getText(),
-                    apptDesc.getText(),
-                    apptLoc.getText(),
-                    apptTypeComboBox.getValue(),
-                    start,
-                    end,
-                    contactComboBox.getValue(),
-                    customerComboBox.getValue(),
-                    Integer.parseInt(userId.getText()));
+
 
             // Create parameters list
 
@@ -309,10 +310,11 @@ public class ApptRecord extends RecordBase<Appointment> {
                         newAppt.getUserId(),
                         newAppt.getContact().getId()
                 );
-                addRecord(newAppt,params);
+                boolean added = addRecord(newAppt,params);
+                if (added) { infoMessage("Appointment ID: " + newAppt.getId() + "\nSuccessfully Added");}
                 exitButton(actionEvent);
             } else {
-                params = toList(newAppt.getId(),
+                params = toList(
                         newAppt.getTitle(),
                         newAppt.getDescription(),
                         newAppt.getLocation(),
@@ -323,7 +325,8 @@ public class ApptRecord extends RecordBase<Appointment> {
                         getActiveUser().getUserName(),
                         newAppt.getCustomer().getId(),
                         newAppt.getUserId(),
-                        newAppt.getContact().getId()
+                        newAppt.getContact().getId(),
+                        newAppt.getId() // Needed for WHERE param
                 );
                 boolean updated = updateRecord(newAppt, params);
                 exitButton(actionEvent);
@@ -394,45 +397,85 @@ public class ApptRecord extends RecordBase<Appointment> {
         if (start.isBefore(end)) {
             if( isInBusinessHours(start, end) ) {
                 if (isWithinBusinessDay(start, end)) {
-                    return true;
+                    if (isNotOverlapping(start, end)) {
+                        return true;
+                    } else {
+                        errorMessage("Date Validation","Appointment overlap exists with this customer for the following appointment(s):" + printOverlaps );
+                    }
                 } else {
                     errorMessage("Date Validation", "Appointment Duration is longer than a business day of 14 hours.");
                 }
+            } else {
                 errorMessage("Date Validation", "Appointment Times are outside of Business Hours.");
             }
-            return false;
         } else {
             errorMessage("Date Validation", "Start time is after End time.");
-            return false;
         }
+        return false;
     }
 
     private Boolean isWithinBusinessDay(LocalDateTime start, LocalDateTime end) {
         Duration between = Duration.between(start,end);
         Duration maxhours = Duration.ofHours(14);
-        if ( between.compareTo(maxhours) > 0) {
-            return false;
-        }
+        if ( between.compareTo(maxhours) > 0) return false;
         return true;
     }
 
     private Boolean isInBusinessHours(LocalDateTime start, LocalDateTime end) {
         System.out.println("Business Starting Hours: " + getBusinessStart());
         System.out.println("Business Closing Hours: " + getBusinessEnd());
-        if (start.isAfter(getBusinessEnd()) || start.isBefore(getBusinessStart())) {
+
+        LocalDateTime startEST = convertTo(start,"America/New_York");
+        LocalDateTime endEST = convertTo(end,"America/New_York");
+
+        System.out.println("Appointment Start in EST: " + startEST);
+        System.out.println("Appointment End in EST: " + endEST);
+
+
+        if (startEST.isAfter(getBusinessEnd()) || startEST.isBefore(getBusinessStart())) {
             errorMessage("Date Validation", "Start date is out of bounds.");
-        } else if (end.isBefore(getBusinessStart()) || end.isAfter(getBusinessEnd())) {
+            return false;
+        } else if (endEST.isBefore(getBusinessStart()) || endEST.isAfter(getBusinessEnd())) {
             errorMessage("Date Validation", "End datetime is out of bounds.");
+            return false;
+        } else {
+            return true;
         }
-        return true;
     }
 
     private LocalDateTime getBusinessStart() {
-        return LocalDateTime.of(LocalDate.now(), LocalTime.of(8,0,0,0)).atZone(ZoneId.of("America/New_York")).toLocalDateTime();
+        return convertTo(LocalDateTime.of(getStartDateTime().toLocalDate(), LocalTime.of(8,0,0,0)),"America/New_York");
     }
 
     private LocalDateTime getBusinessEnd() {
-        return LocalDateTime.of(LocalDate.now(), LocalTime.of(22,0,0,0)).atZone(ZoneId.of("America/New_York")).toLocalDateTime();
+        return convertTo(LocalDateTime.of(getStartDateTime().toLocalDate(), LocalTime.of(22,0,0,0)),"America/New_York");
+    }
+
+    private Boolean isNotOverlapping(LocalDateTime start, LocalDateTime end) {
+        int custId = newAppt.getCustomer().getId();
+        int apptId = newAppt.getId();
+        printOverlaps = "";
+
+        try {
+            PreparedStatement ps = prepQuery("SELECT * FROM appointments WHERE Customer_ID = " + custId + " AND Appointment_ID != " + apptId);
+            ResultSet rs = getResult();
+            while (rs.next()) {
+                int oldApptId = rs.getInt("Appointment_ID");
+                LocalDateTime oldStart = timeStampToLocal(rs.getTimestamp("Start"));
+                LocalDateTime oldEnd = timeStampToLocal(rs.getTimestamp("End"));
+
+                System.out.println("Checking Appointment #" + oldApptId);
+                if ( (end.isBefore (oldStart)  && start.isBefore (oldStart)) || (end.isAfter (oldEnd) && start.isAfter (oldEnd))) {
+                    System.out.println("No overlap found.");
+                } else {
+                    printOverlaps = printOverlaps + "\nAppointment #" + oldApptId + " - From " + oldStart.toLocalTime() + " to " + oldEnd.toLocalTime();
+                    return false;
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return true;
     }
     //
 

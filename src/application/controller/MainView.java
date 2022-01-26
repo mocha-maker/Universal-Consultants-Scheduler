@@ -1,5 +1,7 @@
 package application.controller;
 
+import application.util.Loc;
+import com.mysql.cj.x.protobuf.MysqlxPrepare;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -9,11 +11,19 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ResourceBundle;
+import java.util.TimeZone;
 
+import static application.controller.TableBase.allAppointments;
+import static application.controller.TableBase.allCustomers;
+import static application.util.Alerts.infoMessage;
 import static application.util.Loc.*;
 
 /**
@@ -29,41 +39,76 @@ public class MainView extends Base {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Run Loc getLocalTime and compare to appointment local date-times.
-        checkUpcomingAppts();
 
+        // set user text to menu
         try {
             activeUser.setText(getActiveUser().toString());
         } catch (NullPointerException ex) {
             ex.printStackTrace();
         }
 
+        // set live clock
         setClock();
 
+        // Loads Calendar on first load
         try {
-            switchScene("cal"); // Loads Calendar on first load
+            switchScene("cal");
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        checkUpcomingAppts();
 
     }
 
     /**
      * TODO: Check if there are any appointments within 15 mins upon login
      */
-    public void checkUpcomingAppts() {
-        System.out.println("Checking for upcoming Appointments.");
+    private void checkUpcomingAppts() {
         // Get Local Time
-        Timestamp now = toTimestamp(LocalDateTime.now());
-        // Run Query on Appointments based on returned date and time
+        LocalDateTime nowUTC = convertTo(LocalDateTime.now(),"UTC");
+        Timestamp now = toTimestamp(nowUTC);
+        System.out.println("Timestamp - " + now);
+        Timestamp inQuarterHour = toTimestamp(nowUTC.plusMinutes(15));
+        System.out.println("Timestamp - " + inQuarterHour);
+        long timeDifference = 15L;
+
+        StringBuilder printAppointments = new StringBuilder();
 
 
-        // Check if Result Set is not empty
+        try {
+            System.out.println("Checking for upcoming Appointments.");
+            PreparedStatement ps = getConnection().prepareStatement("SELECT * FROM appointments WHERE Start >= ? AND Start <= ?");
+            ps.setTimestamp(1,now);
+            ps.setTimestamp(2,inQuarterHour);
+            ps.executeQuery();
 
-        // Trigger an Alert
+            ResultSet rs = ps.getResultSet();
+
+            // Check if Result Set is not empty
+            System.out.println("Fetch size = " + rs.getFetchSize());
+            while (rs.next()) {
+                LocalDateTime upcoming = convertTo(timeStampToLocal(rs.getTimestamp("Start")), "UTC");
+
+                // get earliest upcoming appointment time difference
+                if (timeDifference > nowUTC.until(upcoming, ChronoUnit.MINUTES)) {
+                    timeDifference = nowUTC.until(upcoming, ChronoUnit.MINUTES);
+                }
+                printAppointments.append("\nAppointment #").append(rs.getInt("Appointment_ID")).append(" for ").append(dateToString(upcoming, "MMM d, YYYY hh:mm a"));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        if (!printAppointments.toString().equals("")) {
+            // Popup upcoming appointments and when the earliest one is.
+            printAppointments.insert(0, "You have an appointment with in " + timeDifference + " minutes!\n");
+            infoMessage(printAppointments.toString());
+        } else { // no appointments
+            infoMessage("You have no upcoming appointments.");
+        }
     }
 
-    protected void setClock() {
+    private void setClock() {
         // Live Clock
         Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> {
             LocalDateTime currentTime = LocalDateTime.now();

@@ -119,63 +119,49 @@ public class CustRecord extends RecordBase<Customer> {
     @FXML
     public void addListeners() {
 
-        custName.textProperty().addListener(new ChangeListener<String>() {
-
-            @Override
-            public void changed(ObservableValue<? extends String> observableValue, String oldVal, String newVal) {
-                if (newVal != oldVal) {
-                    nameValid = validateField(custName, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
-                }
+        custName.textProperty().addListener((observableValue, oldVal, newVal) -> {
+            if (newVal != oldVal) {
+                nameValid = validateField(custName, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
             }
         });
 
-        address.textProperty().addListener(new ChangeListener<String>() {
-
-            @Override
-            public void changed(ObservableValue<? extends String> observableValue, String oldVal, String newVal) {
-                if (newVal != oldVal) {
-                    addressValid = validateField(address, newVal, "^[a-zA-Z0-9\\s.,'-]{1,100}$");
-                }
+        address.textProperty().addListener((observableValue, oldVal, newVal) -> {
+            if (newVal != oldVal) {
+                addressValid = validateField(address, newVal, "^[a-zA-Z0-9\\s.,'-]{1,100}$");
             }
         });
 
-        phone.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observableValue, String oldVal, String newVal) {
-                if (newVal != oldVal) {
-                    phoneValid = validateField(phone, newVal, "^\\s*(?:\\+?(\\d{1,3}))?[-. (]*(\\d{3})[-. )]*(\\d{3})[-. ]*(\\d{4})(?: *x(\\d+))?\\s*{1,12}$");
-                }
+        phone.textProperty().addListener((observableValue, oldVal, newVal) -> {
+            if (newVal != oldVal) {
+                phoneValid = validateField(phone, newVal, "^\\s*(?:\\+?(\\d{1,3}))?[-. (]*(\\d{3})[-. )]*(\\d{3})[-. ]*(\\d{4})(?: *x(\\d+))?\\s*{1,12}$");
             }
         });
 
-        code.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observableValue, String oldVal, String newVal) {
-                if (newVal != oldVal) {
-                    code.setText(code.getText().toUpperCase());
-                    try {
-                        switch (country.getValue()) {
-                            case "U.S":
-                                System.out.println("Checking US Postal Code...");
-                                codeValid = validateField(code, newVal, "(^\\d{5}$)|(^\\d{9}$)|(^\\d{5}-\\d{4}$)");
-                                break;
-                            case "Canada":
-                                System.out.println("Checking Canadian Postal Code...");
-                                codeValid = validateField(code, newVal, "^(?![DFIOQUWZ])[A-Z]{1}[0-9]{1}(?![DFIOQU])[A-Z]{1}[ ]{1}[0-9]{1}(?![DFIOQU])[A-Z]{1}[0-9]{1}$");
-                                break;
-                            case "UK":
-                                System.out.println("Checking UK Postal Code...");
-                                codeValid = validateField(code, newVal, "^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$");
-                                break;
-                            default:
-                                break;
-                        }
-                    }catch (Exception ex) {
-                        errorMessage("Data Validation", "No Country Selected. Unable to validate postal code.");
-
+        code.textProperty().addListener((observableValue, oldVal, newVal) -> {
+            if (newVal != oldVal) {
+                code.setText(code.getText().toUpperCase());
+                try {
+                    switch (country.getValue()) {
+                        case "U.S":
+                            System.out.println("Checking US Postal Code...");
+                            codeValid = validateField(code, newVal, "(^\\d{5}$)|(^\\d{9}$)|(^\\d{5}-\\d{4}$)");
+                            break;
+                        case "Canada":
+                            System.out.println("Checking Canadian Postal Code...");
+                            codeValid = validateField(code, newVal, "^(?![DFIOQUWZ])[A-Z]{1}[0-9]{1}(?![DFIOQU])[A-Z]{1}[ ]{1}[0-9]{1}(?![DFIOQU])[A-Z]{1}[0-9]{1}$");
+                            break;
+                        case "UK":
+                            System.out.println("Checking UK Postal Code...");
+                            codeValid = validateField(code, newVal, "^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$");
+                            break;
+                        default:
+                            break;
                     }
+                } catch (Exception ex) {
+                    errorMessage("Data Validation", "No Country Selected. Unable to validate postal code.");
 
                 }
+
             }
         });
 
@@ -286,11 +272,11 @@ public class CustRecord extends RecordBase<Customer> {
                         getCurrentTimestamp(),
                         getActiveUser().getUserName(),
                         getDivisionID(newCust.getDivision()),
-                        newCust.getId());
+                        newCust.getId()); // Needed for WHERE param
                 boolean updated = updateRecord(newCust, params);
                 exitButton(actionEvent);
                 if (updated) {
-                    infoMessage("Customer ID: " + newCust.getId() + "\nSuccessfully Updated");
+                    infoMessage("\nSuccessfully Updated" + "\nID: " + newCust.getId() + "\nName: " + newCust.getCustomerName());
                 }
             }
         } else {

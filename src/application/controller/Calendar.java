@@ -159,7 +159,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
             System.out.println("Querying Appointment Database.");
             prepQuery("SELECT * FROM appointments JOIN contacts USING (Contact_ID) JOIN customers USING (Customer_ID) JOIN users USING (User_ID) " +
                     "WHERE Start >= " + startDate + " AND " +
-                    "End < " + endDate + " ORDER BY Start DESC");
+                    "End < " + endDate + " ORDER BY Start ASC");
             ResultSet rs = getResult();
             System.out.println("Retrieved Results.");
             int i = 0;

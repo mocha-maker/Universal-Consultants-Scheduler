@@ -15,6 +15,7 @@ import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -77,11 +78,11 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
 
     protected abstract String getInsertStatement();
 
-    public void addRecord(T record, List<Object> params) {
-        addToDB(record,params);
+    public boolean addRecord(T record, List<Object> params) {
+        return addToDB(record,params);
     }
 
-    private void addToDB(T record, List<Object> params) {
+    private boolean addToDB(T record, List<Object> params) {
         int recordId = record.getId();
         String table = record.getClass().getSimpleName().toLowerCase();
 
@@ -100,14 +101,16 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
             try {
                 System.out.println("Executing Insert.");
                 ps.executeUpdate();
+                return true;
+
             } catch (SQLException ex2) {
                 ex2.printStackTrace();
             }
-            infoMessage(table + " Updated.");
 
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
+        return false;
 
     }
 
@@ -121,8 +124,7 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
     protected abstract String getUpdateStatement();
 
     public boolean updateRecord(T record, List<Object> params) {
-        boolean updated = updateDB(record,params);
-        return updated;
+        return updateDB(record,params);
     }
 
     private boolean updateDB(T record, List<Object> params) {
@@ -158,9 +160,7 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
 
     public List<Object> getFieldValues(Object... args) {
         List<Object> values = FXCollections.observableArrayList();
-        for (Object arg : args) {
-            values.add(arg);
-        }
+        Collections.addAll(values, args);
         return values;
     }
 

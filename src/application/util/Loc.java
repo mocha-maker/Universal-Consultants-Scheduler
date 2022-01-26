@@ -163,7 +163,7 @@ public abstract class Loc {
         return dateToString(dt,"a").toUpperCase();
     }
 
-    // TODO: Move to Loc.java and add a LocalDateTime.parse(str, formatter); DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a")
+    //
 
     public static LocalDateTime formatTimeSelection(LocalDate date, int hour, int minute, String meridiem) {
         // Convert hour to 24-clock
@@ -175,5 +175,7 @@ public abstract class Loc {
         System.out.println(dateTime);
         return dateTime;
     }
+
+
 
 }

@@ -14,10 +14,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -103,7 +100,7 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
 
     /**
      * Populates Table with class records
-     * @return
+     *
      */
     protected abstract void updateTable();
 
@@ -117,8 +114,7 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
     }
 
     public static <T> ObservableList<T> getAllRecords(T obj) {
-        ObservableList<T> allRecords = FXCollections.observableArrayList();
-        return allRecords;
+        return FXCollections.observableArrayList();
     }
 
 
@@ -220,18 +216,6 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
     EVENT HANDLING
      */
 
-    // TODO: retrieve mode from button selection and feed to open record pop-up method
-
-    private void viewRecord() {
-        final T selected = getSelection();
-        if (selected != null) {
-            openRecord(selected);
-        }
-    }
-
-    private void openRecord(T record) {
-
-    }
 
     // TODO: Searchbar with auto filter
 
@@ -317,7 +301,7 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         } else if ( pressed.equals(editButton) ) {
             infoMessage("Please select a record for modification.");
         }
-    };
+    }
 
     private void loadCustomerRecord(T obj, Button pressed) {
         FXMLLoader loader = setLoader("custRecord");
