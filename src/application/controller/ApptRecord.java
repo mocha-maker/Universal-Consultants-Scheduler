@@ -394,23 +394,32 @@ public class ApptRecord extends RecordBase<Appointment> {
     }
 
     public Boolean validateDateTimes(LocalDateTime start, LocalDateTime end) {
-        if (start.isBefore(end)) {
-            if( isInBusinessHours(start, end) ) {
-                if (isWithinBusinessDay(start, end)) {
-                    if (isNotOverlapping(start, end)) {
-                        return true;
+        // Only initiate further validation if start and end are in order and start is in the future.
+        if (start.isAfter(LocalDateTime.now())) {
+            if (start.isBefore(end)) {
+                if (isInBusinessHours(start, end)) {
+                    if (isWithinBusinessDay(start, end)) {
+                        if (isNotOverlapping(start, end)) {
+                            return true;
+                        } else {
+                            errorMessage("Date Validation", "Appointment overlap exists with this customer for the following appointment(s):" + printOverlaps);
+                        }
                     } else {
-                        errorMessage("Date Validation","Appointment overlap exists with this customer for the following appointment(s):" + printOverlaps );
+                        errorMessage("Date Validation", "Appointment is longer than a business day of 14 hours.");
                     }
                 } else {
-                    errorMessage("Date Validation", "Appointment Duration is longer than a business day of 14 hours.");
+                    errorMessage("Date Validation", "Appointment times are outside of Business Hours.");
                 }
             } else {
-                errorMessage("Date Validation", "Appointment Times are outside of Business Hours.");
+                errorMessage("Date Validation", "Appointments need to start before it ends.");
             }
-        } else {
-            errorMessage("Date Validation", "Start time is after End time.");
+        } else{
+            if (formTypeNew) {
+                errorMessage("Date Validation", "New appointments can be made for a future date and time.");
+            }
+            errorMessage("Date Validation", "Appointments can only be updated to a future date and time.");
         }
+
         return false;
     }
 
