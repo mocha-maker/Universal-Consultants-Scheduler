@@ -22,7 +22,7 @@ public class User extends Record {
 
     @Override
     public String toString() {
-        return "ID: " + id + " - " + userName;
+        return userName + " (ID#" + id + ")";
     }
 
 }

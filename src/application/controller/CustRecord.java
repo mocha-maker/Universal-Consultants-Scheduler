@@ -1,33 +1,24 @@
 package application.controller;
 
-import application.model.Appointment;
 import application.model.Customer;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
-import javafx.scene.text.Text;
 
-import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.ResourceBundle;
-import java.util.function.UnaryOperator;
-
-import static application.util.Alerts.errorMessage;
-import static application.util.Alerts.infoMessage;
 
 import static application.util.Loc.getCurrentTimestamp;
 
-
+/**
+ * Customer Record Controller
+ * Manages the Customer Record Form for Adding and Editing Customers
+ */
 public class CustRecord extends RecordBase<Customer> {
 
 
@@ -58,7 +49,11 @@ public class CustRecord extends RecordBase<Customer> {
 
     // TODO: Class Level Validation Booleans for Bindings
 
-
+    /**
+     * Pass parameters from Customer Table
+     * @param action - the button action that was taken
+     * @param customer - the customer to load on the form
+     */
     @Override
     protected void getParams(String action, Customer customer) {
         System.out.println("Transferring parameters to new controller.");
@@ -90,6 +85,7 @@ public class CustRecord extends RecordBase<Customer> {
                 division.setValue(record.getDivision());
                 code.setText(record.getPostalCode());
                 phone.setText(record.getPhone());
+
                 break;
             default:
                 break;
@@ -101,6 +97,9 @@ public class CustRecord extends RecordBase<Customer> {
 
     // FORM VALIDATION AND MANAGEMENT
 
+    /**
+     * TODO: Bind save button to be enabled only when all fields are not empty
+     */
     private void bindSaveButton() {
        BooleanBinding isAllValid = new BooleanBinding() {
             @Override
@@ -116,6 +115,9 @@ public class CustRecord extends RecordBase<Customer> {
         saveButton.disableProperty().bind(isAllValid);
     }
 
+    /**
+     * Add data validation listeners for all Text Fields
+     */
     @FXML
     public void addListeners() {
 
@@ -165,11 +167,19 @@ public class CustRecord extends RecordBase<Customer> {
             }
         });
 
+        country.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal)->{
+            if(newVal != oldVal){
+                setRegionsCB();
+            }
+        });
 
     }
 
 
-
+    /**
+     * Initiate Validation check on all fields
+     * @return validation status
+     */
     private Boolean isAllFieldsValid() {
 
         countryValid = !country.getValue().isEmpty();
@@ -188,11 +198,17 @@ public class CustRecord extends RecordBase<Customer> {
 
     // FORM SETUP
 
+    /**
+     * Set Combo Box values
+     */
     @Override
     protected void setComboBoxes() {
         setCountriesCB();
     }
 
+    /**
+     * Set Countries ComboBox
+     */
     private void setCountriesCB() {
         System.out.println("Setting Countries Combo Box...");
         country.setPromptText("Select a country.");
@@ -203,13 +219,12 @@ public class CustRecord extends RecordBase<Customer> {
             System.out.println("No Countries Found");
         }
 
-        country.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal)->{
-            if(newVal != oldVal){
-                setRegionsCB();
-            }
-        });
+
     }
 
+    /**
+     * Set Regions Combo Box dynamically based on the country selected (see listeners)
+     */
     @FXML
     private void setRegionsCB() {
         System.out.println("Setting Regions Combo Box...");
@@ -229,12 +244,13 @@ public class CustRecord extends RecordBase<Customer> {
     }
 
 
-    // TODO: Set Customer-related Appointments tableview (see apptTable)
-
-    // TODO: SAVE BUTTON
+    /**
+     * Initiate save record process
+     * @param actionEvent
+     */
     @FXML
     private void saveRecord(ActionEvent actionEvent) {
-        // Collect textfield values
+        // Collect textfield values if all fields are valid
 
         if (isAllFieldsValid()) {
             Customer newCust = new Customer(Integer.parseInt(custID.getText()),
@@ -284,10 +300,18 @@ public class CustRecord extends RecordBase<Customer> {
         }
     }
 
+    /**
+     *
+     * @return Customer insert SQL statement
+     */
     public String getInsertStatement() {
         return "INSERT INTO customers VALUES (?,?,?,?,?,?,?,?,?,?)";
     }
 
+    /**
+     *
+     * @return Customer update SQL statement
+     */
     public String getUpdateStatement() {
         return "UPDATE customers SET " +
                 "Customer_Name = ?," +
@@ -300,7 +324,12 @@ public class CustRecord extends RecordBase<Customer> {
                 "WHERE Customer_ID = ?";
     }
 
-    public static int getDivisionID(String divisionName) {
+    /**
+     * Gets Division ID from Division Name for SQL Customer Record Updates
+     * @param divisionName - name of the division
+     * @return division id from database
+     */
+    private static int getDivisionID(String divisionName) {
         System.out.println("Retrieving Division ID for Division " + divisionName);
         int divId = 0;
         try {
@@ -316,7 +345,11 @@ public class CustRecord extends RecordBase<Customer> {
         return divId;
     }
 
-    public static ObservableList<String> getAllCountries() {
+    /**
+     *
+     * @return list of all countries to populate country combo box
+     */
+    private static ObservableList<String> getAllCountries() {
         ObservableList<String> allCountries = FXCollections.observableArrayList();
 
         try {
@@ -342,6 +375,10 @@ public class CustRecord extends RecordBase<Customer> {
         return allCountries;
     }
 
+    /**
+     *
+     * @return list of all divisions to populate state/province combo box
+     */
     public static ObservableList<String> getAllRegions(String country) {
         ObservableList<String> allRegions = FXCollections.observableArrayList();
 

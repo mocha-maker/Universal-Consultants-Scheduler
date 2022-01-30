@@ -5,15 +5,14 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="768.0" prefWidth="754.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/11.0.2" fx:controller="application.controller.CustTable">
-   <VBox>
-      <padding>
-         <Insets left="30.0" right="30.0" top="30.0" />
-      </padding>
-      <Button mnemonicParsing="false" text="Back" />
-      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Customers">
+<AnchorPane stylesheets="@../resources/styles.css" prefHeight="768.0" prefWidth="754.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/11.0.2" fx:controller="application.controller.CustTable">
+   <padding>
+      <Insets left="30.0" right="30.0" top="60.0" />
+   </padding>
+   <VBox prefHeight="768.0" prefWidth="754.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+      <Text styleClass="title" strokeType="OUTSIDE" strokeWidth="0.0" text="Customers">
          <VBox.margin>
-            <Insets bottom="25.0" top="25.0" />
+            <Insets bottom="60.0" top="25.0" />
          </VBox.margin>
          <font>
             <Font size="48.0" />
@@ -34,14 +33,14 @@
                </Button>
                <Button fx:id="deleteButton" mnemonicParsing="false" text="Delete" onAction="#deleteCustRecord">
                   <HBox.margin>
-                     <Insets right="10.0" />
+                     <Insets right="10.0" bottom="5.0"/>
                   </HBox.margin>
                </Button>
             </HBox>
          </AnchorPane>
          <AnchorPane AnchorPane.rightAnchor="0.0">
             <HBox prefWidth="200.0">
-               <Button mnemonicParsing="false" text="Find">
+               <Button fx:id="filterButton" mnemonicParsing="false" text="Find">
                   <HBox.margin>
                      <Insets right="10.0" />
                   </HBox.margin>

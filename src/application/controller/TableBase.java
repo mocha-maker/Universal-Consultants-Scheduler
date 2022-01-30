@@ -8,13 +8,15 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.css.StyleClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -24,12 +26,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
 
-import static application.util.Alerts.errorMessage;
-import static application.util.Alerts.infoMessage;
-
+/**
+ * Abstract Table Controller
+ * Manages
+ * @param <T> the model to use for the tableviews
+ */
 public abstract class TableBase<T extends Record> extends Base implements Initializable {
 
-    // TODO: set Base Table members
+    /*  ======================
+        TABLE BASE FXML ELEMENTS
+        ======================*/
     @FXML
     protected TableView<T> tableView;
     @FXML
@@ -41,12 +47,13 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
     @FXML
     protected Button deleteButton;
 
+    /*  ======================
+        STATIC LISTS FOR TABLE AND FORM USE
+        ======================*/
 
-    protected RecordBase<T> recordForm;
-
-    public static ObservableList<Contact> allContacts = FXCollections.observableArrayList();
-    public static ObservableList<Appointment> allAppointments = FXCollections.observableArrayList();
-    public static ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
+    static ObservableList<Contact> allContacts = FXCollections.observableArrayList();
+    static ObservableList<Appointment> allAppointments = FXCollections.observableArrayList();
+    static ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
 
     /**
      *
@@ -55,9 +62,7 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        /*filterButton.setDisable(true);
-        filterButton.setVisible(false);
-        */
+
         final TableColumn<T, Long> idColumn = new TableColumn<>("ID");
 
         idColumn.setCellValueFactory(param -> new SimpleLongProperty(param.getValue().getId()).asObject());
@@ -68,13 +73,21 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         tableView.refresh();
     }
 
+    /*  ======================
+        SET TABLEVIEW STRUCTURE
+        ======================*/
 
-    /*
-    SET TABLEVIEW STRUCTURE
+    /**
+     * Required method for extended classes to generate columns for the TableView
      */
-
     protected abstract void addColumns();
 
+    /**
+     * Creates a TableColumn to load into the TableView
+     * @param tClass - the model class
+     * @param colName - the name of the field of the class
+     * @return the String TableColumn to be created
+     */
     protected TableColumn<T, String> getStringColumn(Class<T> tClass, String colName) {
         try {
             final Field field = tClass.getDeclaredField(colName);
@@ -86,7 +99,7 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
                 try {
                     return new SimpleStringProperty(field.get(param.getValue()).toString());
                 } catch (IllegalAccessException ex) {
-                    ex.printStackTrace();
+                    System.out.println(ex);
                 }
                 return null;
             });
@@ -97,34 +110,32 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         return null;
     }
 
-
     /**
      * Populates Table with class records
      *
      */
     protected abstract void updateTable();
 
-
+    /**
+     *
+     * @return the selected item from the TableView
+     */
     private T getSelection() {
         return tableView.getSelectionModel().getSelectedItem();
     }
 
-    public ObservableList<T> getAllRecords() {
-        return tableView.getItems();
-    }
 
-    public static <T> ObservableList<T> getAllRecords(T obj) {
-        return FXCollections.observableArrayList();
-    }
-
-
-
+    /**
+     * Checks if the record to be updated exists in the database
+     * @param record - the record to be queried
+     * @return whether a record can be updated or not
+     */
     protected boolean updatable(T record) {
         System.out.println("Checking for record existence in database.");
+
         boolean updatable = false;
-        String table = record.getClass().getSimpleName().toLowerCase();
-        System.out.println(table);
         int id = record.getId();
+        String table = record.getClass().getSimpleName().toLowerCase();
         String tableCapitalized = table.substring(0,1).toUpperCase() + table.substring(1);
 
         try {
@@ -151,8 +162,16 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         Products cannot be deleted if they have associated Parts
         */
 
+    /**
+     *
+     * @return delete query statement
+     */
     protected abstract String getDeleteStatement();
 
+    /**
+     * Only used by
+     * @return the delete dependencies statement
+     */
     protected abstract String getDeleteDependencies();
 
     public boolean deleteRecord(T record) {
@@ -171,18 +190,21 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         return deleted;
     }
 
+    /**
+     *
+     * @param record
+     * @param statement
+     * @return
+     */
     private boolean deleteFromDB(T record, String statement) {
         boolean deleted = false;
-        String table = record.getClass().getSimpleName().toLowerCase();
-
-
-        // retrieve id from object
         int id = record.getId();
+        String table = record.getClass().getSimpleName().toLowerCase();
         String tableCapitalized = table.substring(0,1).toUpperCase() + table.substring(1);
+
         System.out.println("Attempting to delete " + table + " record.");
 
         try {
-            // sqlquery to delete record
             PreparedStatement ps = getConnection().prepareStatement(statement);
             ps.setInt(1, id);
             ps.executeUpdate();
@@ -196,49 +218,11 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         return deleted;
     }
 
-    public static String getRelatedValue(int id, String table, String fieldName) {
-        System.out.println("Retrieving related value for " + table);
-        String fieldValue = "";
-        try {
-            prepQuery("SELECT * FROM " + table + " WHERE " + table.substring(0,1).toUpperCase() +"_ID = " + id);
-            ResultSet rs = getResult();
-            while (rs.next()) {
-                fieldValue = rs.getString(fieldName);
-                System.out.println("Field Value Retrieved = " + fieldValue);
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-        return fieldValue;
-    }
 
-    /*
-    EVENT HANDLING
+    /**
+     *
+     * @return list of all contacts
      */
-
-
-    // TODO: Searchbar with auto filter
-
-    @FXML
-    private void addFilter() {}
-
-    private void filterResults(ActionEvent actionEvent) {
-        TextField source = (TextField)actionEvent.getSource();
-        String q = source.getText(); // retrieve entered string from searchbox
-        ObservableList<?> objs = FXCollections.observableArrayList();
-
-        // check results
-        if (objs.size() == 0) {
-            try {
-                //objs = lookupRecords(T,Integer.parseInt(q));
-            } catch (NullPointerException ex) {
-                ex.printStackTrace();
-
-            }
-        }
-    }
-
-
     public static ObservableList<Contact> getAllContacts() {
         allContacts.clear();
 
@@ -276,8 +260,10 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
     }
 
 
-
-
+    /**
+     * loads the respective form window based on what the current controller is
+     * @param actionEvent
+     */
     @FXML
     protected void toRecords(ActionEvent actionEvent) {
         // Declare Local Variables
@@ -303,6 +289,11 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         }
     }
 
+    /**
+     * Loads Customer Form
+     * @param obj - the selected customer to be loaded into the form
+     * @param pressed - the button that was pressed
+     */
     private void loadCustomerRecord(T obj, Button pressed) {
         FXMLLoader loader = setLoader("custRecord");
         try {
@@ -313,9 +304,13 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
+    /**
+     * Loads Appointment Form
+     * @param obj - the selected appointment to be loaded into the form
+     * @param pressed - the button that was pressed
+     */
     private void loadAppointmentRecord(T obj, Button pressed) {
         FXMLLoader loader = setLoader("apptRecord");
         try {
@@ -327,17 +322,6 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public T getIndex(int id, ObservableList<T> allRecords) {
-        T foundRecord = null;
-        for (T r : allRecords) {
-            if (r.getId() == id) {
-                foundRecord = r;
-                break;
-            }
-        }
-        return foundRecord;
     }
 
     // end of class

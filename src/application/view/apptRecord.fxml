@@ -5,11 +5,15 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="460.0" prefWidth="754.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.ApptRecord">
+<AnchorPane stylesheets="@../resources/styles.css" prefHeight="460.0" prefWidth="754.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.ApptRecord">
+   <padding>
+
+      <Insets left="30.0" right="30.0" top="30.0" />
+   </padding>
    <children>
-      <VBox>
+      <VBox prefHeight="500.0" prefWidth="754.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
-            <Text fx:id="apptRecordTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Add New Appointment">
+            <Text styleClass="title" fx:id="apptRecordTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Add New Appointment">
                <VBox.margin>
                   <Insets bottom="25.0" top="25.0" />
                </VBox.margin>

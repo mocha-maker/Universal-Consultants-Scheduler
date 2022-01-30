@@ -4,6 +4,103 @@
  * ID: 1221251
  */
 
- .menu-text {
-    color: white;
- }
+/*
+ * MENU BAR STYLES
+ */
+
+.menuBar {
+    -fx-background-color: #8E4B88;
+    -fx-height: 100%;
+}
+
+.menuItem {
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-font-size: 12pt;
+}
+
+.menuItem:hover {
+    -fx-font-weight: bold;
+    -fx-text-fill: F5E1FD;
+    -fx-font-size: 12pt;
+    -fx-cursor: hand;
+}
+
+.menu-text {
+    -fx-fill: white;
+    -fx-font-size: 12pt;
+}
+
+.activeUserLabel {
+    -fx-fill: white;
+    -fx-font-size: 10pt;
+}
+
+.clock {
+    -fx-fill: white;
+    -fx-font-size: 10pt;
+}
+
+/*
+* Default Styles
+*/
+
+
+.text {
+    fx-color: black;
+}
+
+.button {
+    -fx-base: #8E4B88;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.radio-button .radio {
+    -fx-border-width: 1px;
+    -fx-border-color: #8E4B88;
+    -fx-background-color: white;
+    -fx-background-image: null;
+    -fx-border-radius: 15px;
+    -fx-padding: 4px;
+}
+
+.radio-button .radio:selected, .radio-button -radio:armed {
+    -fx-background-color: #8E4B88;
+    -fx-background-image: null;
+}
+
+/* Table Views */
+
+.table-view {
+    -fx-background-color: transparent;
+}
+
+.table-view .column-header {
+    -fx-background-color: #8E4B88;
+}
+
+.table-view .column-header-background .label {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+}
+
+.table-view .scroll-bar:horizontal .thumb {
+    -fx-background-color: #8E4B88;
+}
+
+.date-picker-popup {
+    -fx-background-color: #8E4B88;
+}
+
+
+/*
+* Window Styles
+*/
+
+.title {
+    -fx-font-weight: bold;
+    -fx-fill: #8E4B88;
+    -fx-font-size: 30pt;
+    -fx-position-layout-X: 15px;
+}

@@ -1,17 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
-<AnchorPane prefHeight="768.0" prefWidth="754.0" xmlns:fx="http://javafx.com/fxml/" fx:controller="application.controller.Reports">
+
+<AnchorPane prefHeight="768.0" prefWidth="754.0" stylesheets="@../resources/styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.Reports">
+   <padding>
+
+      <Insets left="30.0" right="30.0" top="60.0" />
+   </padding>
    <children>
-      <VBox layoutX="10.0" layoutY="10.0">
+      <VBox prefHeight="768.0" prefWidth="754.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
-            <Button mnemonicParsing="false" text="Back" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Reports">
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="title" text="Reports">
                <VBox.margin>
                   <Insets bottom="25.0" top="25.0" />
                </VBox.margin>
@@ -42,22 +50,17 @@
                         <Insets right="10.0" />
                      </HBox.margin>
                   </Button>
-                  <Button fx:id="printButton" mnemonicParsing="false" text="Print">
-                     <HBox.margin>
-                        <Insets right="10.0" />
-                     </HBox.margin>
-                  </Button>
                </children>
                <padding>
                   <Insets bottom="10.0" />
                </padding>
             </HBox>
-            <ListView prefHeight="450.0" prefWidth="680.0" />
             <AnchorPane>
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>
             </AnchorPane>
+            <TextArea fx:id="reportView" prefHeight="404.0" prefWidth="680.0" />
          </children>
          <padding>
             <Insets left="30.0" right="30.0" top="30.0" />

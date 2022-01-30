@@ -5,32 +5,31 @@ import application.model.Contact;
 import application.model.Customer;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.text.Text;
 
-import java.io.IOException;
-import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.WeekFields;
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import static application.controller.CustTable.getAllCustomers;
-import static application.util.Alerts.*;
 import static application.util.Loc.*;
 
+/**
+ * Calendar Controller
+ * Manages the Calendar View.
+ */
 public final class Calendar extends TableBase<Appointment> implements Initializable {
 
 
@@ -57,6 +56,30 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
     @FXML
     private DatePicker periodPicker;
 
+    private static LocalDate getFirstOfMonth(LocalDate localDate) {
+        return localDate.withDayOfMonth(1);
+    }
+
+    private static LocalDate getBeginOfWeek(LocalDate localDate) {
+        DayOfWeek firstDayofWeek = WeekFields.of(Locale.getDefault()).getFirstDayOfWeek();
+        return localDate.with(TemporalAdjusters.previousOrSame(firstDayofWeek));
+    }
+
+    private static LocalDate getNextMonth(LocalDate localDate) {
+        return getFirstOfMonth(localDate.plusMonths(1));
+    }
+
+    private static LocalDate getNextWeek(LocalDate localDate) {
+        return getBeginOfWeek(localDate.plusWeeks(1));
+    }
+
+    private static LocalDate getPrevMonth(LocalDate localDate) {
+        return getFirstOfMonth(localDate.minusMonths(1));
+    }
+
+    private static LocalDate getPrevWeek(LocalDate localDate) {
+        return getBeginOfWeek(localDate.minusWeeks(1));
+    }
 
 
     // TODO: Create Weekly and Monthly Views that include Appointments in the respective dates
@@ -131,6 +154,19 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
 
     }
 
+    /**
+     * Updates the table with filtered appointments based on selected dates and filters
+     */
+    public void updateTable() {
+        tableView.getItems().clear();
+        tableView.setItems(getFilteredAppointments());
+        currentView.setText(getViewTitle());
+    }
+
+    /**
+     *
+     * @return the view title for the current filter
+     */
     private String getViewTitle() {
         String viewTitle = "";
         Toggle selected = filterSelect.getSelectedToggle();
@@ -144,13 +180,12 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         return viewTitle;
     }
 
-    public void updateTable() {
-        tableView.getItems().clear();
-        tableView.setItems(getFilteredAppointments());
-        currentView.setText(getViewTitle());
-    }
 
-    public ObservableList<Appointment> getFilteredAppointments() {
+    /**
+     * Queries the database for appointments based on the selected filter and dates
+     * @return list of filtered appointments
+     */
+    private ObservableList<Appointment> getFilteredAppointments() {
         allAppointments = FXCollections.observableArrayList();
         String startDate = getStartPeriod();
         String endDate = getEndPeriod();
@@ -206,6 +241,9 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         return allAppointments;
     }
 
+    /**
+     * Sets the current period selected
+     */
     private void setPicked() {
         picked = periodPicker.getValue();
     }
@@ -217,6 +255,11 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
     protected String getDeleteStatement() {
         return "DELETE FROM appointments WHERE Appointment_ID = ?";
     }
+
+    /**
+     * blank delete dependencies method
+     * @return empty string
+     */
     protected String getDeleteDependencies() { return ""; }
 
 
@@ -225,22 +268,29 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
     Event Handling
     ======================*/
 
+    /**
+     * Updates the table based on the change in filter
+     * @param actionEvent
+     */
     @FXML
     private void toggleFilter(ActionEvent actionEvent) {
         if (monthRadio.isSelected()) {
             // Change Label?
 
             // Update Table Filters
-            periodPicker.setValue(getFirstOfMonth(today));
+            periodPicker.setValue(getFirstOfMonth(picked));
         } else if (weekRadio.isSelected()) {
             // Change Label?
 
             // Update Table Filters
-            periodPicker.setValue(getBeginOfWeek(today));
+            periodPicker.setValue(getBeginOfWeek(picked));
         }
         updateTable();
     }
 
+    /**
+     * Automatically set the date picker's value to the first of the month
+     */
     @FXML
     private void monthPickerHandler() {
 
@@ -249,6 +299,9 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         }
     }
 
+    /**
+     * Automatically set the date picker's value to the first of the week
+     */
     @FXML
     private void weekPickerHandler() {
         if (!picked.equals(getBeginOfWeek(picked))){
@@ -256,6 +309,9 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         }
     }
 
+    /**
+     * Manages the next and previous period arrow button actions
+     */
     @FXML
     private void arrowsHandler(ActionEvent actionEvent) {
         picked = periodPicker.getValue();
@@ -270,7 +326,9 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         updateTable();
     }
 
-
+    /**
+     * Manages the next and previous period arrow button actions if using the month filter
+     */
     @FXML
     private void monthArrowsHandler(ActionEvent actionEvent) {
 
@@ -284,7 +342,10 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
             errorMessage("Invalid Action","An invalid action was taken.");
         }
     }
-    
+
+    /**
+     * Manages the next and previous period arrow button actions if using the week filter
+     */
     @FXML
     private void weekArrowsHandler(ActionEvent actionEvent) {
 
@@ -299,10 +360,19 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         }
     }
 
+    /**
+     *
+     * @return the start of the period which is always the date in the date picker
+     */
     private String getStartPeriod() {
         return "'" + dateToString(picked.atStartOfDay(),"yyyy-MM-dd hh:mm:ss") + "'";
     }
 
+
+    /**
+     *
+     * @return the end of the period based on the start of the period and selected filter
+     */
     private String getEndPeriod() {
         String pattern = "yyyy-MM-dd hh:mm:ss";
         if (filterSelect.getSelectedToggle().equals(monthRadio)) {
@@ -313,9 +383,11 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         return null;
     }
 
-
-
-
+    /**
+     * Deletes selected appointment with confirmation
+     * @param e - the button that was pressed
+     */
+    @FXML
     public void deleteApptRecord(ActionEvent e) {
         Appointment appointment = tableView.getSelectionModel().getSelectedItem();
 

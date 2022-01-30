@@ -4,7 +4,7 @@
  * It tracks customers and appointments through interfaces and reports.
  *
  * <b> Courser</b>: C195 - Software II (Java)
- * <b>Date of Submission:</b> November 25, 2021
+ * <b>Date of Submission:</b> January 31, 2022
  * @since 1.0
  * @author Flynn Pyc (#1221251)
  * @version 0.1

@@ -3,36 +3,28 @@ package application.controller;
 import application.model.Appointment;
 import application.model.Contact;
 import application.model.Customer;
-import javafx.beans.property.*;
-import javafx.collections.FXCollections;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 import static application.controller.CustTable.getAllCustomers;
-import static application.util.Alerts.confirmMessage;
-import static application.util.Alerts.infoMessage;
-import static application.util.Loc.timeStampToLocal;
 import static application.util.Loc.dateToString;
+import static application.util.Loc.timeStampToLocal;
 
+/**
+ * Appointment Table Controller
+ * Manages the Appointment Table View
+ */
 public final class ApptTable extends TableBase<Appointment> implements Initializable {
     
-    /*  ======================
-        APPOINTMENT TABLE ELEMENTS
-        ======================*/
-
-
 
     /*  ======================
         TABLEVIEW MANAGEMENT
@@ -71,20 +63,11 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
     }
 
     /**
-     * Updates Customer Table
-     * used to populate tableview
-     */
-    public void updateTable() {
-        tableView.getItems().clear();
-        tableView.setItems(getAllAppointments());
-    }
-
-    /**
      *
-     * @return
+     * @return list of all appointments
      */
     public static ObservableList<Appointment> getAllAppointments() {
-       allAppointments.clear();
+        allAppointments.clear();
 
         try {
             System.out.println("Querying Appointment Database.");
@@ -135,9 +118,17 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         return allAppointments;
     }
 
+    /**
+     * Updates Customer Table
+     * used to populate tableview
+     */
+    public void updateTable() {
+        tableView.getItems().clear();
+        tableView.setItems(getAllAppointments());
+    }
 
     /*  ======================
-        Event Handling
+        EVENT HANDLING
         ======================*/
 
 
@@ -149,6 +140,9 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         return "DELETE FROM appointments WHERE Appointment_ID = ?";
     }
 
+    /**
+     * Starts the delete appointment process with a confirmation message and checks that a valid record is selected
+     */
     public void deleteApptRecord(ActionEvent e) {
         Appointment appointment = tableView.getSelectionModel().getSelectedItem();
 
@@ -171,7 +165,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
     }
 
     /**
-     * empty method
+     * empty delete dependencies method
      * @return empty string
      */
     protected String getDeleteDependencies() { return "";}

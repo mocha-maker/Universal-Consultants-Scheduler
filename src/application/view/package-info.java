@@ -1,4 +1,6 @@
 /**
- * This package is the
+ * This package contains the application views.
+ *
+ *
  */
 package application.view;

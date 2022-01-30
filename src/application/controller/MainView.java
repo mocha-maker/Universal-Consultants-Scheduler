@@ -1,7 +1,6 @@
 package application.controller;
 
 import application.util.Loc;
-import com.mysql.cj.x.protobuf.MysqlxPrepare;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -16,14 +15,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ResourceBundle;
-import java.util.TimeZone;
 
-import static application.controller.TableBase.allAppointments;
-import static application.controller.TableBase.allCustomers;
-import static application.util.Alerts.infoMessage;
 import static application.util.Loc.*;
 
 /**
@@ -35,6 +29,8 @@ public class MainView extends Base {
     Text activeUser;
     @FXML
     Text localTime;
+    @FXML
+    Text localZone;
 
 
     @Override
@@ -42,7 +38,7 @@ public class MainView extends Base {
 
         // set user text to menu
         try {
-            activeUser.setText(getActiveUser().toString());
+            activeUser.setText("Welcome " + getActiveUser().toString() + "!");
         } catch (NullPointerException ex) {
             ex.printStackTrace();
         }
@@ -118,7 +114,9 @@ public class MainView extends Base {
         );
         clock.setCycleCount(Animation.INDEFINITE);
         clock.play();
+        localZone.setText(Loc.getZone().getID());
     }
+
 
 
 }

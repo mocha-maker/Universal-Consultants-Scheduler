@@ -4,30 +4,27 @@ import application.model.Appointment;
 import application.model.Customer;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import static application.util.Alerts.confirmMessage;
-import static application.util.Alerts.infoMessage;
-
-
+/**
+ * Customer Table Controller
+ * Manages the Customer Table View
+ */
 public class CustTable extends TableBase<Customer> implements Initializable {
-    /*  ======================
-        CUSTOMER TABLE ELEMENTS
-        ======================*/
 
 
     /*  ======================
         TABLEVIEW MANAGEMENT
         ======================*/
+
+    /**
+     * Creates and Sets TableView Columns
+     */
     public void addColumns() {
         // Set specially formatted columns
         final TableColumn<?, ?> nameCol = new TableColumn<>("Contact");
@@ -44,64 +41,8 @@ public class CustTable extends TableBase<Customer> implements Initializable {
     }
 
     /**
-     * Updates Customer Table
-     * used to populate tableview
-     */
-    public void updateTable() {
-        tableView.getItems().clear();
-        tableView.setItems(getAllCustomers()); }
-
-    /*  ======================
-        Event Handling
-        ======================*/
-
-    public void deleteCustRecord(ActionEvent e) {
-        Customer customer = tableView.getSelectionModel().getSelectedItem();
-
-        if (customer != null) {
-            boolean confirm = confirmMessage("Delete Customer", "Are you sure you want to delete " + customer.getCustomerName() + " with  ID " + customer.getId() + "? \n" +
-                    "All related appointments will also be deleted.");
-
-            int count = 0;
-            for (Appointment appointment : allAppointments) {
-                if (appointment.getCustomer().getId() == customer.getId()) {
-                    count++;
-                }
-            }
-
-            if (confirm) {
-                boolean deleted = deleteRecord(customer);
-                if (deleted) {
-
-                    infoMessage("Customer ID: " + customer.getId() + "\nCustomer Name: " + customer.getCustomerName() + "\nSuccessfully Deleted with " + count + " Appointment(s)");
-                }
-                updateTable();
-            }
-        } else {
-            infoMessage("Please select a record for deletion.");
-        }
-
-    }
-
-
-    /**
      *
-     * @return SQL statement to delete customer record
-     */
-    protected String getDeleteStatement() {
-        return "DELETE FROM customers WHERE Customer_ID = ?";
-    }
-
-    /**
-     *
-     * @return SQL statement to delete appointment dependencies
-     */
-    protected String getDeleteDependencies() {return "DELETE FROM appointments WHERE Customer_ID = ?";}
-
-
-    /**
-     * Queries DB to build a new Observable list
-     *
+     * @return list of all customers
      */
     public static ObservableList<Customer> getAllCustomers() {
         allCustomers.clear();
@@ -146,6 +87,69 @@ public class CustTable extends TableBase<Customer> implements Initializable {
         System.out.println("Retrieving Observable List.");
         return allCustomers;
     }
+
+    /**
+     * Updates Customer Table
+     * used to populate tableview
+     */
+    public void updateTable() {
+        tableView.getItems().clear();
+        tableView.setItems(getAllCustomers()); }
+
+    /*  ======================
+        Event Handling
+        ======================*/
+
+    /**
+     * Deletes a Customer record with a confirmation that related appointments will also be deleted
+     * Checks if a valid record is selected
+     * @param e
+     */
+    public void deleteCustRecord(ActionEvent e) {
+        Customer customer = tableView.getSelectionModel().getSelectedItem();
+
+        if (customer != null) {
+            boolean confirm = confirmMessage("Delete Customer", "Are you sure you want to delete " + customer.getCustomerName() + " with  ID " + customer.getId() + "? \n" +
+                    "All related appointments will also be deleted.");
+
+            int count = 0;
+            for (Appointment appointment : allAppointments) {
+                if (appointment.getCustomer().getId() == customer.getId()) {
+                    count++;
+                }
+            }
+
+            if (confirm) {
+                boolean deleted = deleteRecord(customer);
+                if (deleted) {
+
+                    infoMessage("Customer ID: " + customer.getId() + "\nCustomer Name: " + customer.getCustomerName() + "\nSuccessfully Deleted with " + count + " Appointment(s)");
+                }
+                updateTable();
+            }
+        } else {
+            infoMessage("Please select a record for deletion.");
+        }
+
+    }
+
+
+    /**
+     *
+     * @return SQL statement to delete customer record
+     */
+    protected String getDeleteStatement() {
+        return "DELETE FROM customers WHERE Customer_ID = ?";
+    }
+
+    /**
+     *
+     * @return SQL statement to delete appointment dependencies
+     */
+    protected String getDeleteDependencies() {return "DELETE FROM appointments WHERE Customer_ID = ?";}
+
+
+
 
 
     // end of class

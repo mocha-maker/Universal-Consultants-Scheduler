@@ -1,7 +1,6 @@
 package application.controller;
 
 import application.model.Record;
-import application.model.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -17,11 +16,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.ResourceBundle;
 
-import static application.util.Alerts.infoMessage;
-
+/**
+ * Abstract Class for Record Views
+ * @param <T> - the model class to be used in the form
+ */
 public abstract class RecordBase<T extends Record> extends Base implements Initializable {
 
     @FXML
@@ -32,21 +32,43 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
 
     @FXML
     Button saveButton;
-    
+
+    /**
+     * Pass parameters from Table Controller to Record Controllers
+     * @param action - the button action that was taken
+     * @param obj - the selected record from the table
+     */
     protected abstract void getParams(String action,T obj) ;
 
+    /**
+     * Default Record initialization to set the form structures and listeners
+     * @param url FXML Location
+     * @param resourceBundle the FXML resource bundle to use
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         // Set up form structures
         setComboBoxes();
         addListeners();
-
     }
 
+    /**
+     * Add listeners for validation and boolean binding
+     */
     protected abstract void addListeners();
 
+    /**
+     * Set combobox options
+     */
     protected abstract void setComboBoxes();
 
+    /**
+     * General String Validation Method from a TextField
+     * @param field - the TextField to update the style if invalid input
+     * @param input - the input from the textfield
+     * @param pattern - the regex pattern to match input to
+     * @return
+     */
     Boolean validateField(TextField field, String input, String pattern) {
         if (input.matches(pattern)) {
             field.setStyle("");
@@ -58,6 +80,13 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
         }
     }
 
+    /**
+     * General String Validation Method from a ComboBox
+     * @param field - the TextField to update the style if invalid input
+     * @param input - the input from the textfield
+     * @param pattern - the regex pattern to match input to
+     * @return
+     */
     Boolean validateField(ComboBox field, String input, String pattern) {
         if (input.matches(pattern)) {
             field.setStyle("");
@@ -76,12 +105,28 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
         Adds records to Database.
         */
 
+    /**
+     *
+     * @return the insert SQL statement
+     */
     protected abstract String getInsertStatement();
 
+    /**
+     * Initiate adding a record to the database
+     * @param record - the record to be added
+     * @param params - the list of values to be set
+     * @return status of adding the record to the database
+     */
     public boolean addRecord(T record, List<Object> params) {
         return addToDB(record,params);
     }
 
+    /**
+     * Add the record to the database as a private method
+     * @param record - the record to be added
+     * @param params - the parameters to be set
+     * @return add to database status
+     */
     private boolean addToDB(T record, List<Object> params) {
         int recordId = record.getId();
         String table = record.getClass().getSimpleName().toLowerCase();
@@ -121,12 +166,28 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
         retrieves existing object using the record id
         */
 
+    /**
+     *
+     * @return update SQL statement
+     */
     protected abstract String getUpdateStatement();
 
+    /**
+     * Initiate record update process
+     * @param record - the record to be updated
+     * @param params - the values to update
+     * @return update record status
+     */
     public boolean updateRecord(T record, List<Object> params) {
         return updateDB(record,params);
     }
 
+    /**
+     *
+     * @param record
+     * @param params
+     * @return
+     */
     private boolean updateDB(T record, List<Object> params) {
         boolean updated = false;
         int recordId = record.getId();
@@ -158,11 +219,6 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
         return updated;
     }
 
-    public List<Object> getFieldValues(Object... args) {
-        List<Object> values = FXCollections.observableArrayList();
-        Collections.addAll(values, args);
-        return values;
-    }
 
     /**
      * Queries table for the first available ID to use in a new record

@@ -2,16 +2,13 @@ package application.controller;
 
 import application.util.DAO;
 import application.util.Loc;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -21,13 +18,11 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
-import static application.util.Alerts.confirmMessage;
-import static application.util.Alerts.errorMessage;
-
 /**
- * Abstract Base Controller Class
+ * Abstract Base Controller Class used for all controllers
  */
 public abstract class Base extends DAO implements Initializable {
     @FXML
@@ -68,6 +63,11 @@ public abstract class Base extends DAO implements Initializable {
         return loader;
     }
 
+    /**
+     * Changes the scene on the main pane without opening a new window
+     * @param fileName - the name of the FXML file to be opened
+     * @throws IOException
+     */
     public void switchScene(String fileName) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(appf + fileName + ".fxml"));
         view = loader.load();
@@ -76,6 +76,12 @@ public abstract class Base extends DAO implements Initializable {
 
     }
 
+    /**
+     * Opens a new window
+     * @param root - the Parent Loaded
+     * @param title - the title to appear on the window
+     * @throws IOException
+     */
     public void popupScene(Parent root, String title) throws IOException {
         Stage stage = new Stage(); // new Stage aka Window
 
@@ -88,26 +94,51 @@ public abstract class Base extends DAO implements Initializable {
     }
 
 
+    /**
+     * Switches scene to appointment table view
+     * @param event
+     * @throws IOException
+     */
     @FXML
-    private void menuAppointment(MouseEvent event) throws IOException {
+    private void menuAppointments(MouseEvent event) throws IOException {
         switchScene("appt");
     }
 
+    /**
+     * Switches scene to calendar view
+     * @param event
+     * @throws IOException
+     */
     @FXML
     private void menuCalendar(MouseEvent event) throws IOException {
         switchScene("cal");
     }
 
+    /**
+     * Switches scene to customer table view
+     * @param event
+     * @throws IOException
+     */
     @FXML
     private void menuCustomers(MouseEvent event) throws IOException {
         switchScene("cust");
     }
 
+    /**
+     * Switches scene to reports view
+     * @param event
+     * @throws IOException
+     */
     @FXML
     private void menuReports(MouseEvent event) throws IOException {
         switchScene("reports");
     }
 
+    /**
+     * Closes the database connection and the main window then loads the login window.
+     * @param event
+     * @throws IOException
+     */
     @FXML
     private void menuLogout(MouseEvent event) {
         closeConnection();
@@ -133,7 +164,11 @@ public abstract class Base extends DAO implements Initializable {
         return true;
     }
 
-// TODO: Remove Back Buttons
+    /**
+     * Used to close the window on forms
+     * @param event
+     * @throws IOException
+     */
     @FXML
     public void exitButton(ActionEvent event) {
         Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
@@ -150,20 +185,98 @@ public abstract class Base extends DAO implements Initializable {
         Boolean confirm = confirmMessage("Cancel Activity","Are you sure you want to cancel? \nAny changes you've made will not be saved.");
 
         if (confirm) {
-            Stage stage = (Stage) ((Button) actionEvent.getSource()).getScene().getWindow();
-            stage.close();
+            exitButton(actionEvent);
         }
     }
 
+    /**
+     * Quick add arguments to a list
+     * @param args
+     * @return the list of arguments
+     */
     public List<Object> toList(Object... args) {
         return List.of(args);
     }
 
+    /**
+     * Formats a string to be capitalized
+     * @param s - the string to be formatted
+     * @return the formatted string
+     */
     public String toCapitalized(String s) {
         return s.substring(0,1).toUpperCase() + s.substring(1);
     }
 
 
+    /* DIALOG BOXES */
+
+    /**
+     * Error Alert Constructor
+     * @param title the dialog title
+     * @param msg the message to show in dialog
+     */
+    public static final void errorMessage(String title, String msg) {
+        // Create alert and set parameters
+        Alert error = new Alert(Alert.AlertType.ERROR);
+        if (!error.isShowing()) { // prevent additional dialogs
+            error.setTitle("ERROR: " + title);
+            error.setHeaderText("");
+            error.setContentText(msg);
+            error.showAndWait();
+        }
+    }
+    /**
+     * Warning Alert Constructor
+     * @param title the dialog title
+     * @param msg the message to show in dialog
+     */
+    final void warningMessage(String title, String msg) {
+        // Create alert and set parameters
+        Alert warning = new Alert(Alert.AlertType.WARNING);
+        if (!warning.isShowing()) { // prevent additional dialogs
+            warning.setTitle("WARNING: " + title);
+            warning.setHeaderText("");
+            warning.setContentText(msg);
+            warning.showAndWait();
+        }
+    }
+
+    /**
+     * Info Alert Constructor
+     * @param msg the message to show in dialog
+     */
+    public static void infoMessage(String msg) {
+        // Create alert and set parameters
+        Alert error = new Alert(Alert.AlertType.INFORMATION);
+        error.setTitle("Information");
+        error.setHeaderText("");
+        error.setContentText(msg);
+        error.showAndWait();
+    }
+
+    /**
+     * Simple Confirmation Dialog
+     * @param title the title of the dialog
+     * @param msg the message to show in dialog
+     * @return boolean confirmation input
+     */
+    public static boolean confirmMessage(String title, String msg) {
+
+        // Create alert and set parameters
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Please Confirm " + title);
+        confirm.setHeaderText("");
+        confirm.setContentText(msg);
+
+        // buttons to include in dialog
+        ButtonType continueButton = new ButtonType("Continue");
+        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        confirm.getButtonTypes().setAll(continueButton,cancelButton); // creates the buttons in dialog
+
+        Optional<ButtonType> result = confirm.showAndWait(); // show dialog
+        return result.get() == continueButton; // user chose CANCEL or closed the dialog
+    }
     // end of class
 }
 
