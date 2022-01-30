@@ -6,7 +6,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TreeTableColumn;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -15,11 +14,8 @@ import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.ResourceBundle;
-
-import static application.util.Loc.dateToString;
 
 /**
  * The Reports Controller
@@ -41,7 +37,9 @@ public class Reports extends Base {
     @FXML
     ChoiceBox<String> reportOptions;
     @FXML
-    Button previewButton, generateButton, printButton;
+    Button previewButton;
+    @FXML
+    Button generateButton;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -81,7 +79,7 @@ public class Reports extends Base {
      * Sets the reporting options in the ChoiceBox
      */
     private void setReportOptions() {
-        ObservableList reports = FXCollections.observableArrayList();
+        ObservableList<String> reports = FXCollections.observableArrayList();
         reports.addAll("Appointments Summary (Type) Report",
                 "Appointments Summary (Country) Report",
                 "Contacts Schedules",
@@ -221,16 +219,18 @@ public class Reports extends Base {
 
     /**
      * Build strings to show in TextArea
-     * @param resultArray
+     * @param resultArray - the report results
      */
     private void previewReport(ObservableList<List<String>> resultArray) {
         System.out.println("Previewing report");
         StringBuilder preview = new StringBuilder();
 
-        for (int i=0;i < resultArray.size(); i++) {
-            for (int j=0;j < resultArray.get(i).size(); j++) {
-                preview.append(resultArray.get(i).get(j));
-                    if(j != resultArray.get(i).size()-1) { preview.append(" | "); }
+        for (List<String> strings : resultArray) {
+            for (int j = 0; j < strings.size(); j++) {
+                preview.append(strings.get(j));
+                if (j != strings.size() - 1) {
+                    preview.append(" | ");
+                }
             }
             preview.append("\n");
         }
@@ -251,17 +251,15 @@ public class Reports extends Base {
 
         FileWriter fileWriter;
         if (outputFile.exists()) {
-            System.out.println("");
             boolean overwrite = confirmMessage("Confirm Overwrite", "File already exists, would you like to overwrite it?");
-            if (overwrite) {
-                // do nothing and continue
-            } else {
+            if (!overwrite) {
                 int i = 1;
                 while (outputFile.exists()) {
                     outputFile = new File(fileName + "_" + i + ".csv");
                     i++;
                 }
-            }
+            }  // do nothing and continue
+
         }
 
         System.out.println(outputFile);
@@ -269,9 +267,9 @@ public class Reports extends Base {
             try {
                 fileWriter = new FileWriter(outputFile, false);
 
-                for (int i=0;i < resultArray.size(); i++) {
-                    for (int j=0;j < resultArray.get(i).size(); j++) {
-                        fileWriter.write(resultArray.get(i).get(j) + ", ");
+                for (List<String> row : resultArray) {
+                    for (String cell : row) {
+                        fileWriter.write(cell + ", ");
 
                     }
                     fileWriter.write("\n");

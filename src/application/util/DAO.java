@@ -10,7 +10,7 @@ import java.sql.Statement;
 import java.util.List;
 
 /**
- * This module interfaces with the database and connects the model to the view_controller
+ * This class interfaces with the database and connects the model to the view_controller
  */
 public abstract class DAO extends DBC {
 

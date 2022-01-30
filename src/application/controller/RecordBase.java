@@ -1,7 +1,6 @@
 package application.controller;
 
 import application.model.Record;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -14,7 +13,6 @@ import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -184,9 +182,9 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
 
     /**
      *
-     * @param record
-     * @param params
-     * @return
+     * @param record - the record to be updated
+     * @param params - the values to update to
+     * @return update status
      */
     private boolean updateDB(T record, List<Object> params) {
         boolean updated = false;
@@ -257,17 +255,6 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
         }
     }
 
-    public T lookupRecords(T obj, ObservableList<T> allRecords) {
-        T foundRecord = null;
-        int id = obj.getId();
-        for (T r : allRecords) {
-            if (r.getId() == id) {
-                foundRecord = r;
-                break;
-            }
-        }
-        return foundRecord;
-    }
     // end of class
 }
 

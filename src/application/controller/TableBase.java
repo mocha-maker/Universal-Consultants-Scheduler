@@ -16,7 +16,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -139,7 +138,7 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         String tableCapitalized = table.substring(0,1).toUpperCase() + table.substring(1);
 
         try {
-            PreparedStatement ps = prepQuery("SELECT COUNT(*) AS count FROM " + table + "s WHERE " + tableCapitalized + "_ID = " + id);
+            prepQuery("SELECT COUNT(*) AS count FROM " + table + "s WHERE " + tableCapitalized + "_ID = " + id);
             ResultSet rs = getResult();
             while (rs.next()) {
                 System.out.println(rs.getInt("count"));
@@ -174,6 +173,11 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
      */
     protected abstract String getDeleteDependencies();
 
+    /**
+     * Initiate delete record process
+     * @param record - the record to be deleted
+     * @return delete status
+     */
     public boolean deleteRecord(T record) {
         boolean deleted;
         // If record is a customer then delete appointment dependencies
@@ -192,9 +196,9 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
 
     /**
      *
-     * @param record
-     * @param statement
-     * @return
+     * @param record - the record to be deleted
+     * @param statement - the delete statement
+     * @return delete status
      */
     private boolean deleteFromDB(T record, String statement) {
         boolean deleted = false;
@@ -208,7 +212,6 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
             PreparedStatement ps = getConnection().prepareStatement(statement);
             ps.setInt(1, id);
             ps.executeUpdate();
-            System.out.println(deleted);
             deleted = true;
 
         } catch (SQLException ex) {

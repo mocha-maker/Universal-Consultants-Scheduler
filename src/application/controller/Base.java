@@ -9,7 +9,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
@@ -27,8 +26,7 @@ import java.util.ResourceBundle;
 public abstract class Base extends DAO implements Initializable {
     @FXML
     private AnchorPane mainPane; // main viewing pane
-    private Pane view; // child pane of mainPane
-    private String appf = "/application/view/";
+    private final String appf = "/application/view/";
     final ResourceBundle rb = Loc.getBundle();
     protected View vController;
 /*    private Button backButton;
@@ -59,8 +57,7 @@ public abstract class Base extends DAO implements Initializable {
     }
 
     protected FXMLLoader setLoader(String fileName) {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource(appf + fileName + ".fxml"));
-        return loader;
+        return new FXMLLoader(getClass().getResource(appf + fileName + ".fxml"));
     }
 
     /**
@@ -70,7 +67,8 @@ public abstract class Base extends DAO implements Initializable {
      */
     public void switchScene(String fileName) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(appf + fileName + ".fxml"));
-        view = loader.load();
+        // child pane of mainPane
+        Pane view = loader.load();
         loader.getController();
         mainPane.getChildren().setAll(view);
 
@@ -96,51 +94,45 @@ public abstract class Base extends DAO implements Initializable {
 
     /**
      * Switches scene to appointment table view
-     * @param event
      * @throws IOException
      */
     @FXML
-    private void menuAppointments(MouseEvent event) throws IOException {
+    private void menuAppointments() throws IOException {
         switchScene("appt");
     }
 
     /**
      * Switches scene to calendar view
-     * @param event
      * @throws IOException
      */
     @FXML
-    private void menuCalendar(MouseEvent event) throws IOException {
+    private void menuCalendar() throws IOException {
         switchScene("cal");
     }
 
     /**
      * Switches scene to customer table view
-     * @param event
      * @throws IOException
      */
     @FXML
-    private void menuCustomers(MouseEvent event) throws IOException {
+    private void menuCustomers() throws IOException {
         switchScene("cust");
     }
 
     /**
      * Switches scene to reports view
-     * @param event
      * @throws IOException
      */
     @FXML
-    private void menuReports(MouseEvent event) throws IOException {
+    private void menuReports() throws IOException {
         switchScene("reports");
     }
 
     /**
      * Closes the database connection and the main window then loads the login window.
-     * @param event
-     * @throws IOException
      */
     @FXML
-    private void menuLogout(MouseEvent event) {
+    private void menuLogout() {
         closeConnection();
         try {
             vController.loadLoginWindow();
@@ -166,7 +158,7 @@ public abstract class Base extends DAO implements Initializable {
 
     /**
      * Used to close the window on forms
-     * @param event
+     * @param event - on exit
      * @throws IOException
      */
     @FXML
@@ -215,7 +207,7 @@ public abstract class Base extends DAO implements Initializable {
      * @param title the dialog title
      * @param msg the message to show in dialog
      */
-    public static final void errorMessage(String title, String msg) {
+    public static void errorMessage(String title, String msg) {
         // Create alert and set parameters
         Alert error = new Alert(Alert.AlertType.ERROR);
         if (!error.isShowing()) { // prevent additional dialogs
