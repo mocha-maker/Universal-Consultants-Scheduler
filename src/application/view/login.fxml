@@ -28,20 +28,29 @@
                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                 </rowConstraints>
-                <Label text="%login.username" GridPane.halignment="RIGHT" />
+                <Label text="%login.username" GridPane.halignment="RIGHT">
+               <GridPane.margin>
+                  <Insets right="5.0" />
+               </GridPane.margin></Label>
                 <TextField fx:id="usernameTF" onAction="#loginHandler" GridPane.columnIndex="1" />
-                <Label text="%login.password" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+                <Label text="%login.password" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+               <GridPane.margin>
+                  <Insets right="5.0" />
+               </GridPane.margin></Label>
                 <PasswordField fx:id="passwordTF" onAction="#loginHandler" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                 <Button mnemonicParsing="false" onAction="#loginHandler" text="%login.login" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
             </GridPane>
         </VBox>
-        <Text styleClass="title" strokeType="OUTSIDE" strokeWidth="0.0" text="%login.welcome" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER">
+        <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="title" text="%login.welcome" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER">
             <font>
                 <Font size="64.0" />
             </font>
         </Text>
          <HBox alignment="BOTTOM_RIGHT" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.rowIndex="2">
-             <Label text="%login.signfrom" textAlignment="CENTER" />
+             <Label text="%login.signfrom" textAlignment="CENTER">
+            <HBox.margin>
+               <Insets right="5.0" />
+            </HBox.margin></Label>
              <Label fx:id="location" text="[Location]" />
          </HBox>
     </GridPane>

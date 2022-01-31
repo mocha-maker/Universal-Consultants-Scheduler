@@ -1,32 +1,33 @@
 =============================================
-Universal Consultants Scheduling
+Title: Universal Consultants Scheduling
 Purpose: This is an appointment scheduling app for managing the appointments of a company with international customers.
 
 =============================================
-=============================================
 
 Author: Flynn Pyc
-Contact Information: fpyc@wgu.edu
+Email: fpyc@wgu.edu
 Version: 0.1
-Date: Jan 30, 2020
+Date: Jan 31, 2022
 
 =============================================
 
 DEVELOPMENT TOOLS
+
 IDE: IntelliJ Community 2021.2.4
-Java: JDK Version 11
-GUID: JavaFX 11.0.2
-Database Driver: mysql-connector-java-8.1.23
+JDK: corretto-11.0.12
+JavaFX: javafx-sdk-11.0.2
+Database Driver: mysql-connector-java-8.0.25
 
 =============================================
 
-Directions for running the program:
+HOW TO RUN THE PROGRAM:
 1) Save a copy of the packages on your PC.
 2) Load into a compatible IDE.
 3) Compile.
 
 =============================================
 
-Additional Reports for Part A3f:
-Customers by Country - lists customer names, addresses, and phone numbers by country.
+ADDITIONAL REPORTS:
+1) Customers by Country - lists customer names, addresses, and phone numbers by country.
+2) Appointments by Customer - lists appointment information by customer.
 

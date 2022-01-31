@@ -1,10 +1,10 @@
 package application.util;
 
 import java.sql.Timestamp;
-import java.time.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAdjusters;
-import java.time.temporal.WeekFields;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
@@ -21,7 +21,6 @@ public abstract class Loc {
 
     protected static ResourceBundle rb;
     protected static Locale activeLocale;
-    static TimeZone timezone;
 
 
     /*  ======================
@@ -77,7 +76,7 @@ public abstract class Loc {
         TIME CONVERSION & FORMATTING
         ======================*/
 
-    // GETTERS
+    /* GETTERS */
 
     /**
      *
@@ -97,7 +96,7 @@ public abstract class Loc {
 
 
 
-    // CONVERSIONS
+    /* CONVERSIONS */
 
     /**
      * Converts a given Timestamp into a LocalDateTime in the Systems Default Zone
@@ -136,13 +135,13 @@ public abstract class Loc {
     }
 
 
-    // FORMATTERS
+    /* FORMATTERS */
 
     /**
      * Formats a LocalDateTime into a String of the given pattern.
      * @param localDateTime - the LocalDateTime to be formatted
      * @param pattern - the pattern to use for formatting
-     * @return
+     * @return formatted date string
      */
     public static String dateToString(LocalDateTime localDateTime, String pattern) {
         return localDateTime.format(DateTimeFormatter.ofPattern(pattern));
@@ -152,22 +151,13 @@ public abstract class Loc {
      * Formats a ZonedDateTime into a String of the given pattern.
      * @param zonedDateTime - the ZonedDateTime to be formatted
      * @param pattern - the pattern to use for formatting
-     * @return
+     * @return formatted date string
      */
     public static String dateToString(ZonedDateTime zonedDateTime, String pattern) {
         return zonedDateTime.format(DateTimeFormatter.ofPattern(pattern));
     }
 
-    // PARSERS
-
-    /**
-     * Parses a string into LocalDateTime
-     * @param string
-     * @return
-     */
-    public static LocalDateTime stringToLocal(String string) {
-        return LocalDateTime.parse(string);
-    }
+    /* PARSERS */
 
     /**
      * Formats a LocalDateTime to string that represents the hour
@@ -196,7 +186,5 @@ public abstract class Loc {
         return dateToString(dt,"a").toUpperCase();
     }
 
-    //
-
-
+    //end of class
 }

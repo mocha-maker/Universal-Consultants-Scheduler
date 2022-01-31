@@ -11,6 +11,7 @@ import javafx.stage.Stage;
  * This class manages the Stages and Scenes to ensure the proper controllers are loaded for each scene.
  */
 public final class View extends Base {
+
     private final Scene scene;
     private final Stage primaryStage;
 
@@ -25,7 +26,11 @@ public final class View extends Base {
             primaryStage.hide();
             final FXMLLoader loader = new FXMLLoader(getClass().getResource("/application/view/login.fxml"), rb);
             scene.setRoot(loader.load());
+
+            // set contorller class
             loader.<Login>getController().setViewController(this);
+
+            // prepare login stage
             primaryStage.setTitle(rb.getString("app.title"));
             primaryStage.setScene(scene);
             primaryStage.setResizable(false);
@@ -41,12 +46,16 @@ public final class View extends Base {
             primaryStage.hide();
             final FXMLLoader loader = new FXMLLoader(getClass().getResource("/application/view/main.fxml"), rb);
             scene.setRoot(loader.load());
+            // set controller class
             MainView mainViewController = loader.getController();
             mainViewController.setViewController(this);
+
+            // prepare main stage
             primaryStage.setTitle(rb.getString("app.title"));
             primaryStage.setScene(scene);
             primaryStage.setResizable(false);
             primaryStage.show();
+
         } catch (Exception ex) {
             System.out.println("Error opening Main Window:");
             ex.printStackTrace();

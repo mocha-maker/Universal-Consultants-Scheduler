@@ -35,10 +35,11 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
     /*  ======================
         TABLE BASE FXML ELEMENTS
         ======================*/
+    /**
+     * Generic tableView for the TableView FXML
+     */
     @FXML
     protected TableView<T> tableView;
-    @FXML
-    protected Button filterButton;
     @FXML
     protected Button addButton;
     @FXML
@@ -55,9 +56,9 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
     static ObservableList<Customer> allCustomers = FXCollections.observableArrayList();
 
     /**
-     *
-     * @param url
-     * @param resourceBundle
+     * Initializes load
+     * @param url the url
+     * @param resourceBundle the resource bundle
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -91,13 +92,14 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
      */
     protected TableColumn<T, String> getStringColumn(Class<T> tClass, String colName) {
         try {
+            // Create table column
             final Field field = tClass.getDeclaredField(colName);
             field.setAccessible(true);
-            final String k = String.format("%s", toCapitalized(field.getName()));
-            System.out.println(k);
-            TableColumn<T,String> col = new TableColumn<>(k);
+            final String header = String.format("%s", toCapitalized(field.getName()));
+            System.out.println(header);
+            TableColumn<T,String> col = new TableColumn<>(header);
 
-
+            // set column cell factory
             col.setCellValueFactory(param -> {
                 try {
                     return new SimpleStringProperty(field.get(param.getValue()).toString());
@@ -107,7 +109,8 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
                 return null;
             });
             return col;
-        } catch (NoSuchFieldException e) {
+
+        } catch (NoSuchFieldException e) { // if field does not exist
             System.out.println(e);
         }
         return null;
@@ -172,7 +175,7 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
     protected abstract String getDeleteStatement();
 
     /**
-     * Only used by
+     * Only used by customers delete
      * @return the delete dependencies statement
      */
     protected abstract String getDeleteDependencies();
@@ -269,7 +272,7 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
 
     /**
      * loads the respective form window based on what the current controller is
-     * @param actionEvent
+     * @param actionEvent the button press event
      */
     @FXML
     protected void toRecords(ActionEvent actionEvent) {

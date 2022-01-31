@@ -2,7 +2,6 @@ package application.controller;
 
 import application.model.User;
 import application.util.Loc;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -57,15 +56,14 @@ public class Login extends Base implements Initializable {
 
     /**
      * Validates the given credentials against the database in a private method
-     * @param rs - the result set
-     * @param user - the username entered
-     * @param password - the password entered
+     * @param rs the result set
+     * @param password the password entered
      * @return the validated user id or -1
      */
     private int validateCredentials(ResultSet rs, String user, String password) {
         int result = -1;
                 try {
-                    if ((rs.next() && (rs.getString("Password").trim().equals(password.trim())))) {
+                    if ((rs.next() && (rs.getString("Password").trim().equals(password.trim())) && (rs.getString("User_Name").trim().equals(user.trim())))) {
                         result = rs.getInt("User_ID");
                     }
                 } catch (SQLException e) {
@@ -78,9 +76,8 @@ public class Login extends Base implements Initializable {
     /**
      * Login action handler for when either the {Enter} key is pressed in the user or password textfields or when the "Sign In" button is pressed.
      * Retrieves the text entered and checks whether input is complete and valid
-     * @param event
      */
-    public void loginHandler(ActionEvent event) {
+    public void loginHandler() {
         // retrieve entered credentials
         final String user = usernameTF.getText();
         final String pass = passwordTF.getText();
@@ -89,7 +86,7 @@ public class Login extends Base implements Initializable {
         // Check if text fields are both filled
         if (user.length() != 0 && pass.length() != 0) {
 
-            String stmt = "SELECT User_ID, Password FROM users WHERE User_Name = '" + user + "'";
+            String stmt = "SELECT User_ID, User_Name, Password FROM users WHERE User_Name = '" + user + "'";
             prepQuery(stmt);
             final int userID = validateCredentials(getResult(), user, pass);
 
@@ -108,7 +105,7 @@ public class Login extends Base implements Initializable {
                 vController.loadMainWindow();
 
             } else {
-                // If unable to validate credentials, give error and reset input
+                // If unable to validate credentials, give error, close connection, and reset input
                 errorMessage("Login Error", Loc.getBundle().getString("error.loginInvalid"));
                 closeConnection();
                 usernameTF.setText("");
@@ -124,9 +121,9 @@ public class Login extends Base implements Initializable {
     }
 
     /**
-     *  Generates a text file with appended login activity in UTC
-     * @param user - the username entered for the attempt
-     * @param result - whether the attempt was successful or not
+     * Generates a text file with appended login activity in UTC
+     * @param user the username entered for the attempt
+     * @param result whether the attempt was successful or not
      */
     protected static void loginActivity(String user, Boolean result) {
 
@@ -143,7 +140,9 @@ public class Login extends Base implements Initializable {
             logFile.write("[" + timestamp + "] Login attempt by user: " + user + " - Attempt " + status + "\n");
             logFile.close();
             System.out.println("Login Activity Recorded.");
+
         } catch (IOException e) {
+
             System.out.println("In catch block.");
             e.printStackTrace();
         }

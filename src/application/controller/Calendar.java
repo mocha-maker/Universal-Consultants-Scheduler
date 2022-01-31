@@ -32,104 +32,44 @@ import static application.util.Loc.*;
  */
 public final class Calendar extends TableBase<Appointment> implements Initializable {
 
-
-    private LocalDate today = LocalDate.now();
+    private final LocalDate today = LocalDate.now();
     private LocalDate picked;
 
-    // Set FXML Objects //
+    /*  ======================
+        FXML ELEMENTS
+        ======================*/
     @FXML
     private Text currentView;
 
-    // Toggle Elements
+    /* TOGGLE ELEMENTS */
     @FXML
     private RadioButton monthRadio;
     @FXML
     private RadioButton weekRadio;
     @FXML
-    private ToggleGroup filterSelect = new ToggleGroup();
+    private final ToggleGroup filterSelect = new ToggleGroup();
 
-    // Set Date Navigation Elements
+    /* DATE NAVIGATION */
 
     @FXML
     private Button  prevBtn, nextBtn;
     @FXML
     private DatePicker periodPicker;
 
-    private static LocalDate getFirstOfMonth(LocalDate localDate) {
-        return localDate.withDayOfMonth(1);
-    }
-
-    private static LocalDate getBeginOfWeek(LocalDate localDate) {
-        DayOfWeek firstDayofWeek = WeekFields.of(Locale.getDefault()).getFirstDayOfWeek();
-        return localDate.with(TemporalAdjusters.previousOrSame(firstDayofWeek));
-    }
-
-    private static LocalDate getNextMonth(LocalDate localDate) {
-        return getFirstOfMonth(localDate.plusMonths(1));
-    }
-
-    private static LocalDate getNextWeek(LocalDate localDate) {
-        return getBeginOfWeek(localDate.plusWeeks(1));
-    }
-
-    private static LocalDate getPrevMonth(LocalDate localDate) {
-        return getFirstOfMonth(localDate.minusMonths(1));
-    }
-
-    private static LocalDate getPrevWeek(LocalDate localDate) {
-        return getBeginOfWeek(localDate.minusWeeks(1));
-    }
-
-
-    // Populate Data
+    /*  ======================
+        VIEW STRUCTURE
+        ======================*/
 
     /**
-     * Creates a listener for the period picker to handle when a new date is selected
-     * lambda: adds functionality to the date picker's valueProperty listener to allow dynamic triaging of handlers in a simple way
-     */
-    private void setListener() {
-
-        periodPicker.valueProperty().addListener(((observableValue, oldVal, newVal) -> {
-            if (newVal != null) {
-                picked = periodPicker.getValue();
-                System.out.println("Updating dates to match period...");
-                if (monthRadio.isSelected()) {
-                    monthPickerHandler();
-                } else if (weekRadio.isSelected()) {
-                    weekPickerHandler();
-                }
-                updateTable();
-            }
-        }));
-    }
-
-    /**
-     * Initiates the setting default values of elements process
-     */
-    private void setDefaults() {
-        monthRadio.setToggleGroup(filterSelect);
-        weekRadio.setToggleGroup(filterSelect);
-        periodPicker.setValue(getFirstOfMonth(today));
-        setPicked();
-    }
-
-    // Create Structure
-
-    private void setToolTips() {
-        prevBtn.setTooltip(new Tooltip("Go to previous period."));
-        nextBtn.setTooltip(new Tooltip("Go to next period."));
-
-        periodPicker.setTooltip(new Tooltip("Select a period."));
-    }
-
-    /**
-     * Adds Columns using Generic Table Column Adder
+     * Add Columns
+     * Adds columns using Generic Table Column Adder and setCellValueFactory
+     * lambdas: used to format and select specific information to populate the tableview
      */
     protected void addColumns() {
 
         // Create and set specially formatted columns
         final TableColumn<Appointment, String> contactCol = new TableColumn<>("Contact");
-        contactCol.setCellValueFactory(new PropertyValueFactory<>("contact"));
+        contactCol.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getContact().getName()));
 
         final TableColumn<Appointment, String> startCol = new TableColumn<>("Start");
         startCol.setCellValueFactory(param -> new SimpleStringProperty(dateToString(param.getValue().getStart(),"yyyy-MM-dd hh:mm a")));
@@ -161,6 +101,47 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
     }
 
     /**
+     * Sets tooltips to assist in how to use calendar
+     */
+    private void setToolTips() {
+
+        prevBtn.setTooltip(new Tooltip("Go to previous period."));
+        nextBtn.setTooltip(new Tooltip("Go to next period."));
+
+        periodPicker.setTooltip(new Tooltip("Select a period."));
+    }
+
+    /**
+     * Creates a listener for the period picker to handle when a new date is selected
+     * lambda: adds functionality to the date picker's valueProperty listener to allow dynamic triaging of handlers in a simple way
+     */
+    private void setListener() {
+
+        periodPicker.valueProperty().addListener(((observableValue, oldVal, newVal) -> {
+            if (newVal != null) {
+                picked = periodPicker.getValue();
+                System.out.println("Updating dates to match period...");
+                if (monthRadio.isSelected()) {
+                    monthPickerHandler();
+                } else if (weekRadio.isSelected()) {
+                    weekPickerHandler();
+                }
+                updateTable();
+            }
+        }));
+    }
+
+    /**
+     * Initiates the setting default values of elements process
+     */
+    private void setDefaults() {
+        monthRadio.setToggleGroup(filterSelect);
+        weekRadio.setToggleGroup(filterSelect);
+        periodPicker.setValue(getFirstOfMonth(today));
+        setPicked();
+    }
+
+    /**
      * Updates the table with filtered appointments based on selected dates and filters
      */
     public void updateTable() {
@@ -170,7 +151,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
     }
 
     /**
-     *
+     * Get Calendar View Title
      * @return the view title for the current filter
      */
     private String getViewTitle() {
@@ -186,6 +167,55 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         return viewTitle;
     }
 
+    /**
+     * Get first of the month
+     * @param localDate selected date in picker
+     * @return first of the month
+     */
+    private static LocalDate getFirstOfMonth(LocalDate localDate) {
+        return localDate.withDayOfMonth(1);
+    }
+    /**
+     * Get beginning of the week
+     * @param localDate selected date in picker
+     * @return beginning of the week
+     */
+    private static LocalDate getBeginOfWeek(LocalDate localDate) {
+        DayOfWeek firstDayofWeek = WeekFields.of(Locale.getDefault()).getFirstDayOfWeek();
+        return localDate.with(TemporalAdjusters.previousOrSame(firstDayofWeek));
+    }
+    /**
+     * Get first of the next month
+     * @param localDate selected date in picker
+     * @return first of the next month
+     */
+    private static LocalDate getNextMonth(LocalDate localDate) {
+        return getFirstOfMonth(localDate.plusMonths(1));
+    }
+    /**
+     * Get beginning of next week
+     * @param localDate selected date in picker
+     * @return beginning of next week
+     */
+    private static LocalDate getNextWeek(LocalDate localDate) {
+        return getBeginOfWeek(localDate.plusWeeks(1));
+    }
+    /**
+     * Get first of the previous month
+     * @param localDate selected date in picker
+     * @return first of the previous month
+     */
+    private static LocalDate getPrevMonth(LocalDate localDate) {
+        return getFirstOfMonth(localDate.minusMonths(1));
+    }
+    /**
+     * Get first of the previous week
+     * @param localDate selected date in picker
+     * @return first of the previous week
+     */
+    private static LocalDate getPrevWeek(LocalDate localDate) {
+        return getBeginOfWeek(localDate.minusWeeks(1));
+    }
 
     /**
      * Queries the database for appointments based on the selected filter and dates
@@ -255,7 +285,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
     }
 
     /**
-     *
+     * Get delete SQL statement
      * @return SQL statement to delete appointment record
      */
     protected String getDeleteStatement() {
@@ -271,15 +301,14 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
 
 
     /*  ======================
-    Event Handling
-    ======================*/
+        Event Handling
+        ======================*/
 
     /**
      * Updates the table based on the change in filter
-     * @param actionEvent
      */
     @FXML
-    private void toggleFilter(ActionEvent actionEvent) {
+    private void toggleFilter() {
         if (monthRadio.isSelected()) {
             // Update Table Filters
             periodPicker.setValue(getFirstOfMonth(picked));
@@ -313,6 +342,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
 
     /**
      * Manages the next and previous period arrow button actions
+     * @param actionEvent the arrow press event
      */
     @FXML
     private void arrowsHandler(ActionEvent actionEvent) {
@@ -347,6 +377,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
 
     /**
      * Manages the next and previous period arrow button actions if using the week filter
+     * @param actionEvent the button press event
      */
     @FXML
     private void weekArrowsHandler(ActionEvent actionEvent) {

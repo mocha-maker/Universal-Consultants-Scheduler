@@ -1,11 +1,9 @@
 package application.controller;
 
 import application.model.Record;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 
@@ -22,14 +20,22 @@ import java.util.ResourceBundle;
  */
 public abstract class RecordBase<T extends Record> extends Base implements Initializable {
 
-    @FXML
-    Text formTitle = new Text();
+    /**
+     * the type of form
+     */
     Boolean formTypeNew;
+    /**
+     * the object record for the form to use
+     */
     T record = null;
-
 
     @FXML
     Button saveButton;
+    @FXML
+    Button cancelButton;
+    @FXML
+    Text formTitle = new Text();
+
 
     /**
      * Pass parameters from Table Controller to Record Controllers
@@ -65,32 +71,14 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
      * @param field - the TextField to update the style if invalid input
      * @param input - the input from the textfield
      * @param pattern - the regex pattern to match input to
-     * @return
+     * @return field validation status
      */
     Boolean validateField(TextField field, String input, String pattern) {
         if (input.matches(pattern)) {
             field.setStyle("");
             return true;
         } else {
-            field.setStyle("-fx-text-box-border: red;-fx-focus-color: red;;");
-            System.out.println("Invalid Entry.");
-            return false;
-        }
-    }
-
-    /**
-     * General String Validation Method from a ComboBox
-     * @param field - the TextField to update the style if invalid input
-     * @param input - the input from the textfield
-     * @param pattern - the regex pattern to match input to
-     * @return
-     */
-    Boolean validateField(ComboBox field, String input, String pattern) {
-        if (input.matches(pattern)) {
-            field.setStyle("");
-            return true;
-        } else {
-            field.setStyle("-fx-text-box-border: red;-fx-focus-color: red;;");
+            field.setStyle("-fx-text-box-border: red;-fx-focus-color: red;");
             System.out.println("Invalid Entry.");
             return false;
         }
@@ -216,7 +204,6 @@ public abstract class RecordBase<T extends Record> extends Base implements Initi
         }
         return updated;
     }
-
 
     /**
      * Queries table for the first available ID to use in a new record

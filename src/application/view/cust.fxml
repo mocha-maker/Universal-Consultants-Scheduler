@@ -5,10 +5,11 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane stylesheets="@../resources/styles.css" prefHeight="768.0" prefWidth="754.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/11.0.2" fx:controller="application.controller.CustTable">
+<AnchorPane prefHeight="768.0" prefWidth="754.0" stylesheets="@../resources/styles.css" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.CustTable">
    <padding>
       <Insets left="30.0" right="30.0" top="60.0" />
    </padding>
+
    <VBox prefHeight="768.0" prefWidth="754.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
       <Text styleClass="title" strokeType="OUTSIDE" strokeWidth="0.0" text="Customers">
          <VBox.margin>
@@ -18,6 +19,7 @@
             <Font size="48.0" />
          </font>
       </Text>
+
       <AnchorPane prefHeight="25.0" prefWidth="680.0">
          <AnchorPane prefWidth="300.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
             <HBox prefWidth="200.0">
@@ -38,19 +40,11 @@
                </Button>
             </HBox>
          </AnchorPane>
-         <AnchorPane AnchorPane.rightAnchor="0.0">
-            <HBox prefWidth="200.0">
-               <Button fx:id="filterButton" mnemonicParsing="false" text="Find">
-                  <HBox.margin>
-                     <Insets right="10.0" />
-                  </HBox.margin>
-               </Button>
-               <TextField />
-            </HBox>
-         </AnchorPane>
       </AnchorPane>
       <TableView prefHeight="500.0" prefWidth="200.0" fx:id="tableView">
+         <columns>
 
+         </columns>
       </TableView>
    </VBox>
 </AnchorPane>

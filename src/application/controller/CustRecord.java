@@ -1,7 +1,7 @@
 package application.controller;
 
 import application.model.Customer;
-import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -12,6 +12,7 @@ import javafx.scene.control.TextField;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 
 import static application.util.Loc.getCurrentTimestamp;
 
@@ -65,7 +66,6 @@ public class CustRecord extends RecordBase<Customer> {
             case "New":
                 formTitle.setText("Add New Customer");
                 formTypeNew = true;
-                System.out.println(formTypeNew);
 
                 division.setDisable(true);
                 // generate id
@@ -75,7 +75,6 @@ public class CustRecord extends RecordBase<Customer> {
             case "Edit" :
                 formTitle.setText("Edit Existing Customer");
                 formTypeNew = false;
-                System.out.println(formTypeNew);
 
                 // populate from formCustomer
                 custID.setText(String.valueOf(record.getId()));
@@ -83,36 +82,39 @@ public class CustRecord extends RecordBase<Customer> {
                 country.setValue(record.getCountry());
                 address.setText(record.getAddress());
                 division.setValue(record.getDivision());
-                code.setText(record.getPostalCode());
+                code.setText(record.getAddressCode());
                 phone.setText(record.getPhone());
 
                 break;
             default:
                 break;
         }
-
         bindSaveButton();
-
     }
 
     // FORM VALIDATION AND MANAGEMENT
 
     /**
-     * TODO: Bind save button to be enabled only when all fields are not empty
+     * Binds saveButton to the other string fields to ensure all fields are completed
      */
     private void bindSaveButton() {
-       BooleanBinding isAllValid = new BooleanBinding() {
-            @Override
-            protected boolean computeValue() {
-                return (custName.getText().isEmpty()
-                        || country.getValue().isBlank()
-                        || address.getText().isEmpty()
-                        || division.getValue().isBlank()
-                        || code.getText().isEmpty()
-                        || phone.getText().isEmpty());
-            }
-        };
-        saveButton.disableProperty().bind(isAllValid);
+        saveButton.disableProperty().bind(Bindings.createBooleanBinding(
+                () ->   // how to calculate value
+                        custName.getText().isEmpty() ||
+                        address.getText().isEmpty() ||
+                        code.getText().isEmpty() ||
+                        phone.getText().isEmpty() ||
+                        country.getSelectionModel().isEmpty() ||
+                        division.getSelectionModel().isEmpty(),
+
+                        // elements to look at
+                        custName.textProperty(),
+                        address.textProperty(),
+                        code.textProperty(),
+                        phone.textProperty(),
+                        country.selectionModelProperty(),
+                        division.selectionModelProperty()
+        ));
     }
 
     /**
@@ -122,25 +124,25 @@ public class CustRecord extends RecordBase<Customer> {
     public void addListeners() {
 
         custName.textProperty().addListener((observableValue, oldVal, newVal) -> {
-            if (newVal != oldVal) {
+            if (!Objects.equals(newVal, oldVal)) {
                 nameValid = validateField(custName, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
             }
         });
 
         address.textProperty().addListener((observableValue, oldVal, newVal) -> {
-            if (newVal != oldVal) {
+            if (!Objects.equals(newVal, oldVal)) {
                 addressValid = validateField(address, newVal, "^[a-zA-Z0-9\\s.,'-]{1,100}$");
             }
         });
 
         phone.textProperty().addListener((observableValue, oldVal, newVal) -> {
-            if (newVal != oldVal) {
+            if (!Objects.equals(newVal, oldVal)) {
                 phoneValid = validateField(phone, newVal, "^\\s*(?:\\+?(\\d{1,3}))?[-. (]*(\\d{3})[-. )]*(\\d{3})[-. ]*(\\d{4})(?: *x(\\d+))?\\s*{1,12}$");
             }
         });
 
         code.textProperty().addListener((observableValue, oldVal, newVal) -> {
-            if (newVal != oldVal) {
+            if (!Objects.equals(newVal, oldVal)) {
                 code.setText(code.getText().toUpperCase());
                 try {
                     switch (country.getValue()) {
@@ -161,14 +163,13 @@ public class CustRecord extends RecordBase<Customer> {
                     }
                 } catch (Exception ex) {
                     errorMessage("Data Validation", "No Country Selected. Unable to validate postal code.");
-
                 }
 
             }
         });
 
         country.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal)->{
-            if(newVal != oldVal){
+            if(!Objects.equals(newVal, oldVal)){
                 setRegionsCB();
             }
         });
@@ -189,10 +190,7 @@ public class CustRecord extends RecordBase<Customer> {
         System.out.println("Division empty = " + divisionValid);
 
 
-        if(nameValid && addressValid && countryValid && divisionValid && codeValid && phoneValid) {
-             return true;
-        } else
-        return false;
+        return nameValid && addressValid && countryValid && divisionValid && codeValid && phoneValid;
     }
 
 
@@ -218,8 +216,6 @@ public class CustRecord extends RecordBase<Customer> {
         } catch (NullPointerException ex) {
             System.out.println("No Countries Found");
         }
-
-
     }
 
     /**
@@ -236,17 +232,15 @@ public class CustRecord extends RecordBase<Customer> {
         division.setPromptText("Select a Region.");
 
         try {
-            division.getItems().addAll(getAllRegions(country.getValue()));
+            division.getItems().addAll(getAllDivisions(country.getValue()));
         } catch (NullPointerException ex) {
             System.out.println("No Regions Found");
         }
-
     }
-
 
     /**
      * Initiate save record process
-     * @param actionEvent
+     * @param actionEvent the button press event
      */
     @FXML
     private void saveRecord(ActionEvent actionEvent) {
@@ -263,15 +257,14 @@ public class CustRecord extends RecordBase<Customer> {
 
             List<Object> params;
 
-
             // check form type
             if (formTypeNew) {
                 params = toList(
                         newCust.getId(),
                         newCust.getCustomerName(),
-                        newCust.getPhone(),
                         newCust.getAddress(),
-                        newCust.getPostalCode(),
+                        newCust.getAddressCode(),
+                        newCust.getPhone(),
                         getCurrentTimestamp(),
                         getActiveUser().getUserName(),
                         getCurrentTimestamp(),
@@ -282,9 +275,9 @@ public class CustRecord extends RecordBase<Customer> {
                 exitButton(actionEvent);
             } else {
                 params = toList(newCust.getCustomerName(),
-                        newCust.getPhone(),
                         newCust.getAddress(),
-                        newCust.getPostalCode(),
+                        newCust.getAddressCode(),
+                        newCust.getPhone(),
                         getCurrentTimestamp(),
                         getActiveUser().getUserName(),
                         getDivisionID(newCust.getDivision()),
@@ -301,7 +294,7 @@ public class CustRecord extends RecordBase<Customer> {
     }
 
     /**
-     *
+     * Get Insert SQL Statement
      * @return Customer insert SQL statement
      */
     public String getInsertStatement() {
@@ -309,15 +302,15 @@ public class CustRecord extends RecordBase<Customer> {
     }
 
     /**
-     *
+     * Get Update SQL Statement
      * @return Customer update SQL statement
      */
     public String getUpdateStatement() {
         return "UPDATE customers SET " +
                 "Customer_Name = ?," +
-                "Phone = ?, " +
                 "Address = ?, " +
                 "Postal_Code = ?, " +
+                "Phone = ?, " +
                 "Last_Update = ?, " +
                 "Last_Updated_By = ?, " +
                 "Division_ID = ? " +
@@ -340,14 +333,15 @@ public class CustRecord extends RecordBase<Customer> {
                 System.out.println("Division ID Retrieved = " + divId);
             }
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            printSQLException(ex);
         }
         return divId;
     }
 
     /**
-     *
-     * @return list of all countries to populate country combo box
+     * Get list of all countries
+     * Used to populate country combo box
+     * @return list of all countries
      */
     static ObservableList<String> getAllCountries() {
         ObservableList<String> allCountries = FXCollections.observableArrayList();
@@ -363,10 +357,10 @@ public class CustRecord extends RecordBase<Customer> {
                 // set result to variables
                 System.out.println("Setting Results to Countries.");
                 String countryResult = rs.getString("Country");
-                // add Type String to Observable List
+                // add country String to Observable List
                 allCountries.add(countryResult);
                 i++;
-                System.out.println(countryResult + " Type added to Observable List. (" + i + ")");
+                System.out.println(countryResult + " Country added to Observable List. (" + i + ")");
             }
         } catch (SQLException ex) {
             printSQLException(ex);
@@ -376,11 +370,12 @@ public class CustRecord extends RecordBase<Customer> {
     }
 
     /**
-     *
+     * Get list of all divisions
+     * @param country the country name to filter by
      * @return list of all divisions to populate state/province combo box
      */
-    public static ObservableList<String> getAllRegions(String country) {
-        ObservableList<String> allRegions = FXCollections.observableArrayList();
+    public static ObservableList<String> getAllDivisions(String country) {
+        ObservableList<String> allDivisions= FXCollections.observableArrayList();
 
         try {
             System.out.println("Querying Regions Database for Unique Items.");
@@ -391,18 +386,19 @@ public class CustRecord extends RecordBase<Customer> {
             while (rs.next()) {
 
                 // set result to variables
-                System.out.println("Setting Results to Regions.");
-                String regionResult = rs.getString("Division");
-                // add Type String to Observable List
-                allRegions.add(regionResult);
+                System.out.println("Setting Results to Divisions.");
+                String division = rs.getString("Division");
+                // add division String to Observable List
+                allDivisions.add(division);
                 i++;
-                System.out.println(regionResult + " Type added to Observable List. (" + i + ")");
+                System.out.println(division + " Division added to Observable List. (" + i + ")");
             }
         } catch (SQLException ex) {
             printSQLException(ex);
         }
         System.out.println("Retrieving Observable List.");
-        return allRegions;
+        return allDivisions;
     }
 
+    // end of class
 }

@@ -14,17 +14,15 @@ import java.util.List;
  */
 public abstract class DAO extends DBC {
 
-    public static List<User> activeUser = FXCollections.observableArrayList();
+    /**
+     * the active user holding list
+     */
+    private static final List<User> activeUser = FXCollections.observableArrayList();
 
-
-    /*  ======================
-        Initialize Data Structure
-        ======================*/
-
-    // private static String q;
-    private static Statement sm;
+    /**
+     * The result set
+     */
     private static ResultSet rs;
-    private static PreparedStatement ps;
 
 
     /* ======================
@@ -32,20 +30,27 @@ public abstract class DAO extends DBC {
        ======================*/
 
     /**
-     *
-     * @param q
+     * Prepares a query statement
+     * Triages based on how the query starts.
+     * @param q the query to prep
+     * @return the prepared statement
      */
     public static PreparedStatement prepQuery(String q) {
-        ps = null;
+        PreparedStatement ps = null;
         try {
             ps = DBC.getConnection().prepareStatement(q);
-            sm = DBC.getConnection().createStatement();
+
+            Statement sm = DBC.getConnection().createStatement();
+
+            // triage depending on query start to use the correct execute method
             if(q.toLowerCase().startsWith("select"))
-                rs=sm.executeQuery(q);
+                rs= sm.executeQuery(q);
+
             if(q.toLowerCase().startsWith("delete")||
                     q.toLowerCase().startsWith("insert")||
                     q.toLowerCase().startsWith("update"))
                 sm.executeUpdate(q);
+
         } catch (SQLException ex) {
             printSQLException(ex);
         }
@@ -53,8 +58,8 @@ public abstract class DAO extends DBC {
     }
 
     /**
-     *
-     * @return rs - ResultSet
+     * Get result set
+     * @return the result set from the prepped query
      */
     public static ResultSet getResult(){
         return rs;
@@ -65,7 +70,11 @@ public abstract class DAO extends DBC {
         Exception Handling
         ======================*/
 
-    protected static void printSQLException(SQLException ex) {
+    /**
+     * Print SQL Exception information
+     * @param ex the SQL Exception given
+     */
+    public static void printSQLException(SQLException ex) {
         System.out.println("SQLException: " + ex.getMessage());
         System.out.println("SQLState: " + ex.getSQLState());
         System.out.println("VendorError: " + ex.getErrorCode());
@@ -77,6 +86,7 @@ public abstract class DAO extends DBC {
      * @param loggedUser the user who successfully logged into this session
      */
     public static void setActiveUser(User loggedUser) {
+        activeUser.clear();
         activeUser.add(loggedUser);
     }
 

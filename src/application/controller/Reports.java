@@ -3,8 +3,6 @@ package application.controller;
 import application.model.Contact;
 import application.model.Customer;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -21,7 +19,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import static application.controller.CustRecord.getAllCountries;
-import static application.controller.TableBase.*;
+import static application.controller.TableBase.allContacts;
+import static application.controller.TableBase.allCustomers;
 
 /**
  * The Reports Controller
@@ -33,6 +32,9 @@ public class Reports extends Base {
         REPORT VARIABLES
         ======================*/
 
+    /**
+     * the selected report
+     */
     private String selectedReport;
 
     /*  ======================
@@ -91,6 +93,9 @@ public class Reports extends Base {
         });
     }
 
+    /**
+     * Sets the report title label
+     */
     private void setReportLabel() {
         if (!reportOptions.getSelectionModel().isEmpty()) {
             reportLabel.setText(reportOptions.getValue());
@@ -113,36 +118,33 @@ public class Reports extends Base {
         reportOptions.setPromptText("Select a report...");
 
         ObservableList<String> options = FXCollections.observableArrayList();
-        reportOptions.valueProperty().addListener(new ChangeListener<String>() {
-              @Override
-              public void changed(ObservableValue<? extends String> observableValue, String old, String newVal) {
-                  options.clear();
-                  filterOptions.setPromptText("");
-                  setReportLabel();
-                  switch (reportOptions.getValue()) {
-                      case "Appointments Summary Report":
-                          filterOptions.setPromptText("Select a group by...");
-                          options.addAll("Type","Country");
-                          break;
-                      case "Contacts Schedules" :
-                          filterOptions.setPromptText("Select a contact...");
-                          for (Contact c : allContacts) {
-                              options.add(c.getName());
-                          }
-                          break;
-                      case "Customers List By Country" :
-                          filterOptions.setPromptText("Select a country...");
-                          options.addAll(getAllCountries());
-                          break;
-                      case "Appointments List By Customer" :
-                          filterOptions.setPromptText("Select a customer...");
-                          for (Customer c : allCustomers) {
-                              options.add(c.getCustomerName());
-                          }
-                          break;
-                  }
-              }
-          }
+        reportOptions.valueProperty().addListener((observableValue, old, newVal) -> {
+            options.clear();
+            filterOptions.setPromptText("");
+            setReportLabel();
+            switch (reportOptions.getValue()) {
+                case "Appointments Summary Report":
+                    filterOptions.setPromptText("Select a group by...");
+                    options.addAll("Type","Country");
+                    break;
+                case "Contacts Schedules" :
+                    filterOptions.setPromptText("Select a contact...");
+                    for (Contact c : allContacts) {
+                        options.add(c.getName());
+                    }
+                    break;
+                case "Customers List By Country" :
+                    filterOptions.setPromptText("Select a country...");
+                    options.addAll(getAllCountries());
+                    break;
+                case "Appointments List By Customer" :
+                    filterOptions.setPromptText("Select a customer...");
+                    for (Customer c : allCustomers) {
+                        options.add(c.getCustomerName());
+                    }
+                    break;
+            }
+        }
         );
         filterOptions.setItems(options);
 
@@ -305,11 +307,8 @@ public class Reports extends Base {
             col.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().get(j)));
             tableView.getColumns().addAll(col);
         }
-
         tableView.setItems(resultArray);
-
     }
-
 
     /**
      * Prints report results to a csv file.
@@ -333,7 +332,6 @@ public class Reports extends Base {
                         i++;
                     }
                 }  // do nothing and continue
-
             }
 
             System.out.println(outputFile);
@@ -357,10 +355,7 @@ public class Reports extends Base {
                 errorMessage("File Unavailable", "Unable to open file. Please check if it is open.");
             }
         }
-
     }
-
-
 
 // end of class
 }

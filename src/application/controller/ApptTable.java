@@ -37,7 +37,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
 
         // Set specially formatted columns
         final TableColumn<Appointment, String> contactCol = new TableColumn<>("Contact");
-        contactCol.setCellValueFactory(new PropertyValueFactory<>("contact"));
+        contactCol.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getContact().getName()));
 
         final TableColumn<Appointment, String> startCol = new TableColumn<>("Start");
         startCol.setCellValueFactory(param -> new SimpleStringProperty(dateToString(param.getValue().getStart(),"yyyy-MM-dd hh:mm a")));
@@ -63,7 +63,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
     }
 
     /**
-     *
+     * Get list of all appointments
      * @return list of all appointments
      */
     public static ObservableList<Appointment> getAllAppointments() {
@@ -133,7 +133,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
 
 
     /**
-     *
+     * Get SQL delete statement
      * @return SQL statement to delete appointment record
      */
     protected String getDeleteStatement() {

@@ -3,7 +3,6 @@ package application.controller;
 import application.model.Appointment;
 import application.model.Customer;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -30,18 +29,17 @@ public class CustTable extends TableBase<Customer> implements Initializable {
         final TableColumn<?, ?> nameCol = new TableColumn<>("Contact");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("contact"));
 
-
+        // Set string columns for table
         tableView.getColumns().addAll(getStringColumn(Customer.class, "customerName"),
                 getStringColumn(Customer.class, "phone"),
                 getStringColumn(Customer.class, "address"),
-                getStringColumn(Customer.class,"postalCode"),
+                getStringColumn(Customer.class,"addressCode"),
                 getStringColumn(Customer.class,"division"),
                 getStringColumn(Customer.class,"country"));
-
     }
 
     /**
-     *
+     * Get list of all customers
      * @return list of all customers
      */
     public static ObservableList<Customer> getAllCustomers() {
@@ -103,9 +101,8 @@ public class CustTable extends TableBase<Customer> implements Initializable {
     /**
      * Deletes a Customer record with a confirmation that related appointments will also be deleted
      * Checks if a valid record is selected
-     * @param e
      */
-    public void deleteCustRecord(ActionEvent e) {
+    public void deleteCustRecord() {
         Customer customer = tableView.getSelectionModel().getSelectedItem();
 
         if (customer != null) {
@@ -118,7 +115,6 @@ public class CustTable extends TableBase<Customer> implements Initializable {
                     count++;
                 }
             }
-
             if (confirm) {
                 boolean deleted = deleteRecord(customer);
                 if (deleted) {
@@ -130,12 +126,11 @@ public class CustTable extends TableBase<Customer> implements Initializable {
         } else {
             infoMessage("Please select a record for deletion.");
         }
-
     }
 
 
     /**
-     *
+     * Get SQL customer delete statement
      * @return SQL statement to delete customer record
      */
     protected String getDeleteStatement() {
@@ -143,7 +138,7 @@ public class CustTable extends TableBase<Customer> implements Initializable {
     }
 
     /**
-     *
+     * Get SQL customer delete appointment dependencies statement
      * @return SQL statement to delete appointment dependencies
      */
     protected String getDeleteDependencies() {return "DELETE FROM appointments WHERE Customer_ID = ?";}

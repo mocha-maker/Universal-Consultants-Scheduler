@@ -3,6 +3,9 @@ package application.controller;
 import application.model.Appointment;
 import application.model.Contact;
 import application.model.Customer;
+import application.model.User;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -16,10 +19,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 
 import java.io.IOException;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.*;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,8 +40,11 @@ import static application.util.Loc.*;
  */
 public class ApptRecord extends RecordBase<Appointment> {
 
+    /**
+     * Appointment object holder
+     */
     Appointment newAppt;
-    private static List<Object> params;
+
     private String printOverlaps;
 
     @FXML
@@ -44,7 +52,7 @@ public class ApptRecord extends RecordBase<Appointment> {
     @FXML
     TextField apptId;
     @FXML
-    TextField userId;
+    ComboBox<User> userComboBox;
     @FXML
     ComboBox<String> apptTypeComboBox;
     @FXML
@@ -76,25 +84,39 @@ public class ApptRecord extends RecordBase<Appointment> {
     @FXML
     ChoiceBox<String> apptEndMeridiem;
 
-
-    // TODO: Individual Validation and error warnings if empty
-    Boolean typeValid;
-/*    Boolean customerValid;
+    Boolean isAllValid;
     Boolean titleValid;
     Boolean descValid;
     Boolean locValid;
-    Boolean startDateTimeValid;
-    Boolean endDateTimeValid;*/
 
-
-
+    /**
+     * Change Listeners to validate fields
+     */
     @Override
     protected void addListeners() {
-        apptTypeComboBox.valueProperty().addListener((observableValue, oldVal, newVal) -> {
+
+        apptTitle.textProperty().addListener((observableValue, oldVal, newVal) -> {
             if (!Objects.equals(newVal, oldVal)) {
-                typeValid = validateField(apptTypeComboBox, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
+                titleValid = validateField(apptTitle, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
             }
         });
+
+        apptDesc.textProperty().addListener((observableValue, oldVal, newVal) -> {
+            if (!Objects.equals(newVal, oldVal)) {
+                descValid = validateField(apptDesc, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
+            }
+        });
+
+        apptLoc.textProperty().addListener((observableValue, oldVal, newVal) -> {
+            if (!Objects.equals(newVal, oldVal)) {
+                locValid = validateField(apptLoc, newVal, "^[a-zA-Z0-9\\s.,'-]{1,50}$");
+            }
+        });
+    }
+
+    private Boolean getIsAllValid() {
+
+        return titleValid && descValid && locValid && !customerComboBox.getSelectionModel().isEmpty();
     }
 
 
@@ -112,6 +134,7 @@ public class ApptRecord extends RecordBase<Appointment> {
         LocalDateTime endLocal;
 
         System.out.println(action);
+        bindSaveButton();
 
         switch (action) {
             case "New":
@@ -120,7 +143,7 @@ public class ApptRecord extends RecordBase<Appointment> {
                 formTypeNew = true;
 
                 apptId.setText(genId("appointment"));
-                userId.setText(String.valueOf(getActiveUser().getId()));
+                userComboBox.setValue(getActiveUser());
 
                 startLocal = LocalDateTime.now();
                 apptStartDate.setValue(startLocal.toLocalDate());
@@ -140,12 +163,7 @@ public class ApptRecord extends RecordBase<Appointment> {
                 apptRecordTitle.setText("Edit Existing Appointment");
                 formTypeNew = false;
 
-                userId.setText(String.valueOf(record.getUserId()));
-                apptId.setText(String.valueOf(record.getId()));
-                apptTitle.setText(record.getTitle());
-                apptDesc.setText(record.getDescription());
-                apptLoc.setText(record.getLocation());
-
+                userComboBox.setValue(getAllUsers().get(record.getUserId()-1));
                 Contact apptContact = allContacts.get(record.getContact().getId()-1);
                 contactComboBox.setValue(apptContact);
 
@@ -153,6 +171,10 @@ public class ApptRecord extends RecordBase<Appointment> {
                 customerComboBox.setValue(apptCustomer);
 
                 apptTypeComboBox.setValue(record.getType());
+                apptId.setText(String.valueOf(record.getId()));
+                apptTitle.setText(record.getTitle());
+                apptDesc.setText(record.getDescription());
+                apptLoc.setText(record.getLocation());
 
                 startLocal = record.getStart();
                 apptStartDate.setValue(startLocal.toLocalDate());
@@ -170,12 +192,32 @@ public class ApptRecord extends RecordBase<Appointment> {
             default:
                 break;
         }
+    }
 
+    /**
+     * Binds saveButton to the other string fields to ensure all fields are completed
+     */
+    private void bindSaveButton() {
+        saveButton.disableProperty().bind(Bindings.createBooleanBinding(
+                () ->   // how to calculate value
+                        apptTitle.getText().isEmpty() ||
+                        apptDesc.getText().isEmpty() ||
+                        apptLoc.getText().isEmpty() ||
+                        apptTypeComboBox.getSelectionModel().isEmpty() ||
+                        contactComboBox.getSelectionModel().isEmpty(),
+
+                        // elements to look at
+                        apptTitle.textProperty(),
+                        apptDesc.textProperty(),
+                        apptLoc.textProperty(),
+                        apptTypeComboBox.selectionModelProperty(),
+                        contactComboBox.selectionModelProperty()
+        ));
     }
 
 
     /*  ======================
-        TODO: COMBO BOX MANAGEMENT
+        COMBO BOX MANAGEMENT
         ======================*/
 
     /**
@@ -186,6 +228,8 @@ public class ApptRecord extends RecordBase<Appointment> {
         System.out.println("Starting Combo box Population...");
         getAllCustomers();
         getAllContacts();
+
+        setUserComboBox();
         setAppointmentType();
         setContactComboBox();
         setCustomerComboBox();
@@ -212,10 +256,13 @@ public class ApptRecord extends RecordBase<Appointment> {
      * Sets customer combo box values and prompt text
      */
     private void setCustomerComboBox() {
-        customerComboBox.getItems().clear();
         System.out.println("Setting Customer Combo Box...");
         customerComboBox.setPromptText("Select a customer.");
-        getAllCustomers();
+        if (customerComboBox.getItems().size() > 0) {
+            customerComboBox.getItems().clear();
+            getAllCustomers();
+        }
+
         try {
             customerComboBox.getItems().addAll(allCustomers);
         } catch (NullPointerException ex) {
@@ -251,19 +298,29 @@ public class ApptRecord extends RecordBase<Appointment> {
     }
 
     /**
+     * set user combo box
+     */
+    private void setUserComboBox() {
+        System.out.println("Setting User Choices...");
+        try {
+            userComboBox.getItems().addAll(getAllUsers());
+
+        } catch (NullPointerException ex) {
+            System.out.println("No Appointment Types Found");
+        }
+    }
+
+    /**
      * set appointment types
      */
     private void setAppointmentType() {
         System.out.println("Setting Appointment Type Choices...");
-        apptTypeComboBox.setEditable(true);
-
         try {
             apptTypeComboBox.getItems().addAll(getAppointmentTypes());
 
         } catch (NullPointerException ex) {
             System.out.println("No Appointment Types Found");
         }
-
     }
 
     /**
@@ -287,7 +344,7 @@ public class ApptRecord extends RecordBase<Appointment> {
 
     /**
      * Inititate save appointment process
-     * @param actionEvent
+     * @param actionEvent the button press event
      */
     @FXML
     private void saveAppointment(ActionEvent actionEvent) {
@@ -296,102 +353,112 @@ public class ApptRecord extends RecordBase<Appointment> {
         LocalDateTime start = getStartDateTime();
         LocalDateTime end = getEndDateTime();
 
-        // Create appointment object
-        newAppt = new Appointment(Integer.parseInt(apptId.getText()),
-                apptTitle.getText(),
-                apptDesc.getText(),
-                apptLoc.getText(),
-                apptTypeComboBox.getValue(),
-                start,
-                end,
-                contactComboBox.getValue(),
-                customerComboBox.getValue(),
-                Integer.parseInt(userId.getText()));
+        if (getIsAllValid()) {
 
-        if (validateDateTimes(start, end)) {
-            System.out.println("DateTimes are valid.");
+            // Create appointment object
+            newAppt = new Appointment(Integer.parseInt(apptId.getText()),
+                    apptTitle.getText(),
+                    apptDesc.getText(),
+                    apptLoc.getText(),
+                    apptTypeComboBox.getValue(),
+                    start,
+                    end,
+                    contactComboBox.getValue(),
+                    customerComboBox.getValue(),
+                    userComboBox.getValue().getId());
+
+            if (validateDateTimes(start, end)) {
+                System.out.println("DateTimes are valid.");
 
 
+                // Create parameters list
 
-            // Create parameters list
+                // check form type
+                List<Object> params;
+                if (formTypeNew) {
 
-            // check form type
-            if (formTypeNew) {
-
-                params = toList(newAppt.getId(),
-                        newAppt.getTitle(),
-                        newAppt.getDescription(),
-                        newAppt.getLocation(),
-                        newAppt.getType(),
-                        toTimestamp(convertTo(newAppt.getStart(),"UTC")),
-                        toTimestamp(convertTo(newAppt.getEnd(),"UTC")),
-                        getCurrentTimestamp(),
-                        getActiveUser().getUserName(),
-                        getCurrentTimestamp(),
-                        getActiveUser().getUserName(),
-                        newAppt.getCustomer().getId(),
-                        newAppt.getUserId(),
-                        newAppt.getContact().getId()
-                );
-                boolean added = addRecord(newAppt,params);
-                if (added) { infoMessage("Appointment ID: " + newAppt.getId() + "\nSuccessfully Added");}
-                exitButton(actionEvent);
+                    params = toList(newAppt.getId(),
+                            newAppt.getTitle(),
+                            newAppt.getDescription(),
+                            newAppt.getLocation(),
+                            newAppt.getType(),
+                            toTimestamp(convertTo(newAppt.getStart(), "UTC")),
+                            toTimestamp(convertTo(newAppt.getEnd(), "UTC")),
+                            getCurrentTimestamp(),
+                            getActiveUser().getUserName(),
+                            getCurrentTimestamp(),
+                            getActiveUser().getUserName(),
+                            newAppt.getCustomer().getId(),
+                            newAppt.getUserId(),
+                            newAppt.getContact().getId()
+                    );
+                    boolean added = addRecord(newAppt, params);
+                    if (added) {
+                        infoMessage("Appointment ID: " + newAppt.getId() + "\nSuccessfully Added");
+                    }
+                    exitButton(actionEvent);
+                } else {
+                    params = toList(
+                            newAppt.getTitle(),
+                            newAppt.getDescription(),
+                            newAppt.getLocation(),
+                            newAppt.getType(),
+                            toTimestamp(convertTo(newAppt.getStart(), "UTC")),
+                            toTimestamp(convertTo(newAppt.getEnd(), "UTC")),
+                            getCurrentTimestamp(),
+                            getActiveUser().getUserName(),
+                            newAppt.getCustomer().getId(),
+                            newAppt.getUserId(),
+                            newAppt.getContact().getId(),
+                            newAppt.getId() // Needed for WHERE param
+                    );
+                    boolean updated = updateRecord(newAppt, params);
+                    exitButton(actionEvent);
+                    if (updated) {
+                        infoMessage("Appointment ID: " + newAppt.getId() + "\nSuccessfully Updated");
+                    }
+                }
             } else {
-                params = toList(
-                        newAppt.getTitle(),
-                        newAppt.getDescription(),
-                        newAppt.getLocation(),
-                        newAppt.getType(),
-                        toTimestamp(convertTo(newAppt.getStart(),"UTC")),
-                        toTimestamp(convertTo(newAppt.getEnd(),"UTC")),
-                        getCurrentTimestamp(),
-                        getActiveUser().getUserName(),
-                        newAppt.getCustomer().getId(),
-                        newAppt.getUserId(),
-                        newAppt.getContact().getId(),
-                        newAppt.getId() // Needed for WHERE param
-                );
-                boolean updated = updateRecord(newAppt, params);
-                exitButton(actionEvent);
-                if (updated) { infoMessage("Appointment ID: " + newAppt.getId() + "\nSuccessfully Updated");}
+                System.out.println("DateTimes are not valid.");
             }
         } else {
-            System.out.println("DateTimes are not valid.");
+            errorMessage("Invalid Data Entry","Missing or invalid information. Please check that all fields are entered using valid data.");
         }
     }
 
     // GETTERS
 
     /**
-     *
+     * Get list of users
+     * @return list of usernames and ids
+     */
+    private ObservableList<User> getAllUsers() {
+        ObservableList<User> allUsers = FXCollections.observableArrayList();
+
+        try {
+            prepQuery("SELECT User_ID, User_Name FROM users ORDER BY User_ID ASC");
+            ResultSet rs = getResult();
+            while (rs.next()) {
+                int userId = rs.getInt("User_ID");
+                String userName = rs.getString("User_Name");
+                allUsers.add(new User(userId,userName));
+            }
+
+        } catch (SQLException e) {
+            printSQLException(e);
+        }
+        return allUsers;
+    }
+
+    /**
+     * Get list of appointment types
      * @return list of appointment types
      */
     public static ObservableList<String> getAppointmentTypes() {
         ObservableList<String> allTypes = FXCollections.observableArrayList();
-        try {
-            System.out.println("Querying Appointments Database for Unique Types.");
-            prepQuery("SELECT DISTINCT Type FROM appointments");
-            ResultSet rs = getResult();
-            System.out.println("Retrieved Results.");
-            int i = 0;
-            while (rs.next()) {
 
-                // set result to variables
-                System.out.println("Setting Results to Appointment Type.");
-                String typeResult = rs.getString("Type");
-                // add Type String to Observable List
-                allTypes.add(typeResult);
-                i++;
-                System.out.println(typeResult + " Type added to Observable List. (" + i + ")");
-            }
-        } catch (SQLException ex) {
-            printSQLException(ex);
-        }
-
-        // TODO: Add defaults if they don't exist
-        // allTypes.add("Planning Session")
-        // allTypes.add("Debriefing")
-
+        allTypes.add("Planning Session");
+        allTypes.add("De-Briefing");
 
         System.out.println("Retrieving Observable List.");
         return allTypes;
@@ -401,11 +468,10 @@ public class ApptRecord extends RecordBase<Appointment> {
 
     /**
      * Initiate add a new customer method
-     * @param actionEvent
-     * @throws IOException
+     * @throws IOException in case the popup is unable to open
      */
     @FXML
-    private void addNewCust(ActionEvent actionEvent) throws IOException {
+    private void addNewCust() throws IOException {
         FXMLLoader loader = setLoader("CustRecord");
         Parent root = loader.load();
         CustRecord controller = loader.getController();
@@ -525,8 +591,7 @@ public class ApptRecord extends RecordBase<Appointment> {
     private Boolean isWithinBusinessDay(LocalDateTime start, LocalDateTime end) {
         Duration between = Duration.between(start,end);
         Duration maxhours = Duration.ofHours(14);
-        if ( between.compareTo(maxhours) > 0) return false;
-        return true;
+        return between.compareTo(maxhours) <= 0;
     }
 
     /**
@@ -593,11 +658,11 @@ public class ApptRecord extends RecordBase<Appointment> {
                 }
             }
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            printSQLException(ex);
         }
         return true;
     }
-    //
+
 
 // end of class
 }
