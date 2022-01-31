@@ -193,7 +193,7 @@ public class Reports extends Base {
      */
     private String apptSummaryQuery() {
         System.out.println("Returning Appointment Summary Query...");
-         return "SELECT date_format(Start, '%Y %M') AS Month, " + filterOptions.getValue() + ", COUNT(*) FROM appointments \n" +
+         return "SELECT date_format(Start, '%Y %M') AS Month, " + filterOptions.getValue() + ", COUNT(*) AS Total_Appts FROM appointments \n" +
                  "JOIN customers USING (Customer_ID) \n" +
                  "JOIN first_level_divisions USING (Division_ID)\n" +
                  "JOIN countries USING (Country_ID)\n" +

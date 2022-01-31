@@ -6,7 +6,7 @@ Purpose: This is an appointment scheduling app for managing the appointments of 
 
 Author: Flynn Pyc
 Email: fpyc@wgu.edu
-Version: 0.1
+Version: 1.0
 Date: Jan 31, 2022
 
 =============================================
@@ -28,6 +28,7 @@ HOW TO RUN THE PROGRAM:
 =============================================
 
 ADDITIONAL REPORTS:
-1) Customers by Country - lists customer names, addresses, and phone numbers by country.
-2) Appointments by Customer - lists appointment information by customer.
+1) Monthly Appointment Summary By Country (minor tweak on the given report)
+2) Customers by Country - lists customer names, addresses, and phone numbers by country.
+3) Appointments by Customer - lists appointment information by customer.
 
