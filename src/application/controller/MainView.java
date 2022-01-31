@@ -22,6 +22,7 @@ import static application.util.Loc.*;
 
 /**
  * Main Window Controller.
+ * Manages the main window that includes the sidebar and the main viewing node.
  */
 public class MainView extends Base {
 
@@ -36,14 +37,14 @@ public class MainView extends Base {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        // set user text to menu
+        // Set user text to menu
         try {
             activeUser.setText("Welcome " + getActiveUser().toString() + "!");
         } catch (NullPointerException ex) {
             ex.printStackTrace();
         }
 
-        // set live clock
+        // Set live clock
         setClock();
 
         // Loads Calendar on first load
@@ -58,7 +59,7 @@ public class MainView extends Base {
     }
 
     /**
-     * TODO: Check if there are any appointments within 15 mins upon login
+     * Check if there are any appointments within 15 mins upon login and show the respective popup message
      */
     private void checkUpcomingAppts() {
         // Get Local Time
@@ -99,21 +100,35 @@ public class MainView extends Base {
             // Popup upcoming appointments and when the earliest one is.
             printAppointments.insert(0, "You have an appointment with in " + timeDifference + " minutes!\n");
             infoMessage(printAppointments.toString());
+
         } else { // no appointments
             infoMessage("You have no upcoming appointments.");
         }
     }
 
+    /**
+     * Creates a live clock to appear in the sidebar that is in the system's local timezone
+     * lambda: allows customized formatting of a clock animation in text form with less lines of code
+     */
     private void setClock() {
-        // Live Clock
+
         Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> {
+            // set time to use
             LocalDateTime currentTime = LocalDateTime.now();
+            // format clock text
             localTime.setText(dateToString(currentTime,"hh:mm:ss a"));
         }),
+                // set update frequency
                 new KeyFrame(Duration.seconds(1))
         );
+
+        // set how long animation will last
         clock.setCycleCount(Animation.INDEFINITE);
+
+        // start clock animation
         clock.play();
+
+        // set local timezone text label
         localZone.setText(Loc.getZone().getID());
     }
 

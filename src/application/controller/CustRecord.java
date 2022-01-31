@@ -349,7 +349,7 @@ public class CustRecord extends RecordBase<Customer> {
      *
      * @return list of all countries to populate country combo box
      */
-    private static ObservableList<String> getAllCountries() {
+    static ObservableList<String> getAllCountries() {
         ObservableList<String> allCountries = FXCollections.observableArrayList();
 
         try {

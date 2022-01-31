@@ -14,7 +14,6 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.ResourceBundle;
 
 import static application.util.Loc.convertToZDT;
@@ -66,7 +65,7 @@ public class Login extends Base implements Initializable {
     private int validateCredentials(ResultSet rs, String user, String password) {
         int result = -1;
                 try {
-                    if ((rs.next() && (rs.getString("Password").trim().equals(password.trim()) || user == "test" && password == "test"))) {
+                    if ((rs.next() && (rs.getString("Password").trim().equals(password.trim())))) {
                         result = rs.getInt("User_ID");
                     }
                 } catch (SQLException e) {

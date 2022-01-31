@@ -28,6 +28,7 @@ public final class View extends Base {
             loader.<Login>getController().setViewController(this);
             primaryStage.setTitle(rb.getString("app.title"));
             primaryStage.setScene(scene);
+            primaryStage.setResizable(false);
             primaryStage.show();
         } catch (Exception ex) {
             System.out.println("Error opening Login Window");
@@ -44,6 +45,7 @@ public final class View extends Base {
             mainViewController.setViewController(this);
             primaryStage.setTitle(rb.getString("app.title"));
             primaryStage.setScene(scene);
+            primaryStage.setResizable(false);
             primaryStage.show();
         } catch (Exception ex) {
             System.out.println("Error opening Main Window:");

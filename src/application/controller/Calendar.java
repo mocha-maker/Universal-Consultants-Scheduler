@@ -47,7 +47,6 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
     private RadioButton weekRadio;
     @FXML
     private ToggleGroup filterSelect = new ToggleGroup();
-    private static Boolean filterMonth = true;
 
     // Set Date Navigation Elements
 
@@ -82,13 +81,16 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
     }
 
 
-    // TODO: Create Weekly and Monthly Views that include Appointments in the respective dates
-
     // Populate Data
 
+    /**
+     * Creates a listener for the period picker to handle when a new date is selected
+     * lambda: adds functionality to the date picker's valueProperty listener to allow dynamic triaging of handlers in a simple way
+     */
     private void setListener() {
-        periodPicker.valueProperty().addListener(((observableValue, localDate, t1) -> {
-            if (t1 != null) {
+
+        periodPicker.valueProperty().addListener(((observableValue, oldVal, newVal) -> {
+            if (newVal != null) {
                 picked = periodPicker.getValue();
                 System.out.println("Updating dates to match period...");
                 if (monthRadio.isSelected()) {
@@ -101,13 +103,14 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         }));
     }
 
+    /**
+     * Initiates the setting default values of elements process
+     */
     private void setDefaults() {
         monthRadio.setToggleGroup(filterSelect);
         weekRadio.setToggleGroup(filterSelect);
         periodPicker.setValue(getFirstOfMonth(today));
         setPicked();
-        setListener();
-        setToolTips();
     }
 
     // Create Structure
@@ -140,6 +143,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         final TableColumn<Appointment, Integer> userIdCol =new TableColumn<>("UserId");
         userIdCol.setCellValueFactory(new PropertyValueFactory<>("userId"));
 
+        // Create and set string columns
         tableView.getColumns().addAll(getStringColumn(Appointment.class, "title"),
                 getStringColumn(Appointment.class, "description"),
                 getStringColumn(Appointment.class, "location"),
@@ -150,6 +154,8 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
                 custIdCol,
                 userIdCol);
 
+        setListener();
+        setToolTips();
         setDefaults();
 
     }
@@ -275,13 +281,9 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
     @FXML
     private void toggleFilter(ActionEvent actionEvent) {
         if (monthRadio.isSelected()) {
-            // Change Label?
-
             // Update Table Filters
             periodPicker.setValue(getFirstOfMonth(picked));
         } else if (weekRadio.isSelected()) {
-            // Change Label?
-
             // Update Table Filters
             periodPicker.setValue(getBeginOfWeek(picked));
         }
@@ -385,10 +387,9 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
 
     /**
      * Deletes selected appointment with confirmation
-     * @param e - the button that was pressed
      */
     @FXML
-    public void deleteApptRecord(ActionEvent e) {
+    public void deleteApptRecord() {
         Appointment appointment = tableView.getSelectionModel().getSelectedItem();
 
         if (updatable(appointment)) {

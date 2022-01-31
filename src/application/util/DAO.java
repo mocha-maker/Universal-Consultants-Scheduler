@@ -88,9 +88,5 @@ public abstract class DAO extends DBC {
         return activeUser.get(0);
     }
 
-    //@Override
-    private void executeQuery() {
-
-    }
 
 }

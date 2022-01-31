@@ -1,11 +1,14 @@
 package application.controller;
 
+import application.model.Contact;
+import application.model.Customer;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -16,6 +19,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ResourceBundle;
+
+import static application.controller.CustRecord.getAllCountries;
+import static application.controller.TableBase.*;
 
 /**
  * The Reports Controller
@@ -28,14 +34,19 @@ public class Reports extends Base {
         ======================*/
 
     private String selectedReport;
-    @FXML
-    private TextArea reportView;
 
     /*  ======================
         FXML ELEMENTS
         ======================*/
+
     @FXML
-    ChoiceBox<String> reportOptions;
+    Label reportLabel;
+    @FXML
+    TableView<List<String>> tableView;
+    @FXML
+    ComboBox<String> reportOptions;
+    @FXML
+    ComboBox<String> filterOptions;
     @FXML
     Button previewButton;
     @FXML
@@ -59,20 +70,34 @@ public class Reports extends Base {
 
         previewButton.setOnAction(EventHandler -> {
             selectedReport = reportOptions.getValue();
-            infoMessage("Previewing your " + selectedReport + " soon!");
-            previewReport(
-                    getReport(
-                            getReportQuery(selectedReport)));
+            if (!reportOptions.getSelectionModel().isEmpty()) {
+                previewReport(
+                        getReport(
+                                getReportQuery(selectedReport)));
+            } else {
+                errorMessage("Unable to preview report.", "Please select a report to preview.");
+            }
         });
 
         generateButton.setOnAction(EventHandler -> {
             selectedReport = reportOptions.getValue();
-            infoMessage("Generating your " + selectedReport + " soon!");
-            generateReport(
-                    getReport(
-                            getReportQuery(selectedReport)));
+            if (!reportOptions.getSelectionModel().isEmpty()) {
+                generateReport(
+                        getReport(
+                                getReportQuery(selectedReport)));
+            } else {
+                errorMessage("Unable to generate report.", "Please select a report to generate.");
+            }
         });
+    }
 
+    private void setReportLabel() {
+        if (!reportOptions.getSelectionModel().isEmpty()) {
+            reportLabel.setText(reportOptions.getValue());
+            if(!filterOptions.getSelectionModel().isEmpty()) {
+                reportLabel.setText(reportOptions.getValue() + " - " + filterOptions.getValue());
+            }
+        }
     }
 
     /**
@@ -80,12 +105,48 @@ public class Reports extends Base {
      */
     private void setReportOptions() {
         ObservableList<String> reports = FXCollections.observableArrayList();
-        reports.addAll("Appointments Summary (Type) Report",
-                "Appointments Summary (Country) Report",
+        reports.addAll("Appointments Summary Report",
                 "Contacts Schedules",
                 "Customers List By Country",
-                "Login Activity Report");
+                "Appointments List By Customer");
         reportOptions.setItems(reports);
+        reportOptions.setPromptText("Select a report...");
+
+        ObservableList<String> options = FXCollections.observableArrayList();
+        reportOptions.valueProperty().addListener(new ChangeListener<String>() {
+              @Override
+              public void changed(ObservableValue<? extends String> observableValue, String old, String newVal) {
+                  options.clear();
+                  filterOptions.setPromptText("");
+                  setReportLabel();
+                  switch (reportOptions.getValue()) {
+                      case "Appointments Summary Report":
+                          filterOptions.setPromptText("Select a group by...");
+                          options.addAll("Type","Country");
+                          break;
+                      case "Contacts Schedules" :
+                          filterOptions.setPromptText("Select a contact...");
+                          for (Contact c : allContacts) {
+                              options.add(c.getName());
+                          }
+                          break;
+                      case "Customers List By Country" :
+                          filterOptions.setPromptText("Select a country...");
+                          options.addAll(getAllCountries());
+                          break;
+                      case "Appointments List By Customer" :
+                          filterOptions.setPromptText("Select a customer...");
+                          for (Customer c : allCustomers) {
+                              options.add(c.getCustomerName());
+                          }
+                          break;
+                  }
+              }
+          }
+        );
+        filterOptions.setItems(options);
+
+        filterOptions.valueProperty().addListener((observableValue, oldVal, newVal) -> setReportLabel());
     }
 
     /*  ======================
@@ -99,74 +160,80 @@ public class Reports extends Base {
      */
     private String getReportQuery(String selectedReport) {
         System.out.println("Running Query based on selected report.");
-        switch (selectedReport) {
-            case "Appointments Summary (Type) Report" :
-                return apptSummaryByTypeQuery();
+        if (!filterOptions.getSelectionModel().isEmpty()) {
 
-            case "Appointments Summary (Country) Report":
-                return apptSummaryByCountryQuery();
+            switch (selectedReport) {
+                case "Appointments Summary Report":
+                    return apptSummaryQuery();
 
+                case "Contacts Schedules":
+                    return reportScheduleQuery();
 
-            case "Contacts Schedules" :
-                return reportScheduleQuery();
+                case "Customers List By Country":
+                    return customersByCountryQuery();
 
-            case "Customers List By Country":
-                return customersByCountryQuery();
+                case "Appointments List By Customer":
+                    return appointmentsByCustomerQuery();
 
-            default:
-                return "";
+                default:
+                    return "";
+            }
+        } else {
+            errorMessage("Unable to get report","Please select a filter option.");
         }
+        return "";
     }
 
     /**
      * Appointments Summary by Type: the total number of customer appointments by type
      * @return the query for an appointments summary report
      */
-    public String apptSummaryByTypeQuery() {
+    private String apptSummaryQuery() {
         System.out.println("Returning Appointment Summary Query...");
-
-        return "SELECT Type, COUNT(*) AS Total_Appointments FROM appointments " +
-                "group by Type";
+         return "SELECT " + filterOptions.getValue() + ", COUNT(*) AS Total_Appointments FROM appointments " +
+                    "JOIN customers USING (Customer_ID) " +
+                    "JOIN first_level_divisions USING (Division_ID)" +
+                    "JOIN countries USING (Country_ID)" +
+                    "group by " + filterOptions.getValue();
     }
 
     /**
      * Schedule: a schedule for each contact in your organization that includes appointment ID, title, type and description, start date and time, end date and time, and customer ID
      * @return the query for the schedules of each contact
      */
-    public String reportScheduleQuery() {
+    private String reportScheduleQuery() {
         System.out.println("Returning Contact Schedule Query...");
 
-        return "SELECT Contact_Name, Appointment_ID, Start, End, Title, Location, Type " +
-                "FROM appointments " +
-                "JOIN contacts USING (Contact_ID) order by Contact_ID";
+            return "SELECT Contact_Name, Appointment_ID, Start, End, Title, Location, Type " +
+                    "FROM appointments " +
+                    "JOIN contacts USING (Contact_ID) " +
+                    "WHERE Contact_Name = '" + filterOptions.getValue() +"' " +
+                    "order by Contact_ID";
     }
 
     /**
      * Customer List by Country
      * @return the query for a list of customers and their info by country
      */
-    public String customersByCountryQuery() {
+    private String customersByCountryQuery() {
         System.out.println("Returning Customers By Country Query...");
 
-        return "SELECT Country, Customer_Name, Address, Phone \n" +
-                "FROM customers \n" +
-                "JOIN first_level_divisions USING (Division_ID) \n" +
-                "JOIN countries USING (Country_ID)\n" +
-                "ORDER BY Country_ID;";
+            return "SELECT Customer_Name, Phone, Address, Division, Country " +
+                    "FROM customers " +
+                    "JOIN first_level_divisions USING (Division_ID) " +
+                    "JOIN countries USING (Country_ID) " +
+                    "WHERE Country = '" + filterOptions.getValue() + "' " +
+                    "ORDER BY Country_ID;";
     }
 
-    /**
-     * Appointments Summary by Country: the total number of customer appointments by type and month
-     * @return the query for an appointments summary report
-     */
-    public String apptSummaryByCountryQuery() {
-        System.out.println("Returning Appointment Summary Query...");
-
-        return "SELECT Country, COUNT(*) AS Total_Appointments FROM appointments " +
+    private String appointmentsByCustomerQuery() {
+        System.out.println("Returning Appointments by Customer Query...");
+        return "SELECT Appointment_ID, Start, End,  Type, Title, Location, Contact_Name " +
+                "FROM appointments " +
+                "JOIN contacts USING (Contact_ID) " +
                 "JOIN customers USING (Customer_ID) " +
-                "JOIN first_level_divisions USING (Division_ID)" +
-                "JOIN countries USING (Country_ID)" +
-                "group by Country";
+                "WHERE Customer_Name = '" + filterOptions.getValue() +"' " +
+                "ORDER BY Start ASC";
     }
 
     /*  ======================
@@ -180,34 +247,37 @@ public class Reports extends Base {
      */
     private ObservableList<List<String>> getReport(String query) {
         ObservableList<List<String>> resultSetArray = FXCollections.observableArrayList();
+        if (!query.isEmpty()) {
+            // Querying database
+            try {
+                PreparedStatement ps = getConnection().prepareStatement(query);
+                ResultSet rs = ps.executeQuery();
+                int numCols = rs.getMetaData().getColumnCount();
 
-        // Querying database
-        try {
-            PreparedStatement ps = getConnection().prepareStatement(query);
-            ResultSet rs = ps.executeQuery();
-            int numCols = rs.getMetaData().getColumnCount();
+                // Build Header
+                List<String> row = FXCollections.observableArrayList();
 
-            // Build Header
-            List<String> row = FXCollections.observableArrayList();
-
-            for (int i = 1; i <= numCols; i++) {
-                row.add(rs.getMetaData().getColumnLabel(i));
-            }
-            System.out.println(row);
-            resultSetArray.add(row);
-
-            // Add rows
-            while(rs.next()) {
-                row = FXCollections.observableArrayList();
                 for (int i = 1; i <= numCols; i++) {
-                        row.add(rs.getString(i));
+                    row.add(rs.getMetaData().getColumnLabel(i));
                 }
                 System.out.println(row);
                 resultSetArray.add(row);
-            }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+                // Add rows
+                while (rs.next()) {
+                    row = FXCollections.observableArrayList();
+                    for (int i = 1; i <= numCols; i++) {
+                        row.add(rs.getString(i));
+                    }
+                    System.out.println(row);
+                    resultSetArray.add(row);
+                }
+
+            } catch (SQLException e) {
+                printSQLException(e);
+            }
+        } else {
+            System.out.println("No query returned.");
         }
 
         System.out.println(resultSetArray.get(0).toString());
@@ -218,24 +288,25 @@ public class Reports extends Base {
     // Event Handling
 
     /**
-     * Build strings to show in TextArea
+     * Build strings to show in tableView
      * @param resultArray - the report results
      */
     private void previewReport(ObservableList<List<String>> resultArray) {
-        System.out.println("Previewing report");
-        StringBuilder preview = new StringBuilder();
 
-        for (List<String> strings : resultArray) {
-            for (int j = 0; j < strings.size(); j++) {
-                preview.append(strings.get(j));
-                if (j != strings.size() - 1) {
-                    preview.append(" | ");
-                }
-            }
-            preview.append("\n");
+        tableView.getColumns().clear();
+        System.out.println("Previewing report");
+        System.out.println("Generating columns...");
+        List<String> header = resultArray.get(0);
+        resultArray.remove(0);
+
+        for (int i=0;i< header.size();i++) {
+            TableColumn<List<String>, String> col = new TableColumn<>(header.get(i));
+            int j = i;
+            col.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().get(j)));
+            tableView.getColumns().addAll(col);
         }
 
-        reportView.setText(preview.toString());
+        tableView.setItems(resultArray);
 
     }
 
@@ -245,24 +316,27 @@ public class Reports extends Base {
      * @param resultArray - the report results
      */
     public void generateReport(ObservableList<List<String>> resultArray) {
-        System.out.println("Generating csv file.");
-        String fileName = selectedReport.replace(" ","_");
-        File outputFile = new File(fileName+".csv");
+        boolean saveFileConfirm = confirmMessage("Save File","Do you want to save report as a CSV file?");
 
-        FileWriter fileWriter;
-        if (outputFile.exists()) {
-            boolean overwrite = confirmMessage("Confirm Overwrite", "File already exists, would you like to overwrite it?");
-            if (!overwrite) {
-                int i = 1;
-                while (outputFile.exists()) {
-                    outputFile = new File(fileName + "_" + i + ".csv");
-                    i++;
-                }
-            }  // do nothing and continue
+        if (saveFileConfirm) {
+            System.out.println("Generating csv file.");
+            String fileName = selectedReport.replace(" ", "_");
+            File outputFile = new File(fileName + ".csv");
 
-        }
+            FileWriter fileWriter;
+            if (outputFile.exists()) {
+                boolean overwrite = confirmMessage("Confirm Overwrite", "File already exists, would you like to overwrite it?");
+                if (!overwrite) {
+                    int i = 1;
+                    while (outputFile.exists()) {
+                        outputFile = new File(fileName + "_" + i + ".csv");
+                        i++;
+                    }
+                }  // do nothing and continue
 
-        System.out.println(outputFile);
+            }
+
+            System.out.println(outputFile);
 
             try {
                 fileWriter = new FileWriter(outputFile, false);
@@ -280,8 +354,9 @@ public class Reports extends Base {
 
             } catch (IOException e) {
                 System.out.println("In catch block.");
-                errorMessage("File Unavailable","Unable to open file. Please check if it is open.");
+                errorMessage("File Unavailable", "Unable to open file. Please check if it is open.");
             }
+        }
 
     }
 

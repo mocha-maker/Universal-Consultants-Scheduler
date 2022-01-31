@@ -29,8 +29,7 @@ public abstract class Base extends DAO implements Initializable {
     private final String appf = "/application/view/";
     final ResourceBundle rb = Loc.getBundle();
     protected View vController;
-/*    private Button backButton;
-    private Stack<Pane> sceneHistory;*/
+
 
     /**
      * Initialize Base. This is the main application controller for the main view that contains the menu and loadable pages.
@@ -87,6 +86,7 @@ public abstract class Base extends DAO implements Initializable {
         Scene scene = new Scene(root);
         stage.setTitle(title); // Window Title
         stage.setScene(scene); // Load Scene on Stage
+        stage.setResizable(false);
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.showAndWait(); // Show Stage
     }
@@ -159,7 +159,6 @@ public abstract class Base extends DAO implements Initializable {
     /**
      * Used to close the window on forms
      * @param event - on exit
-     * @throws IOException
      */
     @FXML
     public void exitButton(ActionEvent event) {
@@ -170,7 +169,6 @@ public abstract class Base extends DAO implements Initializable {
     /**
      * Cancel Button on returns to the previous scene.
      * @param actionEvent when clicking the "Cancel" button
-     * @throws IOException exceptions unload
      */
     @FXML
     private void cancelButton(ActionEvent actionEvent) {
@@ -261,7 +259,7 @@ public abstract class Base extends DAO implements Initializable {
         confirm.setContentText(msg);
 
         // buttons to include in dialog
-        ButtonType continueButton = new ButtonType("Continue");
+        ButtonType continueButton = new ButtonType("OK");
         ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
 
         confirm.getButtonTypes().setAll(continueButton,cancelButton); // creates the buttons in dialog

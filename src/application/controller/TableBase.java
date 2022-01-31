@@ -83,6 +83,8 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
 
     /**
      * Creates a TableColumn to load into the TableView
+     * lambda: used to make the setCellValueFactory method more precise and allow formatting non-string values as a String using less code
+     *
      * @param tClass - the model class
      * @param colName - the name of the field of the class
      * @return the String TableColumn to be created
@@ -94,6 +96,8 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
             final String k = String.format("%s", toCapitalized(field.getName()));
             System.out.println(k);
             TableColumn<T,String> col = new TableColumn<>(k);
+
+
             col.setCellValueFactory(param -> {
                 try {
                     return new SimpleStringProperty(field.get(param.getValue()).toString());

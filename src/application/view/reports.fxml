@@ -2,9 +2,9 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -17,7 +17,7 @@
       <Insets left="30.0" right="30.0" top="60.0" />
    </padding>
    <children>
-      <VBox prefHeight="768.0" prefWidth="754.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+      <VBox prefHeight="768.0" prefWidth="754.0" spacing="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="title" text="Reports">
                <VBox.margin>
@@ -34,10 +34,19 @@
                         <Insets right="10.0" />
                      </padding>
                   </Label>
-                  <ChoiceBox fx:id="reportOptions" prefWidth="150.0" />
+                  <ComboBox fx:id="reportOptions" prefWidth="150.0" />
                </children>
             </HBox>
-            <AnchorPane prefHeight="25.0" prefWidth="680.0" />
+            <HBox layoutX="40.0" layoutY="144.0" prefWidth="200.0">
+               <children>
+                  <Label text="Filter By:">
+                     <padding>
+                        <Insets right="10.0" />
+                     </padding>
+                  </Label>
+                  <ComboBox fx:id="filterOptions" prefWidth="150.0" />
+               </children>
+            </HBox>
             <HBox prefWidth="200.0">
                <children>
                   <Button fx:id="previewButton" mnemonicParsing="false" text="Preview">
@@ -51,16 +60,24 @@
                      </HBox.margin>
                   </Button>
                </children>
-               <padding>
-                  <Insets bottom="10.0" />
-               </padding>
             </HBox>
             <AnchorPane>
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>
+               <children>
+                  <Label fx:id="reportLabel" text="Report Title">
+                     <font>
+                        <Font name="System Bold" size="24.0" />
+                     </font>
+                  </Label>
+               </children>
             </AnchorPane>
-            <TextArea fx:id="reportView" prefHeight="404.0" prefWidth="680.0" />
+            <TableView fx:id="tableView" prefHeight="488.0" prefWidth="634.0">
+              <columns>
+
+              </columns>
+            </TableView>
          </children>
          <padding>
             <Insets left="30.0" right="30.0" top="30.0" />

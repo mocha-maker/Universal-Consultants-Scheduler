@@ -17,6 +17,7 @@ public class Customer extends Record {
         setDivision(division);
         setCountry(country);
     }
+
     /*  ======================
         SETTERS
         ======================*/
@@ -44,6 +45,7 @@ public class Customer extends Record {
     public void setCountry(String country) {
         this.country = country;
     }
+
     /*  ======================
         GETTERS
         ======================*/
