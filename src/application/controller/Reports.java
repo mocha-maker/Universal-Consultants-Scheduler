@@ -110,7 +110,7 @@ public class Reports extends Base {
      */
     private void setReportOptions() {
         ObservableList<String> reports = FXCollections.observableArrayList();
-        reports.addAll("Appointments Summary Report",
+        reports.addAll("Monthly Appointments Summary",
                 "Contacts Schedules",
                 "Customers List By Country",
                 "Appointments List By Customer");
@@ -123,7 +123,7 @@ public class Reports extends Base {
             filterOptions.setPromptText("");
             setReportLabel();
             switch (reportOptions.getValue()) {
-                case "Appointments Summary Report":
+                case "Monthly Appointments Summary":
                     filterOptions.setPromptText("Select a group by...");
                     options.addAll("Type","Country");
                     break;
@@ -165,7 +165,7 @@ public class Reports extends Base {
         if (!filterOptions.getSelectionModel().isEmpty()) {
 
             switch (selectedReport) {
-                case "Appointments Summary Report":
+                case "Monthly Appointments Summary":
                     return apptSummaryQuery();
 
                 case "Contacts Schedules":
@@ -187,16 +187,18 @@ public class Reports extends Base {
     }
 
     /**
-     * Appointments Summary by Type: the total number of customer appointments by type
+     * Appointments Summary by Month and Country or Type
+     * Shows the total number of customer appointments by filter Option per month
      * @return the query for an appointments summary report
      */
     private String apptSummaryQuery() {
         System.out.println("Returning Appointment Summary Query...");
-         return "SELECT " + filterOptions.getValue() + ", COUNT(*) AS Total_Appointments FROM appointments " +
-                    "JOIN customers USING (Customer_ID) " +
-                    "JOIN first_level_divisions USING (Division_ID)" +
-                    "JOIN countries USING (Country_ID)" +
-                    "group by " + filterOptions.getValue();
+         return "SELECT date_format(Start, '%Y %M') AS Month, " + filterOptions.getValue() + ", COUNT(*) FROM appointments \n" +
+                 "JOIN customers USING (Customer_ID) \n" +
+                 "JOIN first_level_divisions USING (Division_ID)\n" +
+                 "JOIN countries USING (Country_ID)\n" +
+                 "GROUP BY MONTH(Start), " + filterOptions.getValue() + " " +
+                 "ORDER BY Start ASC" ;
     }
 
     /**
