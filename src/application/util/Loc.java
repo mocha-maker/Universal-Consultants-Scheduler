@@ -91,7 +91,7 @@ public abstract class Loc {
      * @return the current Timestamp in UTC
      */
     public static Timestamp getCurrentTimestamp() {
-        return (toTimestamp(convertTo(LocalDateTime.now(),"UTC")));
+        return (toTimestamp(LocalDateTime.now()));
     }
 
 
@@ -104,7 +104,7 @@ public abstract class Loc {
      * @return converted LocalDateTime
      */
     public static LocalDateTime timeStampToLocal(Timestamp timestamp) {
-        return timestamp.toLocalDateTime().atZone(ZoneId.of("UTC")).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        return timestamp.toLocalDateTime();
     }
 
     /**
@@ -122,7 +122,7 @@ public abstract class Loc {
      * @return converted LocalDateTime
      */
     public static LocalDateTime convertTo(LocalDateTime localDateTime, String zone) {
-        return localDateTime.atZone(ZoneId.systemDefault()).toInstant().atZone(ZoneId.of(zone)).toLocalDateTime();
+        return convertToZDT(localDateTime,zone).toLocalDateTime();
     }
 
     /**
@@ -131,7 +131,7 @@ public abstract class Loc {
      * @return converted ZonedDateTime
      */
     public static ZonedDateTime convertToZDT(LocalDateTime localDateTime, String zone) {
-        return localDateTime.atZone(ZoneId.systemDefault()).toInstant().atZone(ZoneId.of(zone));
+        return localDateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of(zone));
     }
 
 

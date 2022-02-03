@@ -21,6 +21,8 @@ import java.util.ResourceBundle;
 import static application.controller.CustRecord.getAllCountries;
 import static application.controller.TableBase.allContacts;
 import static application.controller.TableBase.allCustomers;
+import static application.util.Loc.dateToString;
+import static application.util.Loc.timeStampToLocal;
 
 /**
  * The Reports Controller
@@ -263,6 +265,7 @@ public class Reports extends Base {
 
                 for (int i = 1; i <= numCols; i++) {
                     row.add(rs.getMetaData().getColumnLabel(i));
+
                 }
                 System.out.println(row);
                 resultSetArray.add(row);
@@ -271,7 +274,10 @@ public class Reports extends Base {
                 while (rs.next()) {
                     row = FXCollections.observableArrayList();
                     for (int i = 1; i <= numCols; i++) {
-                        row.add(rs.getString(i));
+                        if(rs.getMetaData().getColumnType(i) == 93) {
+                            row.add(dateToString(timeStampToLocal(rs.getTimestamp(i)),"yyyy-MM-dd hh:mm a"));
+                        } else
+                            row.add(rs.getString(i));
                     }
                     System.out.println(row);
                     resultSetArray.add(row);
@@ -284,7 +290,6 @@ public class Reports extends Base {
             System.out.println("No query returned.");
         }
 
-        System.out.println(resultSetArray.get(0).toString());
         return resultSetArray;
     }
 
@@ -307,6 +312,7 @@ public class Reports extends Base {
             TableColumn<List<String>, String> col = new TableColumn<>(header.get(i));
             int j = i;
             col.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().get(j)));
+            //noinspection unchecked
             tableView.getColumns().addAll(col);
         }
         tableView.setItems(resultArray);

@@ -34,7 +34,7 @@ abstract class DBC {
     /**
      * build the JDBC Url
      */
-    private static final String jdbcUrl = protocol + vendor + location + databaseName + "?connectionTimeZone = SERVER"; // LOCAL
+    private static final String jdbcUrl = protocol + vendor + location + databaseName + "?connectionTimeZone = UTC"; // Uses DB Server Time
     /**
      * the jdbc driver
      */

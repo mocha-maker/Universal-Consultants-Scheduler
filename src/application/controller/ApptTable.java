@@ -6,7 +6,6 @@ import application.model.Customer;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -51,6 +50,7 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
         final TableColumn<Appointment, Integer> userIdCol =new TableColumn<>("UserId");
         userIdCol.setCellValueFactory(new PropertyValueFactory<>("userId"));
 
+        //noinspection unchecked
         tableView.getColumns().addAll(getStringColumn(Appointment.class, "title"),
                 getStringColumn(Appointment.class, "description"),
                 getStringColumn(Appointment.class, "location"),
@@ -143,25 +143,28 @@ public final class ApptTable extends TableBase<Appointment> implements Initializ
     /**
      * Starts the delete appointment process with a confirmation message and checks that a valid record is selected
      */
-    public void deleteApptRecord(ActionEvent e) {
+    public void deleteApptRecord() {
         Appointment appointment = tableView.getSelectionModel().getSelectedItem();
 
-        if (updatable(appointment)) {
-            // prompt for confirmation
-            boolean confirm = confirmMessage("Delete Appointment", "Are you sure you want to delete Appointment ID " + appointment.getId() + " at " + appointment.getStart() + "?");
+            if (appointment != null) {
+                // prompt for confirmation
+                boolean confirm = confirmMessage("Delete Appointment", "Are you sure you want to delete Appointment ID " + appointment.getId() + " at " + appointment.getStart() + "?");
 
-            if (confirm) {
-                boolean deleted = deleteRecord(appointment);
-                System.out.println(deleted);
-                if (deleted) {
-                    infoMessage("Appointment ID: " + appointment.getId() + "\nAppointment Type: " + appointment.getType() + "\nSuccessfully cancelled.");
+                if (confirm && updatable(appointment)) {
+                    boolean deleted = deleteRecord(appointment);
+                    System.out.println(deleted);
+                    if (deleted) {
+                        infoMessage("Appointment ID: " + appointment.getId() + "\nAppointment Type: " + appointment.getType() + "\nSuccessfully cancelled.");
+                    }
+                    updateTable();
                 }
-                updateTable();
+
+            } else {
+                infoMessage("Please select a record for deletion.");
             }
 
-        } else {
-            infoMessage("Please select a record for deletion.");
-        }
+
+
     }
 
     /**

@@ -2,17 +2,14 @@ package application;
 
 import application.controller.View;
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
-
 import java.util.Locale;
 import java.util.Scanner;
 
-import static application.util.Loc.*;
+import static application.util.Loc.setLocaleBundle;
 
 /**
  * Main Application.

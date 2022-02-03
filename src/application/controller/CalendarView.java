@@ -30,7 +30,7 @@ import static application.util.Loc.*;
  * Calendar Controller
  * Manages the Calendar View.
  */
-public final class Calendar extends TableBase<Appointment> implements Initializable {
+public final class CalendarView extends TableBase<Appointment> implements Initializable {
 
     private final LocalDate today = LocalDate.now();
     private LocalDate picked;
@@ -84,6 +84,7 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
         userIdCol.setCellValueFactory(new PropertyValueFactory<>("userId"));
 
         // Create and set string columns
+        //noinspection unchecked
         tableView.getColumns().addAll(getStringColumn(Appointment.class, "title"),
                 getStringColumn(Appointment.class, "description"),
                 getStringColumn(Appointment.class, "location"),
@@ -423,17 +424,19 @@ public final class Calendar extends TableBase<Appointment> implements Initializa
     public void deleteApptRecord() {
         Appointment appointment = tableView.getSelectionModel().getSelectedItem();
 
-        if (updatable(appointment)) {
+        if (appointment != null) {
             // prompt for confirmation
             boolean confirm = confirmMessage("Delete Appointment", "Are you sure you want to delete Appointment ID " + appointment.getId() + " at " + appointment.getStart() + "?");
 
-            if (confirm) {
+            if (confirm && updatable(appointment)) {
                 boolean deleted = deleteRecord(appointment);
                 System.out.println(deleted);
                 if (deleted) {
                     infoMessage("Appointment ID: " + appointment.getId() + "\nAppointment Type: " + appointment.getType() + "\nSuccessfully cancelled.");
                 }
                 updateTable();
+            } else {
+                warningMessage("No Record in Database","Unable to find the record in the database.");
             }
 
         } else {

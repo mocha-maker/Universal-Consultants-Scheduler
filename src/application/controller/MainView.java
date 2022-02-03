@@ -63,11 +63,12 @@ public class MainView extends Base {
      */
     private void checkUpcomingAppts() {
         // Get Local Time
-        LocalDateTime nowUTC = convertTo(LocalDateTime.now(),"UTC");
+        LocalDateTime nowUTC = LocalDateTime.now();
         Timestamp now = toTimestamp(nowUTC);
         System.out.println("Timestamp - " + now);
         Timestamp inQuarterHour = toTimestamp(nowUTC.plusMinutes(15));
         System.out.println("Timestamp - " + inQuarterHour);
+
         long timeDifference = 15L;
 
         StringBuilder printAppointments = new StringBuilder();
@@ -85,7 +86,8 @@ public class MainView extends Base {
             // Check if Result Set is not empty
             System.out.println("Fetch size = " + rs.getFetchSize());
             while (rs.next()) {
-                LocalDateTime upcoming = convertTo(timeStampToLocal(rs.getTimestamp("Start")), "UTC");
+                LocalDateTime upcoming = timeStampToLocal(rs.getTimestamp("Start"));
+                System.out.println("Upcoming Timestamp to Local: " + upcoming);
 
                 // get earliest upcoming appointment time difference
                 if (timeDifference > nowUTC.until(upcoming, ChronoUnit.MINUTES)) {

@@ -104,14 +104,14 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
                 try {
                     return new SimpleStringProperty(field.get(param.getValue()).toString());
                 } catch (IllegalAccessException ex) {
-                    System.out.println(ex);
+                    ex.printStackTrace();
                 }
                 return null;
             });
             return col;
 
         } catch (NoSuchFieldException e) { // if field does not exist
-            System.out.println(e);
+            e.printStackTrace();
         }
         return null;
     }
@@ -140,16 +140,16 @@ public abstract class TableBase<T extends Record> extends Base implements Initia
         System.out.println("Checking for record existence in database.");
 
         boolean updatable = false;
-        int id = record.getId();
-        String table = record.getClass().getSimpleName().toLowerCase();
-        String tableCapitalized = table.substring(0,1).toUpperCase() + table.substring(1);
 
         try {
+            String table = record.getClass().getSimpleName().toLowerCase();
+            String tableCapitalized = table.substring(0,1).toUpperCase() + table.substring(1);
+            int id = record.getId();
             prepQuery("SELECT COUNT(*) AS count FROM " + table + "s WHERE " + tableCapitalized + "_ID = " + id);
             ResultSet rs = getResult();
             while (rs.next()) {
                 System.out.println(rs.getInt("count"));
-                if (rs.getInt("count")>0) {
+                if (rs.getInt("count") > 0) {
                     updatable = true;
                 }
             }

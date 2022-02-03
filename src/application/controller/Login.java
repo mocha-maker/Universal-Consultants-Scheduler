@@ -12,11 +12,15 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.Calendar;
 import java.util.ResourceBundle;
+import java.util.TimeZone;
 
-import static application.util.Loc.convertToZDT;
-import static application.util.Loc.dateToString;
+import static application.util.Loc.*;
 
 /**
  * Login Controller
@@ -41,7 +45,16 @@ public class Login extends Base implements Initializable {
         location.setText(Loc.getZone().getID()); // timezone label
 
         // autoFillLoginAsTest();
+        testTime();
 
+
+    }
+
+    private void testTime() {
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println("Local Time: " + now);
+        System.out.println("Converted to Timestamp: " + convertTo(now,"UTC"));
+        System.out.println("Timestamp from Local: " + toTimestamp(now));
     }
 
 
